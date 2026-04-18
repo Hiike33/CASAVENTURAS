@@ -20,6 +20,7 @@ export default function Home() {
     <>
       <SchemaOrg website faqs={generalFaqs} itemList={tours} />
       <Nav />
+      <main>
       <Hero />
 
       {/* INTRO + STATS */}
@@ -137,6 +138,7 @@ export default function Home() {
         </div>
       </section>
 
+      </main>
       <Footer />
     </>
   )

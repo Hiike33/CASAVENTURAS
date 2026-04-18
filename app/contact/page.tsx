@@ -33,6 +33,7 @@ export default function ContactPage() {
       ]} />
       <Nav />
 
+      <main>
       <section className="bg-white pt-[120px] pb-14 px-6 md:px-[52px] border-b border-[#E5E5E5]">
         <p className="text-[10px] font-medium tracking-[0.26em] uppercase text-[#248D6C] mb-4 flex items-center gap-3">
           <span className="inline-block w-7 h-px bg-[#248D6C]" />
@@ -131,6 +132,7 @@ export default function ContactPage() {
         </div>
       </section>
 
+      </main>
       <Footer />
     </>
   )

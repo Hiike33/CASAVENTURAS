@@ -46,6 +46,7 @@ export default function ElYunquePage() {
       ]} />
       <Nav />
 
+      <main>
       {/* HERO */}
       <section
         className="relative flex flex-col justify-end overflow-hidden pt-[120px] pb-12 px-6 md:pt-[140px] md:pb-[60px] md:px-[52px] min-h-[65vh]"
@@ -222,6 +223,7 @@ export default function ElYunquePage() {
         </div>
       </section>
 
+      </main>
       <Footer />
       <StickyMobileCTA fromPrice={tour.price} href="#book" label={`Book · $${tour.price}`} />
     </>
