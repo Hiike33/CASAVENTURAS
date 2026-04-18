@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import ReviewsStrip from '@/components/ReviewsStrip'
@@ -171,7 +172,18 @@ export default function SalsaPage() {
         <div className="grid md:grid-cols-2 gap-px bg-[#E5E5E5]">
           {tours.filter(t => t.slug !== 'salsa').map(t => (
             <Link key={t.slug} href={`/tours/${t.slug}`} className="bg-white hover:bg-[#E6F3EE] transition-colors p-6 flex items-center gap-5">
-              <div className="w-[72px] h-[72px] flex-shrink-0" style={{ background: t.thumbBg }} />
+              <div
+                className="relative w-[120px] h-[90px] md:w-[140px] md:h-[105px] flex-shrink-0 overflow-hidden"
+                style={{ background: t.thumbBg }}
+              >
+                <Image
+                  src={t.photos[0]}
+                  alt={t.name}
+                  fill
+                  sizes="140px"
+                  className="object-cover"
+                />
+              </div>
               <div>
                 <p className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#248D6C] mb-1">{t.category}</p>
                 <p className="text-[#111] text-[18px] font-light">{t.name}</p>
