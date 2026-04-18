@@ -9,6 +9,7 @@ import SchemaOrg from '@/components/SchemaOrg'
 import YouTubeFacade from '@/components/YouTubeFacade'
 import HomeBookingForm from '@/components/HomeBookingForm'
 import { tours, reviews, siteConfig } from '@/lib/tours'
+import { generalFaqs } from '@/lib/cms/data/faqs'
 
 export const metadata: Metadata = {
   alternates: { canonical: siteConfig.url },
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
-      <SchemaOrg />
+      <SchemaOrg website faqs={generalFaqs} itemList={tours} />
       <Nav />
       <Hero />
 

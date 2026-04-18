@@ -24,6 +24,6 @@ export function getCMS(): CMSAdapter {
 }
 
 // Re-export types for convenience — consumers can
-//   import type { Tour, Review, SiteConfig } from '@/lib/cms'
-export type { Tour, Review, SiteConfig } from '@/lib/types/cms'
+//   import type { Tour, Review, SiteConfig, FAQ, Guide } from '@/lib/cms'
+export type { Tour, Review, SiteConfig, FAQ, Guide } from '@/lib/types/cms'
 export type { CMSAdapter } from './adapter'

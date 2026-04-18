@@ -6,6 +6,22 @@
  * conform to these.
  */
 
+export type FAQ = {
+  question: string
+  answer: string
+}
+
+export type Guide = {
+  /** Display name (first name or first + nickname, e.g. "Catherine La Taína") */
+  name: string
+  /** Role inside Casa Venturas, e.g. "Tour Guide", "Salsa Instructor" */
+  jobTitle: string
+  /** Optional tour slugs this guide is primarily associated with */
+  tours?: string[]
+  /** Optional bio blurb — used for Person.description in JSON-LD */
+  description?: string
+}
+
 export type Tour = {
   slug: string
   name: string
@@ -29,6 +45,8 @@ export type Tour = {
   galleryPhotos?: string[]
   video?: string
   tripAdvisorProductUrl?: string
+  /** Tour-specific FAQs for FAQPage JSON-LD (P0 GEO lever) */
+  faqs?: FAQ[]
 }
 
 export type Review = {

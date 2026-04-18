@@ -11,8 +11,12 @@ import Breadcrumb from '@/components/Breadcrumb'
 import StickyMobileCTA from '@/components/StickyMobileCTA'
 import HeroVideo from '@/components/HeroVideo'
 import { tours, reviews, siteConfig } from '@/lib/tours'
+import { tourFaqs } from '@/lib/cms/data/faqs'
+import { guides } from '@/lib/cms/data/guides'
 
 const tour = tours.find(t => t.slug === 'catamaran')!
+const catamaranFaqs = tourFaqs['catamaran']
+const catamaranGuides = guides.filter(g => g.tours?.includes('catamaran'))
 
 export function generateMetadata(): Metadata {
   return {
@@ -33,7 +37,7 @@ export function generateMetadata(): Metadata {
 export default function CatamaranPage() {
   return (
     <>
-      <SchemaOrg tour={tour} />
+      <SchemaOrg tour={tour} faqs={catamaranFaqs} guides={catamaranGuides} />
       <Breadcrumb items={[
         { name: 'Home', url: '/' },
         { name: 'Experiences', url: '/#tours' },

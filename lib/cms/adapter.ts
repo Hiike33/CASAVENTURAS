@@ -1,4 +1,4 @@
-import type { Tour, Review, SiteConfig } from '@/lib/types/cms'
+import type { Tour, Review, SiteConfig, FAQ, Guide } from '@/lib/types/cms'
 
 /**
  * CMSAdapter — source-agnostic interface for content retrieval.
@@ -26,4 +26,16 @@ export interface CMSAdapter {
 
   /** Return site-wide config (contact, brand, social, proof). */
   getSiteConfig(): Promise<SiteConfig>
+
+  /**
+   * Return FAQs. When `tourSlug` is provided, returns tour-specific FAQs;
+   * otherwise returns general (brand-wide) FAQs.
+   */
+  getFaqs(tourSlug?: string): Promise<FAQ[]>
+
+  /**
+   * Return named guides. When `tourSlug` is provided, returns only guides
+   * associated with that tour.
+   */
+  getGuides(tourSlug?: string): Promise<Guide[]>
 }

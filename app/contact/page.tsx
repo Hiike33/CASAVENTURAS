@@ -6,6 +6,7 @@ import SchemaOrg from '@/components/SchemaOrg'
 import Breadcrumb from '@/components/Breadcrumb'
 import ContactForm from '@/components/ContactForm'
 import { tours, siteConfig } from '@/lib/tours'
+import { generalFaqs } from '@/lib/cms/data/faqs'
 
 export function generateMetadata(): Metadata {
   return {
@@ -25,7 +26,7 @@ export function generateMetadata(): Metadata {
 export default function ContactPage() {
   return (
     <>
-      <SchemaOrg />
+      <SchemaOrg faqs={generalFaqs} />
       <Breadcrumb items={[
         { name: 'Home', url: '/' },
         { name: 'Contact', url: '/contact' },
