@@ -168,6 +168,34 @@ Changements :
 
 **Impact** : 5 fichiers modifiés (page.tsx, 3 tour pages, contact page). Heroes conservés avec `md:px-[52px]` pour cohérence du resserrement titre-bord caractéristique.
 
+### D-015 · [REVIEW] Corrections post code-review (silent failures, SoT drift, CLAUDE.md stale)
+
+**Décidé** : suite au `/code-review:code-review` exécuté avant le premier push externe (2026-04-18), corriger 3 issues de confiance ≥ 80 :
+
+1. **Silent failures** — `app/api/contact/route.ts` et `app/api/booking/route.ts` retournaient `{ok: true, 202}` même si l'upstream (Resend, n8n) rejetait la requête. Désormais : `if (!res.ok)` → log + retour 502 avec message actionnable. Impact : plus de perte silencieuse de leads/bookings.
+2. **Single-source-of-truth drift** — `app/api/chat/route.ts` avait des stats hardcodées (`4.9★ · 1,433 reviews`) en dur dans le `SYSTEM_PROMPT`, contredisant `siteConfig.tripAdvisor` (5.0 / 1458). Refactor : `buildSystemPrompt()` interpole depuis `@/lib/tours` (`tours` + `siteConfig`). Viole plus D-005.
+3. **CLAUDE.md périmé** — le fichier décrivait encore la palette D-011 (accent orange, nav noir) alors que D-012 avait reverté vers vert `#248D6C` + nav blanc. Risque que les prochaines sessions Claude régressent l'UI. Lignes 13, 44-45, 56 mises à jour.
+
+**Bonus** : fix du domaine fallback `hello@casaventuras.com` → `hello@micasaventuras.com` dans contact/route.ts (typo révélée par le review).
+
+**Raison** : CCS v2 Gate V — "si tu ne peux pas vérifier qu'un changement fonctionne → ne le commite pas". 2/3 issues (silent failures) auraient eu un impact business direct en prod (leads perdus). Issue #3 aurait causé du drift UI en future session.
+
+**Alternatives rejetées** :
+- Fixer seulement les issues #1 (silent failures) et ignorer les autres → non, la cohérence de spec (CLAUDE.md) est un levier CCS majeur.
+- Regrouper en 1 mega-commit → non, atomic commits obligatoires (CCS règle 2).
+
+**Impact** :
+- 4 fichiers modifiés (2 routes, 1 route chat, 1 CLAUDE.md).
+- `tsc --noEmit` : exit 0.
+- 4 commits atomiques séparés : `[CONFIG/.gitignore]` / `[FIX/api]` / `[FIX/api/chat]` / `[DOCS/spec]`.
+
+**False positives écartés du review** (pour traçabilité) :
+- `model: 'claude-sonnet-4-6'` flaggé invalide par 3 agents → en réalité valide en avril 2026 (training cutoff des agents plus ancien que la date courante).
+- Stale TODO dans STRUCTURE.md — cosmétique.
+- Spacing `py-14` reviews sections vs D-014 `py-16 md:py-24` — mineur, à adresser hors scope review.
+
+---
+
 ## Règles pour ajouter une décision
 
 1. Format strict : `### D-XXX · [SCOPE] Titre court`

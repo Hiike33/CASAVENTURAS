@@ -9,8 +9,8 @@
 
 ## Design System
 
-### Palette — SOURCE: live site micasaventuras.com main_style.css
-Audit d-profondeur a démontré que le live site Casa Venturas est un **LIGHT-FIRST** design avec un accent ORANGE (et non pas vert comme initialement supposé). Body class Weebly: `wsite-theme-light`. Aucune surface noire dominante.
+### Palette — ÉTAT ACTUEL (voir decisions.md D-012)
+Design **LIGHT-FIRST** (héritage Weebly live site — `wsite-theme-light`), aucune surface noire dominante. Brand accent **VERT `#248D6C`** (décidé D-012 : meilleur contraste WCAG AA + cohérence thématique rainforest/El Yunque). La couleur `#F5A623` est **découplée** du brand et réservée aux étoiles TripAdvisor 5★.
 
 ```
 Base LIGHT (dominant) :
@@ -41,8 +41,8 @@ Tour thumb fallbacks (dark, masqués par les photos) :
 
 **Règles strictes :**
 - Aucune section de contenu avec fond sombre (#111/#0d0d0d/#1a1a1a). Les seules apparitions de noir sont : bullets de liste 6×6px, traits burger icon, fallbacks de photos tours.
-- L'accent orange #F5A623 n'est JAMAIS utilisé en text color sur fond blanc sauf en underline CTA. Sur bg blanc, le texte orange n'a que 2.59:1 (échec WCAG). Utiliser #DB8C0A ou #111 pour le texte.
-- Sur #F5A623 background : texte TOUJOURS blanc (ratio 3.2:1 AA large text).
+- Brand accent = VERT `#248D6C` (CTAs, links, icons, eyebrows). Hover = `#1C6E54`. Tint = `#E6F3EE`. Contraste WCAG AA OK sur blanc.
+- `#F5A623` = GOLD ÉTOILES UNIQUEMENT (TripAdvisor 5★). JAMAIS sur CTAs, links, ou bg de section.
 - NO serif fonts. Figtree 300/400/500/600 only.
 
 ### Typography
@@ -54,7 +54,7 @@ Tour thumb fallbacks (dark, masqués par les photos) :
 
 ### Key Design Principles
 - White background sections — photos carry the color
-- Black nav (always dark, not transparent — simplicity)
+- Nav: background `rgba(255,255,255,0.97)` (reproduit le header du live Weebly), jamais noir opaque
 - Tour selector icons at bottom of hero (like surf-spirit.com)
 - All-caps labels with generous letter-spacing
 - Thin borders: 1px solid #E8E8E8
