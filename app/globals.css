@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Palette LIGHT-first alignée avec le site live micasaventuras.com
+     + accent brand VERT #248D6C (choix Stan — meilleur contraste + rapport
+     jungle/rainforest que l'orange pale Weebly par défaut). */
+  --cv-white:    #FFFFFF;  /* fond principal */
+  --cv-off:      #FAFAFA;  /* sections alt / form fields */
+  --cv-gray1:    #F5F5F5;  /* léger alt */
+  --cv-border:   #E5E5E5;  /* borders, grid gaps */
+  --cv-border-d: #E6E6E6;  /* borders slightly darker */
+  --cv-text:     #4F4F4E;  /* body primary (live text color) */
+  --cv-muted:    #717170;  /* body secondary */
+  --cv-ink:      #111111;  /* headings only */
+
+  /* Brand accent VERT (#248D6C — chosen for contrast 4.95:1 + rainforest feel) */
+  --cv-accent:   #248D6C;  /* CTAs, links, section accents */
+  --cv-accent-h: #1C6E54;  /* hover state */
+  --cv-accent-l: #E6F3EE;  /* light tint backgrounds */
+
+  /* Gold preserved for stars only (TripAdvisor standard) */
+  --cv-gold:     #F5A623;
+
+  /* Tour thumb fallbacks (dark photos cover these) */
+  --cv-thumb-j:  #111E14;
+  --cv-thumb-o:  #0A141E;
+  --cv-thumb-s:  #1E0E08;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Figtree', system-ui, sans-serif;
+  font-weight: 300;
+  background: var(--cv-white);
+  color: var(--cv-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Label utility */
+.label {
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* No border-radius anywhere */
+* { border-radius: 0 !important; }
+
+/* Reviews strip drag scroll */
+.reviews-strip {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  cursor: grab;
+}
+.reviews-strip:active { cursor: grabbing; }
+.reviews-strip::-webkit-scrollbar { display: none; }
+
+/* Video object-fit */
+video {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
