@@ -17,6 +17,7 @@ export function generateMetadata(): Metadata {
       description: 'Talk to us, not a bot. We respond within the hour.',
       url: `${siteConfig.url}/contact`,
       type: 'website',
+      images: [{ url: '/images/og/og-1200.jpg', width: 1200, height: 1600, alt: 'Casa Venturas — Puerto Rico experiences' }],
     },
   }
 }

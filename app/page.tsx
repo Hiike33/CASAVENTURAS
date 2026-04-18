@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Nav from '@/components/Nav'
 import Hero from '@/components/Hero'
 import TourCard from '@/components/TourCard'
@@ -8,6 +9,10 @@ import SchemaOrg from '@/components/SchemaOrg'
 import YouTubeFacade from '@/components/YouTubeFacade'
 import HomeBookingForm from '@/components/HomeBookingForm'
 import { tours, reviews, siteConfig } from '@/lib/tours'
+
+export const metadata: Metadata = {
+  alternates: { canonical: siteConfig.url },
+}
 
 export default function Home() {
   return (
