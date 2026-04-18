@@ -93,7 +93,7 @@ export default function ElYunquePage() {
 
       {/* GALLERY */}
       <section className="px-6 md:px-12 lg:px-16 xl:px-24 py-16 md:py-24" aria-label="Tour gallery">
-        <TourGallery photos={tour.photos} tourName={tour.name} priority />
+        <TourGallery photos={tour.galleryPhotos ?? tour.photos} tourName={tour.name} priority />
       </section>
 
       {/* MAIN CONTENT GRID */}

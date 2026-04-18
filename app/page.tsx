@@ -67,29 +67,33 @@ export default function Home() {
         </div>
       </section>
 
-      {/* VIDEO STORY */}
-      <section className="grid md:grid-cols-2 bg-[#f5f5f5] border-t border-[#e8e8e8]" id="story">
-        <div className="relative min-h-[300px]">
-          <YouTubeFacade
-            videoId="_qz8fcMaor8"
-            title="El Yunque Puerto Rico Jungle adventure with Casa Venturas"
-            className="h-full"
-          />
-        </div>
-        <div className="px-10 py-12 flex flex-col justify-center">
-          <p className="text-[10px] font-medium tracking-[0.22em] uppercase text-[#248D6C] mb-3">Behind the experience</p>
-          <h2 className="text-[26px] font-light text-[#111] tracking-tight mb-4 leading-snug">Why we do<br/>what we do</h2>
-          <p className="text-[13px] font-light text-[#888] leading-relaxed mb-5 max-w-md">
-            We grew up here. El Yunque is our backyard, San Juan is our city. Every tour is the version we&apos;d give to a friend visiting for the first time.
+      {/* STORY — A1 Aman-style quote moment + full-width video */}
+      <section className="bg-[#f5f5f5] border-t border-[#E5E5E5]" id="story">
+        <div className="max-w-3xl mx-auto px-6 md:px-12 py-20 md:py-28 text-center">
+          <p className="text-[10px] font-medium tracking-[0.28em] uppercase text-[#248D6C] mb-5">
+            Behind the experience
+          </p>
+          <h2 className="text-[#111] font-light tracking-tight mb-6 leading-[1.15]" style={{ fontSize: 'clamp(32px, 3.6vw, 48px)' }}>
+            Why we do what we do
+          </h2>
+          <p className="text-[16px] md:text-[17px] font-light text-[#354040] leading-[1.75] mb-8 italic">
+            &ldquo;We grew up here. El Yunque is our backyard, San Juan is our city. Every tour is the version we&apos;d give to a friend visiting for the first time.&rdquo;
           </p>
           <a
             href="https://www.youtube.com/watch?v=_qz8fcMaor8"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[10px] font-semibold tracking-[0.14em] uppercase text-[#248D6C] border-b border-[#248D6C]/40 pb-0.5 self-start hover:border-[#248D6C] transition-colors"
+            className="inline-block text-[10px] font-semibold tracking-[0.22em] uppercase text-[#248D6C] border-b border-[#248D6C]/40 pb-1 hover:border-[#248D6C] transition-colors"
           >
             Watch on YouTube →
           </a>
+        </div>
+        <div className="w-full aspect-video">
+          <YouTubeFacade
+            videoId="_qz8fcMaor8"
+            title="El Yunque Puerto Rico Jungle adventure with Casa Venturas"
+            className="h-full"
+          />
         </div>
       </section>
 
