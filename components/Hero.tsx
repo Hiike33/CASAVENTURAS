@@ -26,8 +26,8 @@ export default function Hero() {
   return (
     <section className="relative h-screen flex flex-col justify-center items-center overflow-hidden bg-[#111E14]">
       <HeroVideo
-        src="/videos/hero-home.mp4?v=4"
-        poster="/images/posters/hero-home.jpg?v=4"
+        src="/videos/hero-home.mp4?v=5"
+        poster="/images/posters/hero-home.jpg?v=5"
         alt="El Yunque rainforest adventure — Casa Venturas"
         opacity={0.75}
       />
