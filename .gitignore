@@ -45,3 +45,6 @@ next-env.d.ts
 # Temporary tooling output
 tmp-*
 *.swp
+
+# Video backups (kept local only, 10+ MB each)
+*.original.mp4
