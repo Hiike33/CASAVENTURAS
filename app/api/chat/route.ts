@@ -1,26 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { tours, siteConfig } from '@/lib/tours'
 
-// TODO: wire Claude API
-// This endpoint powers the Cavi chatbot on the booking section
+// Cavi chatbot endpoint — system prompt is built from the canonical CMS data
+// (siteConfig + tours). Never duplicate facts here; if a value is wrong, fix
+// it in lib/cms/data/*.ts so every surface updates together (D-005).
 // Model: claude-sonnet-4-6
 
-const SYSTEM_PROMPT = `You are Cavi, the friendly AI guide for Casa Venturas — a tour company based in San Juan, Puerto Rico.
+function buildSystemPrompt() {
+  const tourLines = tours.map(t => {
+    const addr = t.address ? ` Address: ${t.address}.` : ''
+    return `- ${t.name}: $${t.price}/person, ${t.duration}, group ${t.groupSize}${t.level ? `, ${t.level.toLowerCase()} level` : ''}. ${t.description}${addr}`
+  }).join('\n')
+  const ta = siteConfig.tripAdvisor
+  return `You are Cavi, the friendly AI guide for ${siteConfig.name} — a tour company based in ${siteConfig.location}.
 
 Your job: help visitors choose the right experience, answer questions about tours, and guide them toward booking.
 
 Tours available:
-- El Yunque Vivid Day Tour: $89/person, 6–7h, small groups ≤13, moderate fitness level. Natural waterslide, cliff jumps 5–20ft, rope swing, guided jungle hike. Transport from San Juan hotel included.
-- Private Catamaran to Vieques: $249/person, full day, private charter (≤12 guests). 40-ft Bali catamaran, Punta Arena beach, open bar, lunch, sunset return. Marina: Plaza Mayor, Palmas del Mar, Humacao.
-- Sunset Salsa Rooftop: $65/person, 2–3h, instructor Zoe. Casa Santurce rooftop, 6PM daily. Free Piña Colada. No experience needed. Address: 1050 Calle Marianna, San Juan.
+${tourLines}
 
 Key info:
-- Email: micasaventuras@gmail.com
-- Phone: +1 929 372 4529
-- TripAdvisor: 4.9★ · 1,433 reviews · #10 of 152 in San Juan
+- Email: ${siteConfig.email}
+- Phone: ${siteConfig.phone}
+- TripAdvisor: ${ta.rating}★ · ${ta.reviews.toLocaleString()} reviews · ${ta.ranking}
 - Free cancellation up to 24h before
 - Always recommend booking direct (not Viator) — they save up to 25%
 
 Be warm, concise, helpful. Answer in the same language as the user. Never invent information.`
+}
+
+const SYSTEM_PROMPT = buildSystemPrompt()
 
 export async function POST(req: NextRequest) {
   try {
