@@ -47,6 +47,8 @@ export type Tour = {
   tripAdvisorProductUrl?: string
   /** Tour-specific FAQs for FAQPage JSON-LD (P0 GEO lever) */
   faqs?: FAQ[]
+  /** Bókun numeric experience ID — wired from env var at build time */
+  bokunProductId?: number
 }
 
 export type Review = {

@@ -8,7 +8,23 @@ import type { Tour } from '@/lib/types/cms'
  * replace this array with an adapter that fetches from the CMS API and
  * maps the response to the Tour type in lib/types/cms.ts.
  */
-export const tours: Tour[] = [
+
+// Bókun product IDs are exposed via NEXT_PUBLIC_ env vars so both server
+// components (for `/api/bokun/*` calls) and client components (for widget
+// URLs) resolve the same value at build time.
+const BOKUN_PRODUCT_ID: Record<string, number | undefined> = {
+  'el-yunque': toNum(process.env.NEXT_PUBLIC_BOKUN_PRODUCT_EL_YUNQUE),
+  catamaran: toNum(process.env.NEXT_PUBLIC_BOKUN_PRODUCT_CATAMARAN),
+  salsa: toNum(process.env.NEXT_PUBLIC_BOKUN_PRODUCT_SALSA),
+}
+
+function toNum(v: string | undefined): number | undefined {
+  if (!v) return undefined
+  const n = Number(v)
+  return Number.isFinite(n) && n > 0 ? n : undefined
+}
+
+const rawTours: Tour[] = [
   {
     slug: 'el-yunque',
     name: 'El Yunque Vivid Day Tour',
@@ -160,3 +176,8 @@ export const tours: Tour[] = [
     ],
   },
 ]
+
+export const tours: Tour[] = rawTours.map(t => ({
+  ...t,
+  bokunProductId: BOKUN_PRODUCT_ID[t.slug],
+}))
