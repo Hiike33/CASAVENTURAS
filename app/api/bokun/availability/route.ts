@@ -51,8 +51,10 @@ export async function GET(req: NextRequest): Promise<NextResponse<BokunAvailabil
     if (err instanceof BokunConfigError) {
       return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
     }
+    console.error('[bokun/availability] fetch failed', err)
+    const msg = err instanceof Error ? err.message : 'unknown'
     return NextResponse.json(
-      { ok: false, error: 'Failed to reach Bokun API' },
+      { ok: false, error: `Failed to reach Bokun API: ${msg}` },
       { status: 500 },
     )
   }
