@@ -33,7 +33,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<BokunAvailabil
     )
   }
 
-  const path = `/booking.json/product/${productId}/availabilities?start=${start}&end=${end}`
+  const path = `/activity.json/${productId}/availabilities?start=${start}&end=${end}`
 
   try {
     const res = await bokunFetch(path)
