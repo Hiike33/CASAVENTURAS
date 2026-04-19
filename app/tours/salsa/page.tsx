@@ -21,7 +21,7 @@ const salsaGuides = guides.filter(g => g.tours?.includes('salsa'))
 export function generateMetadata(): Metadata {
   return {
     title: 'Sunset Salsa Lesson San Juan Rooftop | Casa Venturas',
-    description: 'Salsa initiation class on the Casa Santurce rooftop, San Juan. Instructor Zoe. 6 PM daily. Free Piña Colada. No experience needed. $65/person.',
+    description: `Salsa initiation class on the Casa Santurce rooftop, San Juan. Instructor Zoe. 6 PM daily. Free Piña Colada. No experience needed. $${tour.price}/person.`,
     keywords: 'salsa lesson San Juan, sunset rooftop Puerto Rico, Casa Santurce rooftop, salsa beginners San Juan, Puerto Rican dance class',
     alternates: { canonical: `${siteConfig.url}/tours/salsa` },
     openGraph: {

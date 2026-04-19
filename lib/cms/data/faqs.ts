@@ -1,4 +1,11 @@
 import type { FAQ } from '@/lib/types/cms'
+import { tours } from './tours.ts'
+
+const priceOf = (slug: string): number => {
+  const t = tours.find(x => x.slug === slug)
+  if (!t) throw new Error(`tour not found: ${slug}`)
+  return t.price
+}
 
 /**
  * General FAQs — shown on home/contact, apply to the brand overall.
@@ -15,7 +22,7 @@ export const generalFaqs: FAQ[] = [
   },
   {
     question: 'Do you include hotel pickup?',
-    answer: 'Yes for the El Yunque tour — pickup from any San Juan-area hotel is included in the $89/person price. Catamaran pickup from San Juan can be arranged on request (the marina is 1h from San Juan in Humacao). Salsa is self-access at the Casa Santurce rooftop in San Juan.',
+    answer: `Yes for the El Yunque tour — pickup from any San Juan-area hotel is included in the $${priceOf('el-yunque')}/person price. Catamaran pickup from San Juan can be arranged on request (the marina is 1h from San Juan in Humacao). Salsa is self-access at the Casa Santurce rooftop in San Juan.`,
   },
   {
     question: 'What is your cancellation policy?',
@@ -68,7 +75,7 @@ export const tourFaqs: Record<string, FAQ[]> = {
       answer: 'Up to 12 guests. The boat is a 40-foot Bali catamaran chartered exclusively for your group — no strangers on board.',
     },
     {
-      question: 'What is included in the $249 per person price?',
+      question: `What is included in the $${priceOf('catamaran')} per person price?`,
       answer: 'Full-day private charter, sailing to Punta Arena beach in Vieques, swimming, snorkeling, and paddleboarding equipment, open bar (rum, beer, soft drinks), lunch served on deck, sunset return sail, and professional crew with captain.',
     },
     {

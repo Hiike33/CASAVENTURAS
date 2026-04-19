@@ -21,7 +21,7 @@ const catamaranGuides = guides.filter(g => g.tours?.includes('catamaran'))
 export function generateMetadata(): Metadata {
   return {
     title: 'Private Catamaran to Vieques | Casa Venturas',
-    description: '40-ft Bali catamaran private charter to Punta Arena, Vieques. Up to 12 guests, open bar, lunch, snorkeling, sunset return. Book direct from $249/person.',
+    description: `40-ft Bali catamaran private charter to Punta Arena, Vieques. Up to 12 guests, open bar, lunch, snorkeling, sunset return. Book direct from $${tour.price}/person.`,
     keywords: 'private catamaran Vieques, Bali catamaran Puerto Rico, Punta Arena Vieques, luxury sailing San Juan, private charter Caribbean',
     alternates: { canonical: `${siteConfig.url}/tours/catamaran` },
     openGraph: {
