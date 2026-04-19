@@ -20,7 +20,7 @@ export default function StickyMobileCTA({ label = 'Book now', fromPrice, href }:
   return (
     <div
       aria-hidden={!visible}
-      className={`md:hidden fixed bottom-0 left-0 right-0 z-40 px-4 py-3 bg-white border-t border-[#e8e8e8] shadow-[0_-4px_12px_rgba(0,0,0,0.08)] transition-transform duration-200 ${
+      className={`sticky-mobile-cta md:hidden fixed bottom-0 left-0 right-0 z-40 px-4 py-3 bg-white border-t border-[#e8e8e8] shadow-[0_-4px_12px_rgba(0,0,0,0.08)] transition-transform duration-200 ${
         visible ? 'translate-y-0' : 'translate-y-full'
       }`}
     >

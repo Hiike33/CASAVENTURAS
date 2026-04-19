@@ -68,3 +68,14 @@ video {
   width: 100%;
   height: 100%;
 }
+
+/* Reserve bottom space on mobile when a sticky bottom bar (StickyMobileCTA)
+   is present in the DOM. Uses :has() to keep zero coupling: any page that
+   renders <StickyMobileCTA> automatically gets the right padding, no manual
+   class to maintain. env() adds the iOS home-indicator safe area.
+   Banner height = 72px (py-3 + ~48px content). +16px breathing room. */
+@media (max-width: 767px) {
+  body:has(.sticky-mobile-cta) main {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 16px);
+  }
+}
