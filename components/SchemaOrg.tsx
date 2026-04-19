@@ -12,6 +12,8 @@ type Props = {
   itemList?: Tour[]
   /** Emit WebSite + SearchAction schema — use ONCE at root (layout or home). */
   website?: boolean
+  /** Emit a generic WebPage node for legal/informational pages. */
+  webPage?: { path: string; name: string; dateModified?: string }
 }
 
 const ORG_ID = `${siteConfig.url}/#organization`
@@ -154,17 +156,33 @@ function buildWebSite() {
   }
 }
 
+function buildWebPage(wp: { path: string; name: string; dateModified?: string }) {
+  const url = `${siteConfig.url}${wp.path}`
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': `${url}#webpage`,
+    url,
+    name: wp.name,
+    isPartOf: { '@id': WEBSITE_ID },
+    about: { '@id': ORG_ID },
+    inLanguage: 'en-US',
+    ...(wp.dateModified && { dateModified: wp.dateModified }),
+  }
+}
+
 function Script({ data }: { data: unknown }) {
   const json = JSON.stringify(data)
   const props = { type: 'application/ld+json' as const, dangerouslySetInnerHTML: { __html: json } }
   return <script {...props} />
 }
 
-export default function SchemaOrg({ tour, guides, faqs, itemList, website }: Props) {
+export default function SchemaOrg({ tour, guides, faqs, itemList, website, webPage }: Props) {
   return (
     <>
       <Script data={tour ? buildTouristTrip(tour) : { '@context': 'https://schema.org', ...buildOrganization() }} />
       {website && <Script data={buildWebSite()} />}
+      {webPage && <Script data={buildWebPage(webPage)} />}
       {faqs && faqs.length > 0 && <Script data={buildFaqPage(faqs)} />}
       {guides && guides.length > 0 && <Script data={buildGuidesGraph(guides)} />}
       {itemList && itemList.length > 0 && <Script data={buildItemList(itemList)} />}
