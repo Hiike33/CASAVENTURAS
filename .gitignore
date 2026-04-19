@@ -50,3 +50,8 @@ tmp-*
 
 # Video backups (kept local only, 10+ MB each)
 *.original.mp4
+
+# Cloudflare / OpenNext
+.open-next/
+.wrangler/
+.dev.vars
