@@ -20,8 +20,6 @@ export default function Footer() {
             { label: 'Catamaran', href: '/tours/catamaran' },
             { label: 'Salsa', href: '/tours/salsa' },
             { label: 'Contact', href: '/contact' },
-            { label: 'Privacy', href: '/privacy' },
-            { label: 'Terms', href: '/terms' },
             { label: 'TripAdvisor', href: siteConfig.tripAdvisor.url, external: true },
           ].map(l => (
             <li key={l.href}>
@@ -43,9 +41,17 @@ export default function Footer() {
           <a href={siteConfig.whatsapp} target="_blank" rel="noopener noreferrer" className="hover:text-[#248D6C] transition-colors">{siteConfig.phone}</a>
           <span>{siteConfig.location}</span>
         </div>
-        <p className="text-[9.5px] text-[#888] tracking-[0.04em]">
-          © {new Date().getFullYear()} {siteConfig.name} · Crafted by KWS Studio
-        </p>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+          <Link href="/privacy" className="text-[9.5px] text-[#888] tracking-[0.04em] hover:text-[#248D6C] transition-colors">
+            Privacy
+          </Link>
+          <Link href="/terms" className="text-[9.5px] text-[#888] tracking-[0.04em] hover:text-[#248D6C] transition-colors">
+            Terms
+          </Link>
+          <p className="text-[9.5px] text-[#888] tracking-[0.04em]">
+            © {new Date().getFullYear()} {siteConfig.name} · Crafted by KWS Studio
+          </p>
+        </div>
       </div>
     </footer>
   )
