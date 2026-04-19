@@ -93,51 +93,60 @@ export default function CatamaranPage() {
         ))}
       </div>
 
+      {/* ABOUT */}
+      <section className="px-6 md:px-12 lg:px-16 xl:px-24 py-16 md:py-24">
+        <div className="max-w-2xl mx-auto text-center">
+          <p className="text-[10px] font-medium tracking-[0.22em] uppercase text-[#248D6C] mb-2.5">About this experience</p>
+          <h2 className="text-[#111] text-[clamp(28px,3.2vw,40px)] font-light tracking-tight mb-6 leading-tight">
+            The most exclusive<br/>day on the water
+          </h2>
+          <div className="text-[15px] font-light text-[#354040] leading-[1.8] space-y-5 text-left md:text-center">
+            <p>Step aboard a <strong className="font-medium text-[#111]">40-foot Bali catamaran</strong> and enjoy an unforgettable private sailing experience through the pristine waters of Vieques. Designed for comfort, space, and style — this exclusive charter accommodates <strong className="font-medium text-[#111]">groups of up to 12 guests</strong> seeking relaxation, adventure, and a truly elevated day at sea.</p>
+            <p>Your experience begins as you set sail featuring panoramic ocean views, spacious decks, and shaded lounge areas ideal for socializing or simply unwinding. As you cruise toward <strong className="font-medium text-[#111]">Punta Arena</strong> — one of Vieques&apos; most stunning and secluded beaches — you&apos;ll be surrounded by crystal-clear turquoise waters and refreshing Caribbean breezes.</p>
+            <p>Once anchored at Punta Arena, the fun truly begins. Guests can swim, float, paddle, and lounge in calm, shallow waters. As the day closes, you&apos;ll sail back under a breathtaking Caribbean sunset, watching the sky shift into vibrant gold, pink, and orange.</p>
+          </div>
+        </div>
+      </section>
+
       <section className="px-6 md:px-12 lg:px-16 xl:px-24 py-16 md:py-24" aria-label="Tour gallery">
         <TourGallery photos={tour.galleryPhotos ?? tour.photos} tourName={tour.name} priority />
+      </section>
+
+      {/* LISTES */}
+      <section className="px-6 md:px-12 lg:px-16 xl:px-24 pb-16 md:pb-24">
+        <div className="max-w-2xl mx-auto">
+          <h3 className="text-[#111] text-[22px] font-light mb-4">What&apos;s included</h3>
+          <ul className="space-y-2.5">
+            {tour.highlights.map((h, i) => (
+              <li key={i} className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
+                <span className="inline-block w-1.5 h-1.5 bg-[#248D6C] mt-2 flex-shrink-0" aria-hidden />
+                {h}
+              </li>
+            ))}
+          </ul>
+
+          <h3 className="text-[#111] text-[22px] font-light mt-10 mb-4">Good to know</h3>
+          <ul className="space-y-2.5">
+            {tour.whatToBring?.map((h, i) => (
+              <li key={i} className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
+                <span className="inline-block w-1.5 h-1.5 bg-[#111] mt-2 flex-shrink-0" aria-hidden />
+                {h}
+              </li>
+            ))}
+            <li className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
+              <span className="inline-block w-1.5 h-1.5 bg-[#111] mt-2 flex-shrink-0" aria-hidden />
+              Tour runs regardless of weather unless sea conditions are unsafe.
+            </li>
+          </ul>
+        </div>
       </section>
 
       <section className="px-6 md:px-12 lg:px-16 xl:px-24 pb-24 md:pb-32">
         <div className="grid gap-14 lg:grid-cols-[1fr_380px] items-start">
           <article>
-            <p className="text-[10px] font-medium tracking-[0.22em] uppercase text-[#248D6C] mb-2.5">About this experience</p>
-            <h2 className="text-[#111] text-[clamp(28px,3.2vw,40px)] font-light tracking-tight mb-6 leading-tight">
-              The most exclusive<br/>day on the water
-            </h2>
-
-            <div className="text-[15px] font-light text-[#354040] leading-[1.8] space-y-5">
-              <p>Step aboard a <strong className="font-medium text-[#111]">40-foot Bali catamaran</strong> and enjoy an unforgettable private sailing experience through the pristine waters of Vieques. Designed for comfort, space, and style — this exclusive charter accommodates <strong className="font-medium text-[#111]">groups of up to 12 guests</strong> seeking relaxation, adventure, and a truly elevated day at sea.</p>
-              <p>Your experience begins as you set sail featuring panoramic ocean views, spacious decks, and shaded lounge areas ideal for socializing or simply unwinding. As you cruise toward <strong className="font-medium text-[#111]">Punta Arena</strong> — one of Vieques&apos; most stunning and secluded beaches — you&apos;ll be surrounded by crystal-clear turquoise waters and refreshing Caribbean breezes.</p>
-              <p>Once anchored at Punta Arena, the fun truly begins. Guests can swim, float, paddle, and lounge in calm, shallow waters. As the day closes, you&apos;ll sail back under a breathtaking Caribbean sunset, watching the sky shift into vibrant gold, pink, and orange.</p>
-            </div>
-
-            <div className="mt-8 p-5 bg-[#f5f5f5] border-l-[3px] border-[#248D6C] text-[13.5px] font-light text-[#354040] leading-[1.7]">
+            <div className="p-5 bg-[#f5f5f5] border-l-[3px] border-[#248D6C] text-[13.5px] font-light text-[#354040] leading-[1.7]">
               <strong className="font-medium text-[#111]">Marina:</strong> Plaza Mayor, Palmas del Mar, Humacao — 1h from San Juan. Private transport from San Juan available on request.
             </div>
-
-            <h3 className="text-[#111] text-[22px] font-light mt-10 mb-4">What&apos;s included</h3>
-            <ul className="space-y-2.5">
-              {tour.highlights.map((h, i) => (
-                <li key={i} className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
-                  <span className="inline-block w-1.5 h-1.5 bg-[#248D6C] mt-2 flex-shrink-0" aria-hidden />
-                  {h}
-                </li>
-              ))}
-            </ul>
-
-            <h3 className="text-[#111] text-[22px] font-light mt-10 mb-4">Good to know</h3>
-            <ul className="space-y-2.5">
-              {tour.whatToBring?.map((h, i) => (
-                <li key={i} className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
-                  <span className="inline-block w-1.5 h-1.5 bg-[#111] mt-2 flex-shrink-0" aria-hidden />
-                  {h}
-                </li>
-              ))}
-              <li className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
-                <span className="inline-block w-1.5 h-1.5 bg-[#111] mt-2 flex-shrink-0" aria-hidden />
-                Tour runs regardless of weather unless sea conditions are unsafe.
-              </li>
-            </ul>
           </article>
 
           <div id="book">

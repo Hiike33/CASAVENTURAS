@@ -97,9 +97,49 @@ export default function ElYunquePage() {
         ))}
       </div>
 
+      {/* ABOUT */}
+      <section className="px-6 md:px-12 lg:px-16 xl:px-24 py-16 md:py-24">
+        <div className="max-w-2xl mx-auto text-center">
+          <p className="text-[10px] font-medium tracking-[0.22em] uppercase text-[#248D6C] mb-2.5">About this experience</p>
+          <h2 className="text-[#111] text-[clamp(28px,3.2vw,40px)] font-light tracking-tight mb-6 leading-tight">
+            The rainforest,<br/>beyond the tourist trail
+          </h2>
+          <div className="text-[15px] font-light text-[#354040] leading-[1.8] space-y-5 text-left md:text-center">
+            <p>This is an adventure for travelers who want real nature, not a theme-park version of it. Our guides — born and raised in Puerto Rico — take you to the perfect spots: the natural waterslide, rope swing, and cliff jumps that no organized bus tour ever finds.</p>
+            <p>Transport is included. We pick you up at your hotel in the San Juan area. Throughout the trip, your guide shares history and ecosystem facts — El Yunque is the only tropical national forest in the United States, and the only one with parrots, coquís, and 300-year-old trees.</p>
+            <p>The trail involves a moderate hike through muddy, beautiful jungle paths to reach the river. Come prepared: water shoes, a change of clothes, sunscreen. The river has options for every confidence level — there&apos;s no pressure to jump from anywhere you&apos;re not comfortable.</p>
+          </div>
+        </div>
+      </section>
+
       {/* GALLERY */}
       <section className="px-6 md:px-12 lg:px-16 xl:px-24 py-16 md:py-24" aria-label="Tour gallery">
         <TourGallery photos={tour.galleryPhotos ?? tour.photos} tourName={tour.name} priority />
+      </section>
+
+      {/* LISTES */}
+      <section className="px-6 md:px-12 lg:px-16 xl:px-24 pb-16 md:pb-24">
+        <div className="max-w-2xl mx-auto">
+          <h3 className="text-[#111] text-[22px] font-light mb-4">What you&apos;ll experience</h3>
+          <ul className="space-y-2.5">
+            {tour.highlights.map((h, i) => (
+              <li key={i} className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
+                <span className="inline-block w-1.5 h-1.5 bg-[#248D6C] mt-2 flex-shrink-0" aria-hidden />
+                {h}
+              </li>
+            ))}
+          </ul>
+
+          <h3 className="text-[#111] text-[22px] font-light mt-10 mb-4">What to bring</h3>
+          <ul className="space-y-2.5">
+            {tour.whatToBring?.map((h, i) => (
+              <li key={i} className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
+                <span className="inline-block w-1.5 h-1.5 bg-[#111] mt-2 flex-shrink-0" aria-hidden />
+                {h}
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       {/* MAIN CONTENT GRID */}
@@ -107,40 +147,9 @@ export default function ElYunquePage() {
         <div className="grid gap-14 lg:grid-cols-[1fr_380px] items-start">
           {/* Prose */}
           <article>
-            <p className="text-[10px] font-medium tracking-[0.22em] uppercase text-[#248D6C] mb-2.5">About this experience</p>
-            <h2 className="text-[#111] text-[clamp(28px,3.2vw,40px)] font-light tracking-tight mb-6 leading-tight">
-              The rainforest,<br/>beyond the tourist trail
-            </h2>
-
-            <div className="text-[15px] font-light text-[#354040] leading-[1.8] space-y-5">
-              <p>This is an adventure for travelers who want real nature, not a theme-park version of it. Our guides — born and raised in Puerto Rico — take you to the perfect spots: the natural waterslide, rope swing, and cliff jumps that no organized bus tour ever finds.</p>
-              <p>Transport is included. We pick you up at your hotel in the San Juan area. Throughout the trip, your guide shares history and ecosystem facts — El Yunque is the only tropical national forest in the United States, and the only one with parrots, coquís, and 300-year-old trees.</p>
-              <p>The trail involves a moderate hike through muddy, beautiful jungle paths to reach the river. Come prepared: water shoes, a change of clothes, sunscreen. The river has options for every confidence level — there&apos;s no pressure to jump from anywhere you&apos;re not comfortable.</p>
-            </div>
-
-            <h3 className="text-[#111] text-[22px] font-light mt-10 mb-4">What you&apos;ll experience</h3>
-            <ul className="space-y-2.5">
-              {tour.highlights.map((h, i) => (
-                <li key={i} className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
-                  <span className="inline-block w-1.5 h-1.5 bg-[#248D6C] mt-2 flex-shrink-0" aria-hidden />
-                  {h}
-                </li>
-              ))}
-            </ul>
-
-            <h3 className="text-[#111] text-[22px] font-light mt-10 mb-4">What to bring</h3>
-            <ul className="space-y-2.5">
-              {tour.whatToBring?.map((h, i) => (
-                <li key={i} className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
-                  <span className="inline-block w-1.5 h-1.5 bg-[#111] mt-2 flex-shrink-0" aria-hidden />
-                  {h}
-                </li>
-              ))}
-            </ul>
-
             {/* Video */}
             {tour.video && (
-              <div className="mt-12">
+              <div>
                 <p className="text-[10px] font-medium tracking-[0.22em] uppercase text-[#248D6C] mb-3">Watch the tour</p>
                 <YouTubeFacade videoId="_qz8fcMaor8" title="El Yunque Puerto Rico Jungle adventure tour with Casa Venturas" />
               </div>

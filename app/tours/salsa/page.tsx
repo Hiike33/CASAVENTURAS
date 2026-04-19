@@ -93,51 +93,60 @@ export default function SalsaPage() {
         ))}
       </div>
 
+      {/* ABOUT */}
+      <section className="px-6 md:px-12 lg:px-16 xl:px-24 py-16 md:py-24">
+        <div className="max-w-2xl mx-auto text-center">
+          <p className="text-[10px] font-medium tracking-[0.22em] uppercase text-[#248D6C] mb-2.5">About this experience</p>
+          <h2 className="text-[#111] text-[clamp(28px,3.2vw,40px)] font-light tracking-tight mb-6 leading-tight">
+            Dance. Laugh.<br/>Sip. Repeat.
+          </h2>
+          <div className="text-[15px] font-light text-[#354040] leading-[1.8] space-y-5 text-left md:text-center">
+            <p>Even if you&apos;ve never danced before, our professional instructor <strong className="font-medium text-[#111]">Zoe</strong> will have you moving to the rhythm in no time. Have a blast, exercise, meet new people, and gain confidence — all with the power of Latin dance.</p>
+            <p>Zoe loves teaching beginners, because she knows the first impression salsa makes stays forever. She has the skills to make that first impression <strong className="font-medium text-[#111]">memorable, enjoyable, and fun</strong> — in a social atmosphere that feels nothing like a formal class.</p>
+            <p>The class takes place on the rooftop of <strong className="font-medium text-[#111]">Casa Santurce</strong> at sunset — city panorama, warm breeze, golden light. At the end, you&apos;ll enjoy a free <strong className="font-medium text-[#111]">Piña Colada</strong> while the sun dips into the San Juan skyline.</p>
+          </div>
+        </div>
+      </section>
+
       <section className="px-6 md:px-12 lg:px-16 xl:px-24 py-16 md:py-24" aria-label="Tour gallery">
         <TourGallery photos={tour.galleryPhotos ?? tour.photos} tourName={tour.name} priority />
+      </section>
+
+      {/* LISTES */}
+      <section className="px-6 md:px-12 lg:px-16 xl:px-24 pb-16 md:pb-24">
+        <div className="max-w-2xl mx-auto">
+          <h3 className="text-[#111] text-[22px] font-light mb-4">What&apos;s included</h3>
+          <ul className="space-y-2.5">
+            {tour.highlights.map((h, i) => (
+              <li key={i} className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
+                <span className="inline-block w-1.5 h-1.5 bg-[#248D6C] mt-2 flex-shrink-0" aria-hidden />
+                {h}
+              </li>
+            ))}
+          </ul>
+
+          <h3 className="text-[#111] text-[22px] font-light mt-10 mb-4">Getting there</h3>
+          <ul className="space-y-2.5">
+            {tour.whatToBring?.map((h, i) => (
+              <li key={i} className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
+                <span className="inline-block w-1.5 h-1.5 bg-[#111] mt-2 flex-shrink-0" aria-hidden />
+                {h}
+              </li>
+            ))}
+            <li className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
+              <span className="inline-block w-1.5 h-1.5 bg-[#111] mt-2 flex-shrink-0" aria-hidden />
+              20-min Uber or taxi from Old San Juan.
+            </li>
+          </ul>
+        </div>
       </section>
 
       <section className="px-6 md:px-12 lg:px-16 xl:px-24 pb-24 md:pb-32">
         <div className="grid gap-14 lg:grid-cols-[1fr_380px] items-start">
           <article>
-            <p className="text-[10px] font-medium tracking-[0.22em] uppercase text-[#248D6C] mb-2.5">About this experience</p>
-            <h2 className="text-[#111] text-[clamp(28px,3.2vw,40px)] font-light tracking-tight mb-6 leading-tight">
-              Dance. Laugh.<br/>Sip. Repeat.
-            </h2>
-
-            <div className="text-[15px] font-light text-[#354040] leading-[1.8] space-y-5">
-              <p>Even if you&apos;ve never danced before, our professional instructor <strong className="font-medium text-[#111]">Zoe</strong> will have you moving to the rhythm in no time. Have a blast, exercise, meet new people, and gain confidence — all with the power of Latin dance.</p>
-              <p>Zoe loves teaching beginners, because she knows the first impression salsa makes stays forever. She has the skills to make that first impression <strong className="font-medium text-[#111]">memorable, enjoyable, and fun</strong> — in a social atmosphere that feels nothing like a formal class.</p>
-              <p>The class takes place on the rooftop of <strong className="font-medium text-[#111]">Casa Santurce</strong> at sunset — city panorama, warm breeze, golden light. At the end, you&apos;ll enjoy a free <strong className="font-medium text-[#111]">Piña Colada</strong> while the sun dips into the San Juan skyline.</p>
-            </div>
-
-            <div className="mt-8 p-5 bg-[#f5f5f5] border-l-[3px] border-[#248D6C] text-[13.5px] font-light text-[#354040] leading-[1.7]">
+            <div className="p-5 bg-[#f5f5f5] border-l-[3px] border-[#248D6C] text-[13.5px] font-light text-[#354040] leading-[1.7]">
               <strong className="font-medium text-[#111]">After booking</strong>, go directly to <strong className="font-medium">1050 Calle Marianna, 00907 San Juan — Casa Santurce Rooftop</strong>. Zoe will be waiting at 6 PM.
             </div>
-
-            <h3 className="text-[#111] text-[22px] font-light mt-10 mb-4">What&apos;s included</h3>
-            <ul className="space-y-2.5">
-              {tour.highlights.map((h, i) => (
-                <li key={i} className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
-                  <span className="inline-block w-1.5 h-1.5 bg-[#248D6C] mt-2 flex-shrink-0" aria-hidden />
-                  {h}
-                </li>
-              ))}
-            </ul>
-
-            <h3 className="text-[#111] text-[22px] font-light mt-10 mb-4">Getting there</h3>
-            <ul className="space-y-2.5">
-              {tour.whatToBring?.map((h, i) => (
-                <li key={i} className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
-                  <span className="inline-block w-1.5 h-1.5 bg-[#111] mt-2 flex-shrink-0" aria-hidden />
-                  {h}
-                </li>
-              ))}
-              <li className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
-                <span className="inline-block w-1.5 h-1.5 bg-[#111] mt-2 flex-shrink-0" aria-hidden />
-                20-min Uber or taxi from Old San Juan.
-              </li>
-            </ul>
           </article>
 
           <div id="book">
