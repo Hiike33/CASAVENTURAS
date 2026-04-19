@@ -27,7 +27,7 @@ export const generalFaqs: FAQ[] = [
   },
   {
     question: 'How do I book?',
-    answer: 'Book directly on micasaventuras.com — fill the reservation form on the page of the tour you want. You can also email micasaventuras@gmail.com or WhatsApp +1 929 372 4529. Direct bookings save you up to 25% versus OTAs like Viator.',
+    answer: 'Book directly on casaventuras.com — fill the reservation form on the page of the tour you want. You can also email micasaventuras@gmail.com or WhatsApp +1 929 372 4529. Direct bookings save you up to 25% versus OTAs like Viator.',
   },
 ]
 

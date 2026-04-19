@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
           Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: process.env.RESEND_FROM ?? 'hello@micasaventuras.com',
+          from: process.env.RESEND_FROM ?? 'hello@casaventuras.com',
           to: 'micasaventuras@gmail.com',
           reply_to: payload.email,
           subject: `Contact form — ${payload.firstName ?? 'visitor'} ${payload.lastName ?? ''}`.trim(),

@@ -13,7 +13,7 @@ export const siteConfig: SiteConfig = {
   whatsapp: 'https://wa.me/19293724529',
   location: 'San Juan, Puerto Rico',
   hours: 'Mon–Sun · 7:00 AM – 8:00 PM AST',
-  url: 'https://micasaventuras.com',
+  url: 'https://casaventuras.com',
   ogImage: '/images/og/casa-ventura-adventures.png',
   tripAdvisor: {
     rating: 5.0,

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://micasaventuras.com'),
+  metadataBase: new URL('https://casaventuras.com'),
   title: {
     default: 'Casa Venturas — Puerto Rico Experiences',
     template: '%s · Casa Venturas',
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Casa Venturas — Puerto Rico Experiences',
     description: '#10 of 152 tours in San Juan · 5.0★ · 1,458 reviews',
-    url: 'https://micasaventuras.com',
+    url: 'https://casaventuras.com',
     siteName: 'Casa Venturas',
     locale: 'en_US',
     type: 'website',
