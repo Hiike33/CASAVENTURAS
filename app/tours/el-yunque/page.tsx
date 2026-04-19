@@ -158,9 +158,7 @@ export default function ElYunquePage() {
 
           {/* Booking sidebar */}
           <div id="book">
-            <BookingSidebar tour={tour} />
-
-            <div className="mt-4 p-5 bg-[#E6F3EE] border border-[#B8D9CF]">
+            <div className="mb-4 p-5 bg-[#E6F3EE] border border-[#B8D9CF]">
               <p className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#248D6C] mb-2">Questions? Ask Cavi</p>
               <p className="text-[12.5px] font-light text-[#354040] leading-relaxed mb-3">
                 Our AI guide answers 24/7 — fitness level, what to bring, pickup location, family suitability.
@@ -169,6 +167,8 @@ export default function ElYunquePage() {
                 Chat with Cavi →
               </Link>
             </div>
+
+            <BookingSidebar tour={tour} />
           </div>
         </div>
       </section>

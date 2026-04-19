@@ -150,9 +150,7 @@ export default function CatamaranPage() {
           </article>
 
           <div id="book">
-            <BookingSidebar tour={tour} />
-
-            <div className="mt-4 p-5 bg-[#E6F3EE] border border-[#B8D9CF]">
+            <div className="mb-4 p-5 bg-[#E6F3EE] border border-[#B8D9CF]">
               <p className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#248D6C] mb-2">Need transport from San Juan?</p>
               <p className="text-[12.5px] font-light text-[#354040] leading-relaxed mb-3">
                 Marina is in Humacao. We arrange private pickup from San Juan — ask Cavi or contact us directly.
@@ -161,6 +159,8 @@ export default function CatamaranPage() {
                 Contact us →
               </Link>
             </div>
+
+            <BookingSidebar tour={tour} />
           </div>
         </div>
       </section>
