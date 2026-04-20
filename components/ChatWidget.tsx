@@ -1,11 +1,19 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { matchIntent } from '@/lib/cavi-intents'
+import { matchIntent, buildMailto, buildWhatsapp, type CaviCta } from '@/lib/cavi-intents'
 
-type Message = { role: 'bot' | 'user'; text: string }
+type Message = {
+  role: 'bot' | 'user'
+  text: string
+  /** Attached CTAs (e.g. mailto + WhatsApp when Cavi can't answer). */
+  ctas?: CaviCta[]
+  /** User's original message captured when CTAs are rendered, so the buttons
+   * can pre-fill mailto and wa.me URLs with exactly what they asked. */
+  originalQuestion?: string
+}
 
 const INITIAL: Message[] = [
-  { role: 'bot', text: "Hola! I'm Cavi. Ask me about prices, what's included, group sizes, safety — I'll answer right away." },
+  { role: 'bot', text: "Hola! I'm Cavi. Ask me about prices, what's included, group sizes, safety, anything about our tours. I'll answer right away." },
 ]
 
 const DEFAULT_SUGGESTIONS = [
@@ -14,9 +22,30 @@ const DEFAULT_SUGGESTIONS = [
   'Is it safe for kids?',
 ]
 
-// Small artificial delay so replies don't appear instantly — feels more like
-// a conversation than an autocomplete. Purely UX, no LLM is being called.
+// Small artificial delay so replies don't flash in the same tick as the user's
+// message. No LLM is being called, the delay is purely for conversational UX.
 const REPLY_DELAY_MS = 380
+
+function CtaButtons({ ctas, question }: { ctas: CaviCta[]; question: string }) {
+  return (
+    <div className="flex flex-wrap gap-2 mt-3">
+      {ctas.map(cta => {
+        const href = cta.type === 'email' ? buildMailto(question) : buildWhatsapp(question)
+        return (
+          <a
+            key={cta.type}
+            href={href}
+            target={cta.type === 'whatsapp' ? '_blank' : undefined}
+            rel={cta.type === 'whatsapp' ? 'noopener noreferrer' : undefined}
+            className="text-[11px] font-medium tracking-[0.1em] uppercase text-white bg-[#248D6C] hover:bg-[#1C6E54] px-4 py-2 transition-colors"
+          >
+            {cta.label}
+          </a>
+        )
+      })}
+    </div>
+  )
+}
 
 export default function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>(INITIAL)
@@ -38,7 +67,15 @@ export default function ChatWidget() {
 
     const reply = matchIntent(text)
     window.setTimeout(() => {
-      setMessages(prev => [...prev, { role: 'bot', text: reply.text }])
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'bot',
+          text: reply.text,
+          ctas: reply.ctas,
+          originalQuestion: reply.ctas ? text : undefined,
+        },
+      ])
       setSuggestions(reply.suggestions ?? [])
       setLoading(false)
     }, REPLY_DELAY_MS)
@@ -50,7 +87,7 @@ export default function ChatWidget() {
       <div className="flex items-center gap-2.5 px-7 py-5 border-b border-[#E5E5E5] bg-[#FAFAFA]">
         <span className="w-[7px] h-[7px] rounded-full bg-[#248D6C] animate-pulse" aria-hidden />
         <span className="text-[10px] font-medium tracking-[0.15em] uppercase text-[#248D6C]">
-          Cavi — Casa Venturas Guide
+          Cavi, Casa Venturas Guide
         </span>
         <span className="ml-auto text-[8.5px] tracking-[0.08em] text-[#888] bg-white border border-[#E5E5E5] px-2.5 py-0.5 uppercase">
           Instant · 24/7
@@ -69,6 +106,9 @@ export default function ChatWidget() {
               }`}
             >
               {m.text}
+              {m.ctas && m.ctas.length > 0 && (
+                <CtaButtons ctas={m.ctas} question={m.originalQuestion ?? ''} />
+              )}
             </div>
           </div>
         ))}

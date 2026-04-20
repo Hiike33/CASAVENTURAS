@@ -223,6 +223,44 @@ Changements :
 
 ---
 
+## 2026-04-20 — Cavi coverage + FAQ SoT consolidation
+
+### D-017 · [ARCH/cavi] Intent matcher branché sur faqs.ts + FAQ expansion 19→35
+**Décidé** :
+1. `lib/cms/data/faqs.ts` devient la **source de vérité unique** pour toutes les réponses factuelles de Cavi. Chaque FAQ reçoit un `id` stable (ex: `gen-pickup`, `ey-cliff-age`, `cat-alcohol-minors`). Le type `FAQ` dans `lib/types/cms.ts` gagne un champ `id: string` requis.
+2. `lib/cavi-intents.ts` est refondu : les intents ne contiennent plus de réponses hardcodées — ils déclarent soit un `faqId` (référence dans faqs.ts) soit une `reply()` dynamique (overviews qui composent `tours[]`).
+3. La couverture FAQ passe de **19 → 35** (6 new general + 3 El Yunque + 4 catamaran + 3 salsa), ciblant ~85-90% des questions visiteurs sur la base de la recherche concurrentielle (Viator, TripAdvisor, GetYourGuide, DiscoverPuertoRico, BHTP travel safety).
+4. Le fallback Cavi passe du texte statique à un composant avec **2 CTAs actifs** : `mailto:` pré-rempli avec la question du visiteur + `wa.me` pré-rempli. Texte : "I couldn't answer that one, but one of our lovely team members will, ASAP ;)".
+5. **Pass em-dash complet** sur les 19 FAQs existants pour retirer les signatures typographiques LLM (détectables par GPTZero/Originality.ai) et harmoniser le ton humain.
+
+**Raison** :
+1. **D-005 respecté** — fin de la duplication factuelle entre `cavi-intents.ts` et `faqs.ts`. Quand le client édite un FAQ (ex: politique cancellation), Cavi + FAQPage JSON-LD + `/contact` FAQ section se mettent à jour ensemble. Une édition = trois surfaces.
+2. **GEO/SEO** — les 16 nouveaux FAQs enrichissent le JSON-LD `FAQPage` sur chaque page tour, augmentant la surface éligible aux rich results et aux citations par les moteurs génératifs (ChatGPT/Perplexity).
+3. **Research-backed** — gaps identifiés par cross-check des FAQ publiées par Viator/TripAdvisor/GetYourGuide sur des tours concurrents + concerns génériques PR (passport confusion, hurricane season, mosquitoes, safety perception, tipping norms).
+4. **CTA actionables** — l'ancien fallback disait "Email micasaventuras@gmail.com" en texte plat. Les CTAs `mailto:` + `wa.me` pré-remplis réduisent la friction de 2-3 clics → 1 clic pour envoyer la question.
+
+**Alternatives rejetées** :
+- Library fuzzy matching (Fuse.js) → non, +5KB gzipped pour un gain marginal au MVP. Les `includes` simples suffisent tant que les fallbacks restent rares (mesurable plus tard).
+- Keyword matching global sans word boundaries → tombé sur le bug `rain` qui match `rainforest`. Fix : ordre des intents + keywords spécifiques (plural forms, prépositions collées) plutôt que regex \b (overkill).
+- Garder les 19 FAQs originaux → non, coverage estimée ~55-65% seulement, les questions PR context (passport/safety/tipping) manquent complètement.
+- LLM fallback (hybride) → non, contredit D-016 (pas de LLM frontend).
+
+**Impact** :
+- Fichiers modifiés :
+  - `lib/types/cms.ts` (+`id` au type FAQ)
+  - `lib/cms/data/faqs.ts` (refonte complète, 19→35 FAQs, em-dash cleanup)
+  - `lib/cavi-intents.ts` (refonte — 40 intents, `buildMailto`/`buildWhatsapp` exports)
+  - `components/ChatWidget.tsx` (+ composant `CtaButtons`, capture `originalQuestion`)
+  - `lib/cavi-intents.test.ts` (nouveau — 44 tests, intent probes + FAQ refs + CTA URL)
+- Tests : 5/5 FAQ + 44/44 Cavi passent. TSC clean. Build home = 131 kB (zéro régression bundle).
+- Bonus : le `faqById` export (lookup O(1)) sera réutilisable côté `app/contact/page.tsx` si on veut y injecter un accordion de FAQs par id.
+
+**Invalidation** :
+- Si le client ajoute un 4e tour, il faudra étendre les keyword discriminators catamaran/yunque/salsa — mais les FAQs associés se branchent automatiquement via leur `id`.
+- Si un FAQ `id` est renommé dans `faqs.ts`, le test `every intent faqId referenced actually exists` échoue avant le commit — protection structurelle.
+
+---
+
 ## Règles pour ajouter une décision
 
 1. Format strict : `### D-XXX · [SCOPE] Titre court`

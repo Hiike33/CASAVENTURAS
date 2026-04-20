@@ -7,6 +7,8 @@
  */
 
 export type FAQ = {
+  /** Stable id used by Cavi intent matcher to reference this answer (e.g. "gen-pickup", "ey-fitness"). */
+  id: string
   question: string
   answer: string
 }
