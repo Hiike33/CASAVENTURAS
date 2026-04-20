@@ -63,6 +63,33 @@ export type Review = {
   url: string
 }
 
+/**
+ * Legal page content. Sections are numbered 1, 2, 3 and contain a mix of
+ * paragraph and list blocks. Inline markup (strong, em, a href, code) is
+ * permitted in block strings and rendered with a controlled HTML injection
+ * in the page template. Content is author-controlled (lib/cms/data/legal.*),
+ * never user input. Anything richer belongs in MDX, not here.
+ */
+export type LegalBlock =
+  | { kind: 'p'; html: string }
+  | { kind: 'ul'; items: string[] }
+
+export type LegalSection = {
+  n: string
+  title: string
+  blocks: LegalBlock[]
+}
+
+export type LegalPage = {
+  /** yyyy-MM-dd, last revision */
+  lastUpdated: string
+  /** Pre-sections intro paragraph, inline markup permitted */
+  introHtml: string
+  sections: LegalSection[]
+  /** SEO description (80-160 chars) used in generateMetadata */
+  metaDescription: string
+}
+
 export type SiteConfig = {
   name: string
   tagline: string

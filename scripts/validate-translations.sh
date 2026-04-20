@@ -28,6 +28,10 @@ EMDASH_TARGETS=(
   lib/cms/data/site-config.fr.ts
   lib/cms/data/reviews.es.ts
   lib/cms/data/reviews.fr.ts
+  lib/cms/data/legal.en.ts
+  lib/cms/data/legal.es.ts
+  lib/cms/data/legal.fr.ts
+  messages/en.json
   messages/es.json
   messages/fr.json
 )

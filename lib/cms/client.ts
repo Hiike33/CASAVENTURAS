@@ -1,4 +1,4 @@
-import type { Tour, SiteConfig } from '@/lib/types/cms'
+import type { Tour, SiteConfig, LegalPage } from '@/lib/types/cms'
 import type { Locale } from '@/i18n/routing'
 
 import { tours as toursEn } from './data/tours.en'
@@ -7,6 +7,9 @@ import { tours as toursFr } from './data/tours.fr'
 import { siteConfig as configEn } from './data/site-config.en'
 import { siteConfig as configEs } from './data/site-config.es'
 import { siteConfig as configFr } from './data/site-config.fr'
+import * as legalEn from './data/legal.en'
+import * as legalEs from './data/legal.es'
+import * as legalFr from './data/legal.fr'
 
 // Synchronous client-safe accessors. Mirror of LocalAdapter but without the
 // Promise wrapper, so client components (Nav, StickyMobileCTA, forms) can
@@ -31,4 +34,16 @@ export function toursFor(locale: Locale): Tour[] {
 
 export function siteConfigFor(locale: Locale): SiteConfig {
   return CONFIG[locale] ?? CONFIG.en
+}
+
+export type LegalSlug = 'privacy' | 'terms' | 'cookies'
+
+const LEGAL: Record<Locale, { privacy: LegalPage; terms: LegalPage; cookies: LegalPage }> = {
+  en: { privacy: legalEn.privacy, terms: legalEn.terms, cookies: legalEn.cookies },
+  es: { privacy: legalEs.privacy, terms: legalEs.terms, cookies: legalEs.cookies },
+  fr: { privacy: legalFr.privacy, terms: legalFr.terms, cookies: legalFr.cookies },
+}
+
+export function legalFor(locale: Locale, slug: LegalSlug): LegalPage {
+  return (LEGAL[locale] ?? LEGAL.en)[slug]
 }
