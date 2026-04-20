@@ -35,6 +35,8 @@ export type CheckoutSubmitRequest = {
   pickupPlaceId?: number
   roomNumber?: string
   customPickupAddress?: string
+  customPickupLat?: number
+  customPickupLon?: number
   mainContactDetails: {
     title?: string
     firstName: string
@@ -174,7 +176,15 @@ function buildBokunPayload(b: CheckoutSubmitRequest) {
     bookingQuestionId: Number(id),
     answer,
   }))
-  const comment = [b.specialRequests, b.customPickupAddress && `Custom pickup: ${b.customPickupAddress}`, b.roomNumber && `Room: ${b.roomNumber}`]
+  const coord =
+    b.customPickupLat !== undefined && b.customPickupLon !== undefined
+      ? ` (${b.customPickupLat.toFixed(5)}, ${b.customPickupLon.toFixed(5)})`
+      : ''
+  const comment = [
+    b.specialRequests,
+    b.customPickupAddress && `Custom pickup: ${b.customPickupAddress}${coord}`,
+    b.roomNumber && `Room: ${b.roomNumber}`,
+  ]
     .filter(Boolean)
     .join(' · ')
   return {

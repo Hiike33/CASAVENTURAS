@@ -16,6 +16,7 @@ import type {
 } from '@/app/api/bokun/checkout-context/route'
 import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
 import { htmlToList } from '@/lib/html/to-list'
+import AddressAutocomplete from '@/components/AddressAutocomplete'
 
 // Inline checkout panel wired to Bókun + Stripe.
 //
@@ -92,6 +93,8 @@ function CheckoutPanelInner({
     roomNumber: '',
     customPickup: false,
     customPickupAddress: '',
+    customPickupLat: undefined as number | undefined,
+    customPickupLon: undefined as number | undefined,
     answers: {} as Record<number, string>,
     requests: '',
   })
@@ -187,6 +190,8 @@ function CheckoutPanelInner({
           customPickupAddress: form.customPickup
             ? form.customPickupAddress
             : undefined,
+          customPickupLat: form.customPickup ? form.customPickupLat : undefined,
+          customPickupLon: form.customPickup ? form.customPickupLon : undefined,
           mainContactDetails: {
             title: form.title || undefined,
             firstName: form.firstName,
@@ -396,28 +401,34 @@ function CheckoutPanelInner({
                       pickupTitle: v ? '' : f.pickupTitle,
                       roomNumber: v ? '' : f.roomNumber,
                       customPickupAddress: v ? f.customPickupAddress : '',
+                      customPickupLat: v ? f.customPickupLat : undefined,
+                      customPickupLon: v ? f.customPickupLon : undefined,
                     }))
                   }
                 />
               )}
 
               {form.customPickup && ctx.customPickupAllowed && (
-                <Field id="cp-custom-addr" label="Pickup address" required>
-                  <textarea
-                    id="cp-custom-addr"
-                    rows={2}
-                    required
-                    value={form.customPickupAddress}
-                    onChange={e =>
-                      setForm(f => ({ ...f, customPickupAddress: e.target.value }))
-                    }
-                    placeholder="Street, number, neighborhood, city (San Juan metro area only)"
-                    className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa] resize-none"
-                  />
-                  <p className="text-[10px] font-light text-[#717170] mt-1">
-                    Our guide will contact you to confirm the exact pickup time.
-                  </p>
-                </Field>
+                <AddressAutocomplete
+                  id="cp-custom-addr"
+                  label="Pickup address"
+                  required
+                  value={{
+                    text: form.customPickupAddress,
+                    lat: form.customPickupLat,
+                    lon: form.customPickupLon,
+                  }}
+                  onChange={v =>
+                    setForm(f => ({
+                      ...f,
+                      customPickupAddress: v.text,
+                      customPickupLat: v.lat,
+                      customPickupLon: v.lon,
+                    }))
+                  }
+                  placeholder="Start typing your Puerto Rico address…"
+                  hint="Our guide will contact you to confirm the exact pickup time."
+                />
               )}
             </>
           )}

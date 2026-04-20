@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --test lib/bokun/client.test.ts lib/bokun/checkout-mode.test.ts lib/cms/data/faqs.test.ts",
+    "test": "node --test lib/bokun/client.test.ts lib/bokun/checkout-mode.test.ts lib/geo/nominatim.test.ts lib/cms/data/faqs.test.ts",
     "build:cf": "opennextjs-cloudflare build",
     "preview:cf": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy:cf": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
