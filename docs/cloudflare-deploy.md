@@ -1,8 +1,17 @@
 # Cloudflare Pages Deployment — Casa Venturas
 
 **Target domain**: `casaventuras.com` (registered on Cloudflare Registrar, account `Elie.belkheir@gmail.com`)
+**Cloudflare account**: `Elie.belkheir@gmail.com`
+**Cloudflare account ID**: `42f1ff5c412f53c54404943fa9d8cdd3`
+**Workers subdomain**: `elie-belkheir.workers.dev`
 **Repo**: https://github.com/VictoHughes/casaventuras
-**Stack**: Next.js 14 App Router · Node runtime (API routes use Anthropic + Resend)
+**Stack**: Next.js 15 App Router · OpenNext for Cloudflare (Workers Builds)
+
+> ⚠️ **ANY deploy MUST target the Elie account** (ID `42f1ff5c…`). Never push to
+> a personal Cloudflare account (`Bccecorp@gmail.com` / `fd9a811e…` / subdomain
+> `bccecorp.workers.dev`) — that was an ops mistake once and got rolled back.
+> Before running `wrangler deploy` locally, always run `wrangler whoami` and
+> confirm the account ID printed matches the one above.
 
 ---
 
@@ -55,11 +64,18 @@ Add `wrangler.jsonc` at repo root (created by `opennextjs init`).
 
 | Field | Value |
 |---|---|
-| Framework preset | `Next.js` |
-| Build command | `npx @opennextjs/cloudflare build` |
-| Build output directory | `.open-next/assets` |
-| Root directory | `/` (or `cv-next` if monorepo — here it's fine) |
-| Node version | `20` |
+| Framework preset | `None` (do NOT pick Next.js — it hard-codes `next build`) |
+| **Build command** | `npm run build:cf` (runs `opennextjs-cloudflare build` — produces `.open-next/`) |
+| **Deploy command** | `npx wrangler deploy` (picks up `wrangler.jsonc`, uploads `.open-next/worker.js` + assets) |
+| Build output directory | *(leave empty — Workers Builds ignores this for Workers deploys)* |
+| Root directory | `/cv-next` (the Next app lives in a subfolder of the repo) |
+| Node version | `22` |
+
+> 🚨 **Gotcha encountered 2026-04-20**: the default Cloudflare build command
+> `npm run build` only runs `next build` and produces `.next/` — it does NOT
+> create `.open-next/worker.js`. The deploy step then fails with
+> *"Could not find compiled Open Next config, did you run the build command?"*.
+> Fix: use `npm run build:cf` (already defined in `package.json` scripts).
 
 Compatibility flags (Settings → Functions → Compatibility flags):
 - `nodejs_compat`
