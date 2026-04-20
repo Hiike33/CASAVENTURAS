@@ -27,9 +27,14 @@ const INTENT_PROBES: Array<[string, string]> = [
   ['what if it rains in the rainforest?', 'ey-rain'],
   ['minimum age for cliff jumps?', 'ey-cliff-age'],
   ['do i need a recreation.gov permit?', 'ey-reservation-gov'],
-  ['how difficult is the hike?', 'ey-fitness'],
+  ['how difficult is the hike on el yunque?', 'ey-fitness'],
   ['what should i bring to el yunque? waterproof phone', 'ey-what-to-bring'],
   ['is el yunque safe for kids?', 'ey-kids-seniors'],
+  // Generic versions (no tour specified) → must route to multi-tour overviews
+  ['is it safe for kids?', 'generic-family-kids'],
+  ['is it hard?', 'generic-difficulty'],
+  ['what should i bring?', 'generic-what-to-bring'],
+  ['how long is it?', 'generic-duration'],
   ['how long is the rainforest tour?', 'ey-duration'],
   ['what makes el yunque special vs others?', 'ey-why-us'],
   // Catamaran specific

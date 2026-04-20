@@ -116,19 +116,22 @@ const INTENTS: Intent[] = [
     match: m => hasAny(m, ['recreation.gov', 'reservation.gov', 'park reservation', 'permit', 'park pass', 'entry fee']),
     faqId: 'ey-reservation-gov',
   },
+  // EY intents below require an explicit El Yunque keyword so that generic
+  // questions ("is it safe for kids?", "is it hard?", "what should I bring?")
+  // fall through to the generic multi-tour overviews further down.
   {
     id: 'ey-fitness',
-    match: m => hasAny(m, ['fitness', 'difficult', 'hard', 'easy', 'level', 'physical', 'workout', 'fit']),
+    match: m => hasAny(m, ['fitness', 'difficult', 'hard', 'easy', 'level', 'physical', 'workout', 'strenuous']) && hasAny(m, ['yunque', 'rainforest', 'jungle', 'forest', 'hike']),
     faqId: 'ey-fitness',
   },
   {
     id: 'ey-what-to-bring',
-    match: m => hasAny(m, ['bring', 'pack', 'wear shoes', 'water shoes', 'dry bag', 'waterproof', 'sunscreen']) && !hasAny(m, ['salsa', 'class']),
+    match: m => hasAny(m, ['bring', 'pack', 'wear shoes', 'water shoes', 'dry bag', 'waterproof', 'sunscreen']) && hasAny(m, ['yunque', 'rainforest', 'jungle', 'forest', 'hike']),
     faqId: 'ey-what-to-bring',
   },
   {
     id: 'ey-kids-seniors',
-    match: m => hasAny(m, ['kid', 'child', 'children', 'family', 'senior', 'elder', 'grandparent', 'age']) && hasAny(m, ['yunque', 'rainforest', 'jungle', 'forest', 'hike', 'safe', 'okay']),
+    match: m => hasAny(m, ['kid', 'child', 'children', 'family', 'senior', 'elder', 'grandparent']) && hasAny(m, ['yunque', 'rainforest', 'jungle', 'forest', 'hike']),
     faqId: 'ey-kids-seniors',
   },
   {
@@ -259,6 +262,59 @@ const INTENTS: Intent[] = [
     reply: () => ({
       text: `The fastest paths are email ${siteConfig.email} or WhatsApp ${siteConfig.phone}. We reply within a few hours during daytime in Puerto Rico (AST, UTC-4).`,
       ctas: [{ type: 'email', label: 'Email us' }, { type: 'whatsapp', label: 'WhatsApp' }],
+    }),
+  },
+
+  // ─── Generic multi-tour overviews ───────────────────────────────────
+  // These fire only when the user asks something generic without specifying
+  // a tour. Each composes a per-tour breakdown so visitors can pick the
+  // right fit. They sit below tour-qualified intents so "is el yunque safe
+  // for kids?" goes to ey-kids-seniors, not here.
+  {
+    id: 'generic-family-kids',
+    match: m => hasAny(m, ['kid', 'child', 'children', 'family', 'toddler', 'baby', 'safe for']),
+    reply: () => ({
+      text:
+        'Quick family fit by tour:\n\n' +
+        '• El Yunque: families welcome. Guided groups have included 5-year-olds and seniors. Cliff jumps (5 to 20 ft) are always optional, guides adapt the pace.\n' +
+        '• Catamaran: kids of any walking age are welcome, life jackets in kids\' sizes provided. Infants under 2 are not allowed for safety and insurance reasons. Open bar is 21+, minors get unlimited soft drinks.\n' +
+        '• Salsa Rooftop: beginner-friendly at any age, Zoe rotates partners so kids and parents dance together.\n\n' +
+        'For specific ages or mobility concerns, we are happy to help you pick the best fit.',
+      ctas: [{ type: 'email', label: 'Email us' }, { type: 'whatsapp', label: 'WhatsApp' }],
+      suggestions: ['Is it safe for kids on El Yunque?', 'Catamaran age minimum?'],
+    }),
+  },
+  {
+    id: 'generic-difficulty',
+    match: m => hasAny(m, ['difficult', 'difficulty', 'hard', 'easy', 'level', 'physical', 'fitness', 'strenuous', 'workout']),
+    reply: () => ({
+      text:
+        'Difficulty by tour:\n\n' +
+        '• El Yunque: moderate. Muddy jungle paths, river walking, optional cliff jumps. You can skip anything you are not comfortable with.\n' +
+        '• Catamaran: passive. You sail, swim, snorkel at your pace. No physical demand.\n' +
+        '• Salsa Rooftop: beginner-friendly. Zoe teaches from zero, no prior dance skill required.\n\n' +
+        'Not sure which fits you? Tell us about your group and we will pick.',
+      ctas: [{ type: 'email', label: 'Email us' }, { type: 'whatsapp', label: 'WhatsApp' }],
+    }),
+  },
+  {
+    id: 'generic-what-to-bring',
+    match: m => hasAny(m, ['what should i bring', 'what do i bring', 'what to bring', 'what to pack', 'what do i pack', 'what should i wear', 'what to wear']),
+    reply: () => ({
+      text:
+        'What to bring, by tour:\n\n' +
+        '• El Yunque: water shoes or old sneakers, dry bag, waterproof phone case, change of clothes, sunscreen, water. Life vests are provided.\n' +
+        '• Catamaran: swimwear, towel, reef-safe sunscreen, a light layer for sunset return. Snorkel gear and lunch are included.\n' +
+        '• Salsa Rooftop: comfortable shoes (sneakers fine, no heels needed), casual clothes, water. Arrive 10 minutes early.',
+    }),
+  },
+  {
+    id: 'generic-duration',
+    match: m => hasAny(m, ['how long', 'duration', 'how many hours']) && !hasAny(m, ['yunque', 'rainforest', 'jungle', 'forest', 'hike', 'catamaran', 'boat', 'cata', 'salsa', 'dance']),
+    reply: () => ({
+      text:
+        'Durations by tour:\n\n' +
+        tours.map(t => `• ${t.name}: ${t.duration}`).join('\n'),
     }),
   },
 ]
