@@ -172,7 +172,7 @@ function buildWebPage(wp: { path: string; name: string; dateModified?: string })
 }
 
 function Script({ data }: { data: unknown }) {
-  const json = JSON.stringify(data)
+  const json = JSON.stringify(data).replace(/</g, '\\u003c')
   const props = { type: 'application/ld+json' as const, dangerouslySetInnerHTML: { __html: json } }
   return <script {...props} />
 }

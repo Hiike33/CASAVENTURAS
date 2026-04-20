@@ -16,7 +16,7 @@ function buildList(items: Crumb[]) {
 }
 
 export default function Breadcrumb({ items }: { items: Crumb[] }) {
-  const json = JSON.stringify(buildList(items))
+  const json = JSON.stringify(buildList(items)).replace(/</g, '\\u003c')
   const props = { type: 'application/ld+json' as const, dangerouslySetInnerHTML: { __html: json } }
   return <script {...props} />
 }
