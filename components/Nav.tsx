@@ -91,19 +91,20 @@ export default function Nav() {
               </Link>
             </li>
           ))}
-
-          <li>
-            <LocaleSwitcher variant="desktop" />
-          </li>
         </ul>
 
-        {/* Desktop CTA */}
-        <Link
-          href="/#booking"
-          className="hidden md:inline-block text-[9.5px] font-semibold tracking-[0.14em] uppercase text-white bg-[#248D6C] px-[22px] py-[10px] hover:bg-[#1C6E54] transition-colors"
-        >
-          {t('bookNow')}
-        </Link>
+        {/* Desktop CTA cluster: locale switcher sits immediately left of the
+            Book now button, both in a single flex row so gap-5 keeps them
+            visually grouped without crowding the nav links above. */}
+        <div className="hidden md:flex items-center gap-5">
+          <LocaleSwitcher variant="desktop" />
+          <Link
+            href="/#booking"
+            className="inline-block text-[9.5px] font-semibold tracking-[0.14em] uppercase text-white bg-[#248D6C] px-[22px] py-[10px] hover:bg-[#1C6E54] transition-colors"
+          >
+            {t('bookNow')}
+          </Link>
+        </div>
 
         {/* Mobile burger */}
         <button
