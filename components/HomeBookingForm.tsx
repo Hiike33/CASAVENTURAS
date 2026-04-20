@@ -2,18 +2,22 @@
 import { useEffect, useState } from 'react'
 import { tours, siteConfig } from '@/lib/tours'
 import type { BokunAvailability, BokunAvailabilityResponse } from '@/lib/bokun/types'
+import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
+import CheckoutPanel from '@/components/CheckoutPanel'
 
 type AvailabilityState =
   | { kind: 'idle' }
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
-  | { kind: 'ok'; slots: number; soldOut: boolean }
+  | {
+      kind: 'ok'
+      slots: number
+      soldOut: boolean
+      firstSlot?: BokunAvailability
+    }
 
 const BOKUN_CHANNEL_UUID = process.env.NEXT_PUBLIC_BOKUN_CHANNEL_UUID
 
-// On-request tours are listed in the selector but don't yet have a Bókun
-// product configured — their slug is not in the `tours` array. Selecting
-// them falls back to an email CTA.
 const onRequestOptions = [
   { slug: 'rum', label: 'Rum Distillery Tour — on request' },
   { slug: 'surf', label: 'Learn to Surf — on request' },
@@ -24,15 +28,15 @@ export default function HomeBookingForm() {
   const [date, setDate] = useState('')
   const [guests, setGuests] = useState('2')
   const [availability, setAvailability] = useState<AvailabilityState>({ kind: 'idle' })
+  const [inCheckout, setInCheckout] = useState(false)
 
   const selectedTour = tours.find(t => t.slug === tourSlug)
   const productId = selectedTour?.bokunProductId
   const bokunConfigured = Boolean(productId && BOKUN_CHANNEL_UUID)
 
-  // Re-run availability lookup whenever tour OR date changes. Reset to idle
-  // when switching to an on-request tour (no product to query).
   useEffect(() => {
     setAvailability({ kind: 'idle' })
+    setInCheckout(false)
     if (!date || !productId) return
     const ctrl = new AbortController()
     setAvailability({ kind: 'loading' })
@@ -51,7 +55,9 @@ export default function HomeBookingForm() {
         )
         const soldOut =
           data.availabilities.length > 0 && data.availabilities.every(a => a.soldOut)
-        setAvailability({ kind: 'ok', slots: sumSlots, soldOut })
+        const firstSlot =
+          data.availabilities.find(a => !a.soldOut) ?? data.availabilities[0]
+        setAvailability({ kind: 'ok', slots: sumSlots, soldOut, firstSlot })
       })
       .catch(err => {
         if (err?.name === 'AbortError') return
@@ -73,6 +79,42 @@ export default function HomeBookingForm() {
   )}&body=${encodeURIComponent(
     `Hello,\n\nI'd like to book: ${tourSlug}\nDate: ${date || 'flexible'}\nGuests: ${guestsNum}\n`,
   )}`
+
+  const customCheckoutEnabled =
+    CLIENT_CHECKOUT_MODE !== 'disabled' && Boolean(productId)
+
+  if (
+    customCheckoutEnabled &&
+    inCheckout &&
+    selectedTour &&
+    availability.kind === 'ok' &&
+    availability.firstSlot
+  ) {
+    const slot = availability.firstSlot
+    const slotDate =
+      typeof slot.date === 'number'
+        ? new Date(slot.date).toISOString().slice(0, 10)
+        : date
+    const label = slot.startTimeLabel
+      ? `${slot.startTimeLabel}${slot.startTime ? ` · ${slot.startTime}` : ''}`
+      : slot.startTime ?? ''
+    return (
+      <CheckoutPanel
+        tour={selectedTour}
+        date={slotDate}
+        startTimeId={Number((slot as unknown as { startTimeId?: number }).startTimeId ?? 0)}
+        rateId={Number((slot as unknown as { defaultRateId?: number }).defaultRateId ?? 0)}
+        startTimeLabel={label}
+        onClose={() => setInCheckout(false)}
+      />
+    )
+  }
+
+  const disableSubmit =
+    customCheckoutEnabled &&
+    (availability.kind !== 'ok' ||
+      availability.soldOut ||
+      !availability.firstSlot)
 
   return (
     <div className="bg-white border border-[#E5E5E5] p-8">
@@ -128,7 +170,20 @@ export default function HomeBookingForm() {
         </div>
       )}
 
-      {bokunCheckoutUrl ? (
+      {customCheckoutEnabled ? (
+        <button
+          type="button"
+          disabled={disableSubmit}
+          onClick={() => setInCheckout(true)}
+          className="block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] transition-colors disabled:opacity-60"
+        >
+          {availability.kind === 'ok' && availability.soldOut
+            ? 'Sold out — pick another date'
+            : !date
+              ? 'Pick a date to continue'
+              : 'Confirm booking'}
+        </button>
+      ) : bokunCheckoutUrl ? (
         <a
           className="bokunButton block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] transition-colors aria-[disabled=true]:opacity-60"
           href={bokunCheckoutUrl}
