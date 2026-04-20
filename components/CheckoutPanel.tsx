@@ -83,7 +83,6 @@ function CheckoutPanelInner({
   } | null>(null)
   const [ctx, setCtx] = useState<CheckoutContext | null>(null)
   const [form, setForm] = useState({
-    title: '',
     firstName: '',
     lastName: '',
     email: '',
@@ -140,6 +139,11 @@ function CheckoutPanelInner({
   const showMeetingPoint =
     ctx?.meetingType === 'MEET_ON_LOCATION' && Boolean(meetingPoint)
   const showPickup = Boolean(ctx?.pickupService) && (ctx?.pickupPlaces.length ?? 0) > 0
+  // In dev-mock we always expose the custom-pickup toggle so the UX can be
+  // rehearsed before the vendor flips `customPickupAllowed` in Bokun.
+  // In live mode we strictly honour Bokun's flag.
+  const showCustomPickupToggle =
+    ctx?.customPickupAllowed === true || CLIENT_CHECKOUT_MODE === 'dev-mock'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -193,7 +197,10 @@ function CheckoutPanelInner({
           customPickupLat: form.customPickup ? form.customPickupLat : undefined,
           customPickupLon: form.customPickup ? form.customPickupLon : undefined,
           mainContactDetails: {
-            title: form.title || undefined,
+            // Title field was removed from the UI for inclusivity. If Bokun
+            // listed it as required for this product we still ship "MX"
+            // (gender-neutral) so the submit doesn't fail validation.
+            title: needs('title') ? 'MX' : undefined,
             firstName: form.firstName,
             lastName: form.lastName,
             email: form.email,
@@ -289,23 +296,6 @@ function CheckoutPanelInner({
         )}
 
         <Section title="Guest details">
-          {needs('title') && (
-            <Field id="cp-title" label="Title" required>
-              <select
-                id="cp-title"
-                required
-                value={form.title}
-                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                className="w-full bg-white border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors"
-              >
-                <option value="">Select…</option>
-                <option value="MR">Mr</option>
-                <option value="MS">Ms</option>
-                <option value="MX">Mx</option>
-              </select>
-            </Field>
-          )}
-
           <div className="grid grid-cols-2 gap-3">
             <Field id="cp-first" label="First name" required>
               <input
@@ -390,7 +380,7 @@ function CheckoutPanelInner({
                 </Field>
               )}
 
-              {ctx.customPickupAllowed && (
+              {showCustomPickupToggle && (
                 <CustomPickupToggle
                   on={form.customPickup}
                   onToggle={v =>
@@ -408,7 +398,7 @@ function CheckoutPanelInner({
                 />
               )}
 
-              {form.customPickup && ctx.customPickupAllowed && (
+              {form.customPickup && showCustomPickupToggle && (
                 <AddressAutocomplete
                   id="cp-custom-addr"
                   label="Pickup address"

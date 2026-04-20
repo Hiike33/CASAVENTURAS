@@ -18,11 +18,6 @@ type AvailabilityState =
 
 const BOKUN_CHANNEL_UUID = process.env.NEXT_PUBLIC_BOKUN_CHANNEL_UUID
 
-const onRequestOptions = [
-  { slug: 'rum', label: 'Rum Distillery Tour — on request' },
-  { slug: 'surf', label: 'Learn to Surf — on request' },
-]
-
 export default function HomeBookingForm() {
   const [tourSlug, setTourSlug] = useState(tours[0].slug)
   const [date, setDate] = useState('')
@@ -129,9 +124,6 @@ export default function HomeBookingForm() {
       >
         {tours.map(t => (
           <option key={t.slug} value={t.slug}>{t.name} — ${t.price}/person</option>
-        ))}
-        {onRequestOptions.map(o => (
-          <option key={o.slug} value={o.slug}>{o.label}</option>
         ))}
       </select>
 
