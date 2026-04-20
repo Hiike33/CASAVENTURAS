@@ -96,7 +96,7 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
       !availability.firstSlot)
 
   return (
-    <aside className="sticky top-[80px] border border-[#E5E5E5] bg-white">
+    <aside className="sticky top-[80px] border border-[#E5E5E5] bg-white shadow-hairline rounded-sm">
       <header className="bg-[#FAFAFA] border-b border-[#E5E5E5] px-6 py-5">
         <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C] mb-1.5">Starting from</p>
         <p className="text-[36px] font-light text-[#111] leading-none tracking-tight">${tour.price}</p>

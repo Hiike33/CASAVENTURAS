@@ -57,7 +57,7 @@ export default function ReviewsStrip({ reviews, filterTour, className = '' }: Pr
           <div className="text-[10px] text-[#F5A623] tracking-widest mb-3" aria-label={`${r.rating} out of 5 stars`}>
             ★★★★★
           </div>
-          <p className="text-[13px] font-light italic text-[#333] leading-relaxed mb-4 flex-1">
+          <p className="text-[16px] md:text-[17px] font-serif italic font-light text-[#2a2a2a] leading-relaxed mb-4 flex-1">
             &ldquo;{r.text}&rdquo;
           </p>
           <div className="text-[9px] font-normal tracking-[0.1em] uppercase text-[#bbb] mb-2">
