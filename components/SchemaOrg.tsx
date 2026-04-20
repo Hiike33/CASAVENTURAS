@@ -1,7 +1,19 @@
-import { siteConfig } from '@/lib/cms/data/site-config'
+import { siteConfig } from '@/lib/cms/data/site-config.en'
 import type { Tour, FAQ, Guide } from '@/lib/types/cms'
+import type { Locale } from '@/i18n/routing'
+
+// Maps i18n locale → schema.org BCP-47 language code. Puerto Rico uses es-PR
+// (not es-ES) for geographic accuracy; FR visitors are primarily from France
+// so fr-FR is the closest match.
+const SCHEMA_LANG: Record<Locale, string> = {
+  en: 'en-US',
+  es: 'es-PR',
+  fr: 'fr-FR',
+}
 
 type Props = {
+  /** Current page locale — drives inLanguage on all JSON-LD nodes. */
+  locale?: Locale
   /** When provided, emits a TouristTrip schema for this tour. */
   tour?: Tour
   /** Emit Person[] schema (GEO / E-E-A-T lever). */
@@ -10,7 +22,7 @@ type Props = {
   faqs?: FAQ[]
   /** Emit ItemList wrapping the provided tours (home page catalog view). */
   itemList?: Tour[]
-  /** Emit WebSite + SearchAction schema — use ONCE at root (layout or home). */
+  /** Emit WebSite + SearchAction schema; use ONCE at root (layout or home). */
   website?: boolean
   /** Emit a generic WebPage node for legal/informational pages. */
   webPage?: { path: string; name: string; dateModified?: string }
@@ -65,7 +77,7 @@ function buildOrganization() {
   }
 }
 
-function buildTouristTrip(tour: Tour) {
+function buildTouristTrip(tour: Tour, locale: Locale) {
   return {
     '@context': 'https://schema.org',
     '@type': 'TouristTrip',
@@ -73,6 +85,7 @@ function buildTouristTrip(tour: Tour) {
     name: tour.name,
     description: tour.description,
     touristType: tour.category,
+    inLanguage: SCHEMA_LANG[locale],
     url: `${siteConfig.url}/tours/${tour.slug}`,
     image: tour.photos.map(p => siteConfig.url.replace(/\/$/, '') + p),
     offers: {
@@ -92,10 +105,11 @@ function buildTouristTrip(tour: Tour) {
   }
 }
 
-function buildFaqPage(faqs: FAQ[]) {
+function buildFaqPage(faqs: FAQ[], locale: Locale) {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    inLanguage: SCHEMA_LANG[locale],
     mainEntity: faqs.map(f => ({
       '@type': 'Question',
       name: f.question,
@@ -135,7 +149,7 @@ function buildItemList(tours: Tour[]) {
   }
 }
 
-function buildWebSite() {
+function buildWebSite(locale: Locale) {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -143,7 +157,7 @@ function buildWebSite() {
     name: siteConfig.name,
     url: siteConfig.url,
     description: siteConfig.tagline,
-    inLanguage: 'en-US',
+    inLanguage: SCHEMA_LANG[locale],
     publisher: { '@id': ORG_ID },
     potentialAction: {
       '@type': 'SearchAction',
@@ -156,7 +170,7 @@ function buildWebSite() {
   }
 }
 
-function buildWebPage(wp: { path: string; name: string; dateModified?: string }) {
+function buildWebPage(wp: { path: string; name: string; dateModified?: string }, locale: Locale) {
   const url = `${siteConfig.url}${wp.path}`
   return {
     '@context': 'https://schema.org',
@@ -166,7 +180,7 @@ function buildWebPage(wp: { path: string; name: string; dateModified?: string })
     name: wp.name,
     isPartOf: { '@id': WEBSITE_ID },
     about: { '@id': ORG_ID },
-    inLanguage: 'en-US',
+    inLanguage: SCHEMA_LANG[locale],
     ...(wp.dateModified && { dateModified: wp.dateModified }),
   }
 }
@@ -177,13 +191,13 @@ function Script({ data }: { data: unknown }) {
   return <script {...props} />
 }
 
-export default function SchemaOrg({ tour, guides, faqs, itemList, website, webPage }: Props) {
+export default function SchemaOrg({ locale = 'en', tour, guides, faqs, itemList, website, webPage }: Props) {
   return (
     <>
-      <Script data={tour ? buildTouristTrip(tour) : { '@context': 'https://schema.org', ...buildOrganization() }} />
-      {website && <Script data={buildWebSite()} />}
-      {webPage && <Script data={buildWebPage(webPage)} />}
-      {faqs && faqs.length > 0 && <Script data={buildFaqPage(faqs)} />}
+      <Script data={tour ? buildTouristTrip(tour, locale) : { '@context': 'https://schema.org', ...buildOrganization() }} />
+      {website && <Script data={buildWebSite(locale)} />}
+      {webPage && <Script data={buildWebPage(webPage, locale)} />}
+      {faqs && faqs.length > 0 && <Script data={buildFaqPage(faqs, locale)} />}
       {guides && guides.length > 0 && <Script data={buildGuidesGraph(guides)} />}
       {itemList && itemList.length > 0 && <Script data={buildItemList(itemList)} />}
     </>

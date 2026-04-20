@@ -1,5 +1,5 @@
 import type { FAQ } from '@/lib/types/cms'
-import { tours } from './tours.ts'
+import { tours } from './tours.en.ts'
 
 const priceOf = (slug: string): number => {
   const t = tours.find(x => x.slug === slug)

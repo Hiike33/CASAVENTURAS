@@ -1,18 +1,16 @@
 /**
- * Backward-compat shim.
+ * Backward-compat shim for sync Client Component imports.
  *
- * Preserves the original `@/lib/tours` import surface used across 17 call
- * sites while the real source of truth now lives in lib/cms/.
+ * Returns the EN (default locale) content. Locale-aware Server Components
+ * should use `getCMS().getTours(locale)` from `@/lib/cms` instead.
  *
- * Prefer the new API in new code:
- *   import { getCMS } from '@/lib/cms'
- *   const tours = await getCMS().getTours()
- *
- * This shim will be removed once all client components accept data via
- * props (Phase 2, when plugging a real CMS).
+ * All 17 call sites of `@/lib/tours` are in Client Components that don't
+ * yet receive props from a localized server parent (Nav, etc.). Those
+ * display EN content even on /es or /fr routes for now; translating them
+ * is a Phase 2b refactor and tracked in D-018.
  */
 
 export type { Tour, Review, SiteConfig } from '@/lib/types/cms'
-export { tours } from '@/lib/cms/data/tours'
-export { reviews } from '@/lib/cms/data/reviews'
-export { siteConfig } from '@/lib/cms/data/site-config'
+export { tours } from '@/lib/cms/data/tours.en'
+export { reviews } from '@/lib/cms/data/reviews.en'
+export { siteConfig } from '@/lib/cms/data/site-config.en'

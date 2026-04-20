@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { matchIntent, matchIntentId, buildMailto, buildWhatsapp, INTENT_FAQ_REFS } from './cavi-intents.ts'
-import { faqById } from './cms/data/faqs.ts'
+import { faqById } from './cms/data/faqs.en.ts'
 
 // ─── Intent → FAQ id mapping ──────────────────────────────────────────
 // For each probe, we assert the intent that fires AND (when faq-backed)

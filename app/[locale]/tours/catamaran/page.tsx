@@ -11,8 +11,8 @@ import Breadcrumb from '@/components/Breadcrumb'
 import StickyMobileCTA from '@/components/StickyMobileCTA'
 import HeroVideo from '@/components/HeroVideo'
 import { tours, reviews, siteConfig } from '@/lib/tours'
-import { tourFaqs } from '@/lib/cms/data/faqs'
-import { guides } from '@/lib/cms/data/guides'
+import { tourFaqs } from '@/lib/cms/data/faqs.en'
+import { guides } from '@/lib/cms/data/guides.en'
 
 const tour = tours.find(t => t.slug === 'catamaran')!
 const catamaranFaqs = tourFaqs['catamaran']

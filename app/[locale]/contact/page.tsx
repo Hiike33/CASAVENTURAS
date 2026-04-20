@@ -6,7 +6,7 @@ import SchemaOrg from '@/components/SchemaOrg'
 import Breadcrumb from '@/components/Breadcrumb'
 import ContactForm from '@/components/ContactForm'
 import { tours, siteConfig } from '@/lib/tours'
-import { generalFaqs } from '@/lib/cms/data/faqs'
+import { generalFaqs } from '@/lib/cms/data/faqs.en'
 
 export function generateMetadata(): Metadata {
   return {

@@ -1,6 +1,6 @@
-import { tours } from './cms/data/tours.ts'
-import { siteConfig } from './cms/data/site-config.ts'
-import { faqById } from './cms/data/faqs.ts'
+import { tours } from './cms/data/tours.en.ts'
+import { siteConfig } from './cms/data/site-config.en.ts'
+import { faqById } from './cms/data/faqs.en.ts'
 
 // Deterministic intent matcher for Cavi. No LLM. Intents map user keywords to
 // either (a) a FAQ id in lib/cms/data/faqs.ts (the authoritative answer), or
