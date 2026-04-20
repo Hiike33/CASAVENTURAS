@@ -173,7 +173,7 @@ export default async function Home({ params }: Props) {
           <h2 className="text-[#111] font-light tracking-tight mb-6 leading-[1.15]" style={{ fontSize: 'clamp(32px, 3.6vw, 48px)' }}>
             {t.whyWeDoIt}
           </h2>
-          <p className="text-[20px] md:text-[22px] font-serif font-light italic text-[#2a3434] leading-[1.55] mb-8">
+          <p className="text-[16px] md:text-[17px] font-light text-[#354040] leading-[1.75] mb-8 italic">
             {t.storyQuote}
           </p>
           <a

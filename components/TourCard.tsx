@@ -39,13 +39,8 @@ export default function TourCard({ tour, featured = false }: { tour: Tour; featu
 
       {/* Top gradient — carries the "Most booked" badge */}
       <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/50 to-transparent" aria-hidden />
-      {/* Bottom gradient — readability base for the text block */}
-      <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-black/70 via-black/30 to-transparent" aria-hidden />
-      {/* Glass frosted panel (D-019) — intensifies on hover for editorial cross-dissolve */}
-      <div
-        className="absolute inset-x-0 bottom-0 h-[42%] backdrop-blur-md bg-black/15 border-t border-white/10 transition-[backdrop-filter,background-color] duration-[700ms] ease-out group-hover:backdrop-blur-xl group-hover:bg-black/35"
-        aria-hidden
-      />
+      {/* Bottom gradient — carries the full text block */}
+      <div className="absolute inset-x-0 bottom-0 h-[70%] bg-gradient-to-t from-black/85 via-black/40 to-transparent" aria-hidden />
 
       {featured && (
         <span className="absolute top-8 left-6 md:top-12 md:left-12 lg:top-14 lg:left-16 xl:left-24 bg-[#248D6C] text-white text-[9px] md:text-[10px] font-semibold tracking-[0.18em] uppercase px-3 py-1.5 z-20">
