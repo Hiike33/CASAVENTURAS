@@ -1,9 +1,16 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { tours } from '@/lib/tours'
+import { useLocale, useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
+import { toursFor } from '@/lib/cms/client'
+import type { Locale } from '@/i18n/routing'
+import LocaleSwitcher from '@/components/LocaleSwitcher'
 
 export default function Nav() {
+  const t = useTranslations('Nav')
+  const locale = useLocale() as Locale
+  const tours = toursFor(locale)
+
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -17,6 +24,12 @@ export default function Nav() {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
+
+  const secondaryLinks = [
+    { label: t('reviews'), href: '/#reviews' },
+    { label: t('about'), href: '/#story' },
+    { label: t('contact'), href: '/contact' },
+  ] as const
 
   return (
     <>
@@ -40,48 +53,48 @@ export default function Nav() {
               aria-haspopup="menu"
               aria-expanded="false"
             >
-              Experiences
+              {t('experiences')}
               <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" className="opacity-60 group-hover:translate-y-0.5 transition-transform">
                 <path d="M0 2L4 6L8 2Z" />
               </svg>
             </button>
             <div className="absolute top-full right-0 pt-3 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity" role="menu">
               <div className="w-[280px] bg-white border border-[#E5E5E5] shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
-                {tours.map(t => (
+                {tours.map(tour => (
                   <Link
-                    key={t.slug}
-                    href={`/tours/${t.slug}`}
+                    key={tour.slug}
+                    href={`/tours/${tour.slug}`}
                     className="flex items-center justify-between gap-4 px-5 py-3.5 border-b border-[#E5E5E5] last:border-b-0 hover:bg-[#E6F3EE] transition-colors group/item"
                     role="menuitem"
-                    data-test={`nav-tour-${t.slug}`}
+                    data-test={`nav-tour-${tour.slug}`}
                   >
                     <div>
-                      <p className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#248D6C] mb-0.5">{t.category}</p>
-                      <p className="text-[#111] text-[13px] font-light">{t.shortName}</p>
+                      <p className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#248D6C] mb-0.5">{tour.category}</p>
+                      <p className="text-[#111] text-[13px] font-light">{tour.shortName}</p>
                     </div>
                     <span className="text-[11px] font-light text-[#888] group-hover/item:text-[#248D6C] transition-colors">
-                      ${t.price} →
+                      ${tour.price} →
                     </span>
                   </Link>
                 ))}
                 <Link href="/#tours" className="block px-5 py-3 bg-[#248D6C] hover:bg-[#1C6E54] transition-colors text-white text-[9.5px] font-semibold tracking-[0.14em] uppercase text-center" role="menuitem">
-                  View all experiences →
+                  {t('viewAll')} →
                 </Link>
               </div>
             </div>
           </li>
 
-          {[
-            { label: 'Reviews', href: '/#reviews' },
-            { label: 'About', href: '/#story' },
-            { label: 'Contact', href: '/contact' },
-          ].map(link => (
+          {secondaryLinks.map(link => (
             <li key={link.href}>
               <Link href={link.href} className="text-[9.5px] font-medium tracking-[0.14em] uppercase text-[#4F4F4E] hover:text-[#111] transition-colors">
                 {link.label}
               </Link>
             </li>
           ))}
+
+          <li>
+            <LocaleSwitcher variant="desktop" />
+          </li>
         </ul>
 
         {/* Desktop CTA */}
@@ -89,14 +102,14 @@ export default function Nav() {
           href="/#booking"
           className="hidden md:inline-block text-[9.5px] font-semibold tracking-[0.14em] uppercase text-white bg-[#248D6C] px-[22px] py-[10px] hover:bg-[#1C6E54] transition-colors"
         >
-          Book now
+          {t('bookNow')}
         </Link>
 
         {/* Mobile burger */}
         <button
           type="button"
           className="md:hidden w-9 h-9 flex flex-col items-center justify-center gap-[5px] group"
-          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-label={mobileOpen ? t('closeMenu') : t('openMenu')}
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen(v => !v)}
           data-test="nav-burger"
@@ -116,34 +129,30 @@ export default function Nav() {
       <aside
         className={`md:hidden fixed top-[62px] right-0 bottom-0 w-[86%] max-w-[320px] bg-white z-50 overflow-y-auto transition-transform duration-300 border-l border-[#E5E5E5] ${mobileOpen ? 'translate-x-0' : 'translate-x-full'}`}
         role="dialog"
-        aria-label="Mobile navigation"
+        aria-label="Casa Venturas"
         aria-hidden={!mobileOpen}
       >
         <div className="py-6 px-6">
-          <p className="text-[10px] font-medium tracking-[0.22em] uppercase text-[#248D6C] mb-4">Experiences</p>
+          <p className="text-[10px] font-medium tracking-[0.22em] uppercase text-[#248D6C] mb-4">{t('experiences')}</p>
           <div className="flex flex-col border border-[#E5E5E5] mb-6">
-            {tours.map(t => (
+            {tours.map(tour => (
               <Link
-                key={t.slug}
-                href={`/tours/${t.slug}`}
+                key={tour.slug}
+                href={`/tours/${tour.slug}`}
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center justify-between gap-4 px-5 py-3.5 border-b border-[#E5E5E5] last:border-b-0 hover:bg-[#E6F3EE] transition-colors"
               >
                 <div>
-                  <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#248D6C] mb-0.5">{t.category}</p>
-                  <p className="text-[#111] text-[14px] font-light">{t.shortName}</p>
+                  <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#248D6C] mb-0.5">{tour.category}</p>
+                  <p className="text-[#111] text-[14px] font-light">{tour.shortName}</p>
                 </div>
-                <span className="text-[12px] font-light text-[#888]">${t.price}</span>
+                <span className="text-[12px] font-light text-[#888]">${tour.price}</span>
               </Link>
             ))}
           </div>
 
           <ul className="flex flex-col gap-0 border-t border-[#E5E5E5]">
-            {[
-              { label: 'Reviews', href: '/#reviews' },
-              { label: 'About', href: '/#story' },
-              { label: 'Contact', href: '/contact' },
-            ].map(link => (
+            {secondaryLinks.map(link => (
               <li key={link.href}>
                 <Link
                   href={link.href}
@@ -156,12 +165,16 @@ export default function Nav() {
             ))}
           </ul>
 
+          <div className="mt-6 mb-6">
+            <LocaleSwitcher variant="mobile" />
+          </div>
+
           <Link
             href="/#booking"
             onClick={() => setMobileOpen(false)}
-            className="block mt-6 bg-[#248D6C] text-white text-[11px] font-semibold tracking-[0.16em] uppercase text-center py-4 hover:bg-[#1C6E54] transition-colors"
+            className="block bg-[#248D6C] text-white text-[11px] font-semibold tracking-[0.16em] uppercase text-center py-4 hover:bg-[#1C6E54] transition-colors"
           >
-            Book now
+            {t('bookNow')}
           </Link>
         </div>
       </aside>

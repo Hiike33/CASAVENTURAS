@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { loadStripe, type Stripe } from '@stripe/stripe-js'
 import {
   Elements,
@@ -17,6 +18,8 @@ import type {
 import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
 import { htmlToList } from '@/lib/html/to-list'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
+
+type T = ReturnType<typeof useTranslations<'CheckoutPanel'>>
 
 // Inline checkout panel wired to Bókun + Stripe.
 //
@@ -73,6 +76,8 @@ function CheckoutPanelInner({
   devMock = CLIENT_CHECKOUT_MODE === 'dev-mock',
   onClose,
 }: CheckoutPanelProps) {
+  const t = useTranslations('CheckoutPanel')
+  const tCommon = useTranslations('Common')
   const stripe = useStripe()
   const elements = useElements()
   const [step, setStep] = useState<Step>('form')
@@ -149,12 +154,12 @@ function CheckoutPanelInner({
     e.preventDefault()
     if (!ctx) return
     if (!stripe || !elements) {
-      setErrorMsg('Payment library not ready. Please retry in a moment.')
+      setErrorMsg(t('paymentLibraryNotReady'))
       return
     }
     const card = elements.getElement(CardElement)
     if (!card) {
-      setErrorMsg('Card input not found.')
+      setErrorMsg(t('cardNotFound'))
       return
     }
 
@@ -166,7 +171,7 @@ function CheckoutPanelInner({
     })
     if (stripeError || !token) {
       setStep('error')
-      setErrorMsg(stripeError?.message ?? 'Card could not be validated.')
+      setErrorMsg(stripeError?.message ?? t('cardValidationError'))
       return
     }
 
@@ -227,7 +232,7 @@ function CheckoutPanelInner({
       setStep('success')
     } catch (err) {
       setStep('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Network error.')
+      setErrorMsg(err instanceof Error ? err.message : t('networkError'))
     }
   }
 
@@ -238,25 +243,26 @@ function CheckoutPanelInner({
         total={confirmation.total}
         date={date}
         code={confirmation.code}
+        t={t}
       />
     )
   }
 
   return (
     <aside className="border border-[#E5E5E5] bg-white">
-      {devMock && <DevMockBanner />}
+      {devMock && <DevMockBanner t={t} />}
 
       <header className="bg-[#FAFAFA] border-b border-[#E5E5E5] px-6 py-5 flex items-start justify-between gap-4">
         <div>
           <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C] mb-1.5">
-            Secure checkout
+            {t('secureCheckout')}
           </p>
           <p className="text-[#111] text-[15px] font-normal mb-1">
             {ctx?.title ?? tour.name}
           </p>
           <p className="text-[12px] font-light text-[#717170]">
             {date} · {startTimeLabel} · {totalGuests}{' '}
-            {totalGuests === 1 ? 'guest' : 'guests'}
+            {totalGuests === 1 ? tCommon('guest') : tCommon('guests')}
           </p>
         </div>
         {onClose && (
@@ -264,7 +270,7 @@ function CheckoutPanelInner({
             type="button"
             onClick={onClose}
             className="text-[#717170] hover:text-[#111] transition-colors text-[18px] leading-none px-2"
-            aria-label="Close checkout"
+            aria-label={t('closeCheckout')}
           >
             ×
           </button>
@@ -272,12 +278,12 @@ function CheckoutPanelInner({
       </header>
 
       {showMeetingPoint && meetingPoint && (
-        <MeetingPointBlock point={meetingPoint} />
+        <MeetingPointBlock point={meetingPoint} t={t} />
       )}
 
       <form onSubmit={handleSubmit} className="p-6 space-y-5">
         {ctx && ctx.pricingCategories.length > 0 && (
-          <Section title="Guests">
+          <Section title={t('guests')}>
             <div className="border border-[#E5E5E5]">
               {ctx.pricingCategories.map((c, idx) => (
                 <PricingCategoryRow
@@ -295,52 +301,52 @@ function CheckoutPanelInner({
           </Section>
         )}
 
-        <Section title="Guest details">
+        <Section title={t('guestDetails')}>
           <div className="grid grid-cols-2 gap-3">
-            <Field id="cp-first" label="First name" required>
+            <Field id="cp-first" label={t('firstName')} required>
               <input
                 id="cp-first"
                 type="text"
                 required
                 value={form.firstName}
                 onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
-                placeholder="Jane"
+                placeholder={t('firstNamePh')}
                 className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
               />
             </Field>
-            <Field id="cp-last" label="Last name" required>
+            <Field id="cp-last" label={t('lastName')} required>
               <input
                 id="cp-last"
                 type="text"
                 required
                 value={form.lastName}
                 onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
-                placeholder="Doe"
+                placeholder={t('lastNamePh')}
                 className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
               />
             </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field id="cp-email" label="Email" required>
+            <Field id="cp-email" label={t('email')} required>
               <input
                 id="cp-email"
                 type="email"
                 required
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                placeholder="jane@example.com"
+                placeholder={t('emailPh')}
                 className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
               />
             </Field>
-            <Field id="cp-phone" label="Phone" required={needs('phoneNumber')}>
+            <Field id="cp-phone" label={t('phone')} required={needs('phoneNumber')}>
               <input
                 id="cp-phone"
                 type="tel"
                 required={needs('phoneNumber')}
                 value={form.phone}
                 onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                placeholder="+1 555 0123"
+                placeholder={t('phonePh')}
                 className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
               />
             </Field>
@@ -363,18 +369,19 @@ function CheckoutPanelInner({
                   onChange={v =>
                     setForm(f => ({ ...f, pickupTitle: v, pickupId: null }))
                   }
+                  t={t}
                 />
               )}
 
               {needsRoomNumber && !form.customPickup && (
-                <Field id="cp-room" label="Room number" required>
+                <Field id="cp-room" label={t('roomNumber')} required>
                   <input
                     id="cp-room"
                     type="text"
                     required
                     value={form.roomNumber}
                     onChange={e => setForm(f => ({ ...f, roomNumber: e.target.value }))}
-                    placeholder="e.g. 412"
+                    placeholder={t('roomNumberPh')}
                     className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
                   />
                 </Field>
@@ -395,13 +402,14 @@ function CheckoutPanelInner({
                       customPickupLon: v ? f.customPickupLon : undefined,
                     }))
                   }
+                  t={t}
                 />
               )}
 
               {form.customPickup && showCustomPickupToggle && (
                 <AddressAutocomplete
                   id="cp-custom-addr"
-                  label="Pickup address"
+                  label={t('pickupAddress')}
                   required
                   value={{
                     text: form.customPickupAddress,
@@ -416,8 +424,8 @@ function CheckoutPanelInner({
                       customPickupLon: v.lon,
                     }))
                   }
-                  placeholder="Start typing your Puerto Rico address…"
-                  hint="Our guide will contact you to confirm the exact pickup time."
+                  placeholder={t('pickupAddressPh')}
+                  hint={t('pickupAddressHint')}
                 />
               )}
             </>
@@ -425,7 +433,7 @@ function CheckoutPanelInner({
         </Section>
 
         {ctx && ctx.bookingQuestions.length > 0 && (
-          <Section title="A few more questions">
+          <Section title={t('moreQuestions')}>
             {ctx.bookingQuestions.map(q => (
               <Field
                 key={q.id}
@@ -451,13 +459,13 @@ function CheckoutPanelInner({
           </Section>
         )}
 
-        <Field id="cp-requests" label="Special requests (optional)">
+        <Field id="cp-requests" label={t('specialRequests')}>
           <textarea
             id="cp-requests"
             rows={2}
             value={form.requests}
             onChange={e => setForm(f => ({ ...f, requests: e.target.value }))}
-            placeholder="Dietary needs, celebration, anything useful…"
+            placeholder={t('specialRequestsPh')}
             className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa] resize-none"
           />
         </Field>
@@ -468,15 +476,16 @@ function CheckoutPanelInner({
             excluded={ctx.content.excluded}
             attention={ctx.content.attention}
             requirements={ctx.content.requirements}
+            t={t}
           />
         )}
 
         <div className="h-px bg-[#E5E5E5]" />
 
-        <Section title="Payment">
-          <StripeCard fallback={!STRIPE_KEY} />
+        <Section title={t('payment')}>
+          <StripeCard fallback={!STRIPE_KEY} t={t} />
           <p className="text-[10px] font-light text-[#717170] leading-relaxed mt-1">
-            Payment is processed securely by Stripe. Your card details never reach our servers.
+            {t('paymentNote')}
           </p>
         </Section>
 
@@ -488,7 +497,7 @@ function CheckoutPanelInner({
 
         <div className="bg-[#FAFAFA] border border-[#E5E5E5] px-4 py-3 flex items-baseline justify-between">
           <span className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#717170]">
-            Total
+            {t('total')}
           </span>
           <span className="text-[26px] font-light text-[#111] tracking-tight leading-none">
             ${total}
@@ -500,22 +509,21 @@ function CheckoutPanelInner({
           disabled={step === 'submitting' || totalGuests === 0 || !stripe}
           className="w-full bg-[#248D6C] text-white text-[10px] font-semibold tracking-[0.16em] uppercase py-4 hover:bg-[#1C6E54] transition-colors disabled:opacity-60"
         >
-          {step === 'submitting' ? 'Processing…' : `Pay $${total} & confirm booking`}
+          {step === 'submitting' ? t('processing') : t('payAndConfirm', { amount: total })}
         </button>
 
-        <CancellationLine policy={ctx?.cancellationPolicy} />
+        <CancellationLine policy={ctx?.cancellationPolicy} t={t} />
       </form>
     </aside>
   )
 }
 
-function StripeCard({ fallback }: { fallback: boolean }) {
+function StripeCard({ fallback, t }: { fallback: boolean; t: T }) {
   if (fallback) {
     return (
       <div className="border border-[#E5E5E5] bg-white px-3.5 py-3 flex items-center gap-3">
         <span className="text-[11px] font-light text-[#717170]">
-          Stripe publishable key missing — card input disabled. Set{' '}
-          <code className="text-[#4F4F4E]">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code>.
+          {t('stripeMissing')}
         </span>
       </div>
     )
@@ -543,7 +551,7 @@ function StripeCard({ fallback }: { fallback: boolean }) {
   )
 }
 
-function MeetingPointBlock({ point }: { point: StartPoint }) {
+function MeetingPointBlock({ point, t }: { point: StartPoint; t: T }) {
   const lines = [
     point.addressLine1,
     point.addressLine2,
@@ -558,7 +566,7 @@ function MeetingPointBlock({ point }: { point: StartPoint }) {
   return (
     <div className="bg-[#E6F3EE] border-b border-[#B8D9CF] px-6 py-4">
       <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C] mb-1.5 flex items-center gap-2">
-        <PinIcon /> Meeting point
+        <PinIcon /> {t('meetingPoint')}
       </p>
       <p className="text-[#111] text-[13px] font-medium leading-tight">{point.title}</p>
       <p className="text-[12px] font-light text-[#4F4F4E] leading-[1.6] mt-0.5">
@@ -570,7 +578,7 @@ function MeetingPointBlock({ point }: { point: StartPoint }) {
         rel="noopener noreferrer"
         className="inline-block mt-2 text-[10px] font-medium tracking-[0.14em] uppercase text-[#248D6C] border-b border-[#248D6C]/30 hover:border-[#248D6C] transition-colors"
       >
-        View on map →
+        {t('viewOnMap')}
       </a>
     </div>
   )
@@ -579,9 +587,11 @@ function MeetingPointBlock({ point }: { point: StartPoint }) {
 function CustomPickupToggle({
   on,
   onToggle,
+  t,
 }: {
   on: boolean
   onToggle: (v: boolean) => void
+  t: T
 }) {
   return (
     <button
@@ -589,9 +599,7 @@ function CustomPickupToggle({
       onClick={() => onToggle(!on)}
       className="w-full text-left text-[11px] font-medium tracking-[0.08em] text-[#248D6C] border-t border-[#E5E5E5] pt-3 hover:text-[#1C6E54] transition-colors"
     >
-      {on
-        ? '← Choose a listed hotel instead'
-        : '✎ Not staying at a listed hotel? Enter custom address'}
+      {on ? t('chooseListedHotel') : t('customPickupToggle')}
     </button>
   )
 }
@@ -601,11 +609,13 @@ function WhatsIncludedPanel({
   excluded,
   attention,
   requirements,
+  t,
 }: {
   included?: string
   excluded?: string
   attention?: string
   requirements?: string
+  t: T
 }) {
   const [open, setOpen] = useState(false)
   const includedList = htmlToList(included)
@@ -623,7 +633,7 @@ function WhatsIncludedPanel({
         className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-[#FAFAFA] transition-colors"
       >
         <span className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C]">
-          What&apos;s included &amp; good to know
+          {t('included')}
         </span>
         <span
           className={`text-[#717170] transition-transform ${open ? 'rotate-180' : ''}`}
@@ -634,24 +644,24 @@ function WhatsIncludedPanel({
       {open && (
         <div className="px-4 pb-4 pt-1 space-y-4">
           {includedList.length > 0 && (
-            <IncludeExcludeList title="Included" items={includedList} positive />
+            <IncludeExcludeList title={t('includedTitle')} items={includedList} positive />
           )}
           {excludedList.length > 0 && (
-            <IncludeExcludeList title="Not included" items={excludedList} positive={false} />
+            <IncludeExcludeList title={t('notIncluded')} items={excludedList} positive={false} />
           )}
           {attentionList.length > 0 && (
             <div>
               <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#717170] mb-2">
-                Please note
+                {t('pleaseNote')}
               </p>
               <ul className="space-y-1.5">
-                {attentionList.map((t, i) => (
+                {attentionList.map((item, i) => (
                   <li
                     key={i}
                     className="flex items-start gap-2 text-[12px] font-light text-[#4F4F4E] leading-[1.5]"
                   >
                     <span className="inline-block w-1 h-1 bg-[#717170] mt-[7px] flex-shrink-0" />
-                    {t}
+                    {item}
                   </li>
                 ))}
               </ul>
@@ -660,7 +670,7 @@ function WhatsIncludedPanel({
           {requirementsList.length > 0 && (
             <div>
               <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#717170] mb-2">
-                Requirements
+                {t('requirements')}
               </p>
               <p className="text-[12px] font-light text-[#4F4F4E] leading-[1.6]">
                 {requirementsList.join(' ')}
@@ -688,7 +698,7 @@ function IncludeExcludeList({
         {title}
       </p>
       <ul className="space-y-1.5">
-        {items.map((t, i) => (
+        {items.map((item, i) => (
           <li
             key={i}
             className="flex items-start gap-2 text-[12px] font-light text-[#4F4F4E] leading-[1.5]"
@@ -698,7 +708,7 @@ function IncludeExcludeList({
             ) : (
               <span className="text-[#717170] mt-[-1px]">×</span>
             )}
-            <span>{t}</span>
+            <span>{item}</span>
           </li>
         ))}
       </ul>
@@ -781,11 +791,13 @@ function PickupCombobox({
   value,
   onSelect,
   onChange,
+  t,
 }: {
   places: PickupPlace[]
   value: string
   onSelect: (p: PickupPlace) => void
   onChange: (v: string) => void
+  t: T
 }) {
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -813,7 +825,7 @@ function PickupCombobox({
         htmlFor="cp-pickup"
         className="block text-[9px] font-normal tracking-[0.14em] uppercase text-[#888] mb-1.5"
       >
-        Hotel pickup <span className="text-[#248D6C]">*</span>
+        {t('hotelPickup')} <span className="text-[#248D6C]">*</span>
       </label>
       <div className="relative">
         <input
@@ -826,7 +838,7 @@ function PickupCombobox({
             onChange(e.target.value)
             setOpen(true)
           }}
-          placeholder="Search your hotel…"
+          placeholder={t('searchHotel')}
           autoComplete="off"
           className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 pr-9 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
         />
@@ -852,7 +864,7 @@ function PickupCombobox({
                 {p.title}
                 {p.askForRoomNumber && (
                   <span className="ml-2 text-[9px] tracking-[0.12em] uppercase text-[#717170]">
-                    Room # required
+                    {t('roomRequired')}
                   </span>
                 )}
               </button>
@@ -862,11 +874,11 @@ function PickupCombobox({
       )}
       {open && filtered.length === 0 && q !== '' && (
         <p className="absolute z-10 left-0 right-0 mt-1 bg-white border border-[#E5E5E5] px-3.5 py-3 text-[12px] font-light text-[#717170]">
-          No hotel matches &quot;{value}&quot;.
+          {t('noHotelMatch', { query: value })}
         </p>
       )}
       <p className="text-[10px] font-light text-[#717170] mt-1.5">
-        {places.length} pickup locations available · start typing to filter
+        {t('pickupLocations', { count: places.length })}
       </p>
     </div>
   )
@@ -908,14 +920,16 @@ function Field({
 
 function CancellationLine({
   policy,
+  t,
 }: {
   policy?: { title: string; fullRefundBeforeHours?: number }
+  t: T
 }) {
   const hours = policy?.fullRefundBeforeHours
   const text =
     hours === undefined
-      ? 'Instant confirmation · Powered by Bókun & Stripe'
-      : `Free cancellation up to ${hours}h · Instant confirmation · Powered by Bókun & Stripe`
+      ? t('cancellationDefault')
+      : t('cancellationWithHours', { hours })
   return <p className="text-[9.5px] text-center text-[#aaa] font-light">{text}</p>
 }
 
@@ -941,10 +955,10 @@ function PinIcon() {
   )
 }
 
-function DevMockBanner() {
+function DevMockBanner({ t }: { t: T }) {
   return (
     <div className="bg-[#FFF8E1] border-b border-[#E6D89A] px-6 py-2 text-[10px] font-medium tracking-[0.14em] uppercase text-[#8A6A0F]">
-      ⚠ Dev preview — no real booking or charge will be made
+      {t('devMockBanner')}
     </div>
   )
 }
@@ -954,31 +968,30 @@ function SuccessState({
   total,
   date,
   code,
+  t,
 }: {
   tour: Tour
   total: number
   date: string
   code: string
+  t: T
 }) {
   return (
     <aside className="border border-[#E5E5E5] bg-white">
       <div className="bg-[#E6F3EE] border-b border-[#B8D9CF] px-6 py-5">
         <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C] mb-1.5 flex items-center gap-2">
-          <CheckIcon /> Booking confirmed
+          <CheckIcon /> {t('bookingConfirmed')}
         </p>
         <p className="text-[#111] text-[20px] font-light leading-tight">{tour.name}</p>
         <p className="text-[12px] font-light text-[#4F4F4E] mt-1">
-          {date} · confirmation code <span className="font-medium text-[#111]">{code}</span>
+          {date} · {t('confirmationCode')} <span className="font-medium text-[#111]">{code}</span>
         </p>
       </div>
       <div className="p-6 space-y-4 text-[13px] font-light text-[#4F4F4E] leading-[1.7]">
-        <p>
-          A confirmation email with your travel documents is on its way. Keep the code{' '}
-          <span className="font-medium text-[#111]">{code}</span> for any reference.
-        </p>
+        <p>{t('confirmationEmail', { code })}</p>
         <div className="border-t border-[#E5E5E5] pt-4 flex items-baseline justify-between">
           <span className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#717170]">
-            Amount paid
+            {t('amountPaid')}
           </span>
           <span className="text-[20px] font-light text-[#111]">${total}</span>
         </div>

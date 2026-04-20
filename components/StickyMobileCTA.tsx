@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 
 type Props = {
   label?: string
@@ -8,7 +9,8 @@ type Props = {
   href: string
 }
 
-export default function StickyMobileCTA({ label = 'Book now', fromPrice, href }: Props) {
+export default function StickyMobileCTA({ label, fromPrice, href }: Props) {
+  const t = useTranslations('StickyCTA')
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -26,14 +28,14 @@ export default function StickyMobileCTA({ label = 'Book now', fromPrice, href }:
     >
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[9px] font-medium tracking-[0.16em] uppercase text-[#888]">From</p>
-          <p className="text-[20px] font-light text-[#111] leading-none">${fromPrice}<span className="text-[11px] text-[#888] ml-1 font-light">/person</span></p>
+          <p className="text-[9px] font-medium tracking-[0.16em] uppercase text-[#888]">{t('from')}</p>
+          <p className="text-[20px] font-light text-[#111] leading-none">${fromPrice}<span className="text-[11px] text-[#888] ml-1 font-light">{t('perPerson')}</span></p>
         </div>
         <Link
           href={href}
           className="bg-[#248D6C] text-white text-[11px] font-semibold tracking-[0.14em] uppercase px-6 py-3 hover:bg-[#1C6E54] transition-colors"
         >
-          {label}
+          {label ?? t('bookNow')}
         </Link>
       </div>
     </div>
