@@ -1,0 +1,77 @@
+name: Deploy to Cloudflare Workers
+
+# Replaces Cloudflare Workers Builds (dashboard-only CI) with a transparent,
+# version-controlled pipeline. Runs on every push to main and manual dispatch.
+# Same flow as local deploy: install, OpenNext build, wrangler deploy.
+#
+# Server-side secrets (BOKUN_ACCESS_KEY, BOKUN_SECRET_KEY, BOKUN_CHECKOUT_MODE,
+# RESEND_API_KEY) are NOT set here — they live in Cloudflare Worker Secrets
+# and get injected at runtime. Public NEXT_PUBLIC_* vars are inlined at build
+# time so they must be provided here.
+#
+# Security note: this workflow uses no untrusted inputs (no issue titles,
+# PR descriptions, commit messages passed to run:). All env values are
+# either hardcoded (public client vars) or come from secrets.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-cloudflare
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      NEXT_PUBLIC_BOKUN_CHANNEL_UUID: db3d303f-f72c-4ef5-983b-821ad33b7ded
+      NEXT_PUBLIC_BOKUN_PRODUCT_EL_YUNQUE: '448405'
+      NEXT_PUBLIC_BOKUN_PRODUCT_CATAMARAN: '1134501'
+      NEXT_PUBLIC_BOKUN_PRODUCT_SALSA: '680641'
+      NEXT_PUBLIC_BOKUN_CHECKOUT_MODE: dev-mock
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_live_51ITpwpBf8w9DbxGlKqObExWn3FbK5GhdCfe5368qyZJfDzmJRzCjzR9YFejs6GkgRdOliZ5bM9F0pqAm6uz2qfUc00u3jFdced
+      NEXT_PUBLIC_SITE_URL: https://casaventuras.elie-belkheir.workers.dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build Next.js + OpenNext worker
+        run: npm run build:cf
+
+      - name: Fail if server secrets leaked into bundle
+        run: |
+          if grep -rE "cf7021b4a4f94a6dbfb1f3a8614c5a75|re_2jufKpWe" .open-next/ 2>/dev/null; then
+            echo "::error::Server secret leaked into build bundle — aborting deploy"
+            exit 1
+          fi
+          echo "Bundle is clean."
+
+      - name: Deploy to Cloudflare Workers
+        run: npx wrangler deploy
+
+      - name: Smoke test live URL
+        run: |
+          URL="https://casaventuras.elie-belkheir.workers.dev"
+          echo "Probing $URL"
+          home=$(curl -sS -o /dev/null -w "%{http_code}" "$URL/")
+          tour=$(curl -sS -o /dev/null -w "%{http_code}" "$URL/tours/el-yunque")
+          api=$(curl -sS -o /dev/null -w "%{http_code}" "$URL/api/bokun/availability?productId=448405&start=2026-05-15&end=2026-05-15")
+          echo "home=$home tour=$tour api=$api"
+          if [ "$home" != "200" ] || [ "$tour" != "200" ] || [ "$api" != "200" ]; then
+            echo "::error::Smoke test failed (home=$home tour=$tour api=$api)"
+            exit 1
+          fi
+          echo "All smoke tests passed."
