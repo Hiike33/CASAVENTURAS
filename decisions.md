@@ -196,6 +196,33 @@ Changements :
 
 ---
 
+## 2026-04-20 — Architecture Cavi
+
+### D-016 · [ARCH/bot] Cavi = bot déterministe sans LLM frontend
+**Décidé** : Cavi (ChatWidget sur la home) tourne 100% client-side via un intent matcher déterministe dans `lib/cavi-intents.ts`. Aucun appel à l'API Anthropic. L'ancienne route `app/api/chat/route.ts` est supprimée. Le LLM reste réservé au **backend** pour des usages non user-facing futurs (dispatch guides, triage d'emails, préparation de bookings via n8n).
+
+**Raison** :
+1. **Décision produit (session 1191a7a2 idx 60-62)** — Stan avait demandé "question possible en automatique plus que llm" ; la reco alors validée était "Bot-first + LLM fallback plus tard". La décision n'avait pas été écrite ici, ce qui a causé une dérive (route `/api/chat` construite + wired dans CLAUDE.md "TODO wire Claude API").
+2. **Économie** — $0/mois vs ~$30-60/mois à 500 conversations/jour avec Sonnet.
+3. **Sécurité** — zéro surface prompt-injection, pas de clé `ANTHROPIC_API_KEY` à gérer côté Worker. Budget caps automatiques (impossible de dépasser par définition).
+4. **Couverture** — pour un site de 3 tours, ~80-90% des questions sont répétitives (prix, durée, inclusions, groupe, sécurité, contact). 12 intents couvrent ce périmètre. Le fallback route vers WhatsApp/email pour tout le reste — c'est le vrai canal de conversion pour les 10-20% restants.
+
+**Alternatives rejetées** :
+- Garder le LLM "au cas où" → non, contredit la décision produit et ajoute un coût/risque non justifié pour du MVP.
+- Retirer Cavi entièrement et remplacer par FAQ accordion → non, le widget conversationnel reste un meilleur signal d'engagement qu'une FAQ statique.
+- Hybride intent + LLM fallback dès le MVP → non, une étape à la fois. Repousser à plus tard si les fallbacks deviennent fréquents (mesurable).
+
+**Impact** :
+- Supprimé : `app/api/chat/route.ts`, la clé `ANTHROPIC_API_KEY` dans `.env.local` et `.env.example`.
+- Ajouté : `lib/cavi-intents.ts` (12 intents + fallback CTA).
+- Modifié : `components/ChatWidget.tsx` (plus de `fetch('/api/chat')`, import `matchIntent`, badge "Claude AI" → "Instant").
+- Docs : `CLAUDE.md` ligne 129+142, `STRUCTURE.md` (env + api tree + conventions), `docs/cloudflare-deploy.md` (retire `ANTHROPIC_API_KEY` de la liste des secrets).
+- Intents ancrés sur `@/lib/tours` (D-005 respecté — zéro duplication de données).
+
+**Futur (hors scope D-016)** : quand le LLM reviendra côté backend pour le dispatch, il passera par n8n → webhook + outil dédié (pas par une route `/api/chat` user-facing). Une D-XXX future tracera cet ajout.
+
+---
+
 ## Règles pour ajouter une décision
 
 1. Format strict : `### D-XXX · [SCOPE] Titre court`

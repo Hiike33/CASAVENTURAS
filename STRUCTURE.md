@@ -14,7 +14,7 @@ cv-next/
 ├── tailwind.config.ts
 ├── tsconfig.json              # paths alias @/* → ./*
 ├── next-env.d.ts              # auto-généré par Next au 1er dev
-├── .env.example               # clés attendues (ANTHROPIC_API_KEY, RESEND, n8n)
+├── .env.example               # clés attendues (BOKUN, RESEND, n8n — pas d'ANTHROPIC, D-016)
 ├── .env.local                 # (git-ignoré) secrets réels
 │
 ├── app/                       # Next 14 App Router
@@ -22,9 +22,10 @@ cv-next/
 │   ├── page.tsx               # Home "/"
 │   ├── globals.css            # Figtree import, CSS vars, reset, border-radius 0
 │   ├── api/
-│   │   └── chat/route.ts      # POST → Claude Sonnet (Cavi)
-│   │   ├── booking/route.ts   # [TODO] POST → n8n webhook
-│   │   └── contact/route.ts   # [TODO] POST → Resend
+│   │   ├── booking/route.ts   # POST → n8n webhook (wired)
+│   │   ├── contact/route.ts   # POST → Resend (wired)
+│   │   ├── bokun/             # Bokun availability + submit proxy
+│   │   └── geo/               # Nominatim PR address autocomplete
 │   ├── tours/
 │   │   ├── el-yunque/page.tsx # [Étape 2]
 │   │   ├── catamaran/page.tsx # [Étape 3]
@@ -36,7 +37,7 @@ cv-next/
 │   ├── Hero.tsx               # video bg, tour selector bottom
 │   ├── TourCard.tsx           # carte tour grille home
 │   ├── Footer.tsx             # dark footer
-│   ├── ChatWidget.tsx         # Cavi (wire étape 7)
+│   ├── ChatWidget.tsx         # Cavi — bot déterministe client-side (D-016)
 │   └── ReviewsStrip.tsx       # [Étape 6] drag-scroll horizontal
 │
 ├── lib/
@@ -82,7 +83,7 @@ cv-next/
 
 ### 2.7 Server Actions (Next 14.x stable)
 - Formulaires mutations sans endpoint API séparé.
-- **Notre choix** : on reste sur `fetch('/api/chat')` + `route.ts` — plus explicite pour Cavi et compatible avec le wire n8n.
+- **Notre choix** : Cavi tourne 100% client-side via `lib/cavi-intents.ts` (intent matcher déterministe, D-016). Pas d'API route nécessaire.
 
 ### 2.8 Loading & Error UI
 - Fichiers conventionnels : `loading.tsx`, `error.tsx`, `not-found.tsx`.

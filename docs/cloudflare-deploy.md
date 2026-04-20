@@ -83,7 +83,6 @@ Compatibility flags (Settings → Functions → Compatibility flags):
 ### 3. Environment variables (Settings → Environment variables → Production)
 
 ```
-ANTHROPIC_API_KEY         = sk-ant-...                  [Secret]
 RESEND_API_KEY            = re_...                      [Secret]
 RESEND_FROM               = hello@casaventuras.com      [Plain text]
 NEXT_PUBLIC_SITE_URL      = https://casaventuras.com    [Plain text]

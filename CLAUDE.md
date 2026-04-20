@@ -126,7 +126,7 @@ These names MUST appear in reviews only if sourced. Do not invent guides.
 | TourCard | components/TourCard.tsx | scaffold |
 | ReviewsStrip | components/ReviewsStrip.tsx | scaffold |
 | BookingForm | components/BookingForm.tsx | scaffold |
-| ChatWidget (Cavi) | components/ChatWidget.tsx | TODO: wire Claude API |
+| ChatWidget (Cavi) | components/ChatWidget.tsx | ✅ Deterministic intent bot (no LLM — D-016) |
 | AutomationFlow | components/AutomationFlow.tsx | scaffold |
 | VideoSection | components/VideoSection.tsx | scaffold |
 | Footer | components/Footer.tsx | scaffold |
@@ -139,7 +139,7 @@ These names MUST appear in reviews only if sourced. Do not invent guides.
 - `/public/images/tours/salsa-1.jpg`
 
 ## TODO (wire later)
-1. **Cavi chatbot** → `app/api/chat/route.ts` → Claude API (claude-sonnet-4-6)
+1. **Cavi** → ✅ Deterministic intent matcher in `lib/cavi-intents.ts` (no LLM frontend — D-016). LLM reserved for backend dispatch/email triage only.
 2. **Booking form** → `app/api/booking/route.ts` → webhook → n8n
 3. **Contact form** → `app/api/contact/route.ts` → Resend email
 4. **n8n automation** → external, self-hosted Docker VPS
