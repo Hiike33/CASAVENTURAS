@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Casa Venturas — Pickup address autocomplete: decision brief</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  html, body {
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    color: #2b2b2b;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0;
+  }
+  h1 {
+    font-size: 26pt;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+    color: #111;
+    margin: 0 0 6px 0;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 15pt;
+    font-weight: 500;
+    color: #111;
+    margin: 28px 0 10px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #E5E5E5;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: #248D6C;
+    margin: 22px 0 6px 0;
+    page-break-after: avoid;
+  }
+  .eyebrow {
+    font-size: 9pt;
+    font-weight: 600;
+    letter-spacing: 2.2px;
+    text-transform: uppercase;
+    color: #248D6C;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    color: #6f6f6f;
+    font-size: 11pt;
+    font-weight: 300;
+    margin-bottom: 22px;
+  }
+  .meta {
+    font-size: 9pt;
+    color: #888;
+    margin-bottom: 28px;
+    border-bottom: 1px solid #E5E5E5;
+    padding-bottom: 12px;
+  }
+  .callout {
+    background: #E6F3EE;
+    border-left: 3px solid #248D6C;
+    padding: 12px 16px;
+    margin: 14px 0 20px;
+    font-size: 10pt;
+  }
+  .callout strong { color: #1C6E54; }
+  .warning {
+    background: #FFF8E1;
+    border-left: 3px solid #D4A017;
+    padding: 12px 16px;
+    margin: 14px 0 20px;
+    font-size: 10pt;
+  }
+  .scenario {
+    background: #FAFAFA;
+    border: 1px solid #E5E5E5;
+    padding: 14px 16px;
+    margin: 12px 0;
+  }
+  .scenario .label {
+    font-size: 9pt;
+    font-weight: 600;
+    color: #717170;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 20px;
+    font-size: 9.8pt;
+  }
+  th, td {
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px solid #E5E5E5;
+    vertical-align: top;
+  }
+  th {
+    background: #FAFAFA;
+    font-weight: 600;
+    color: #111;
+    font-size: 9pt;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  td.check { color: #248D6C; font-weight: 600; text-align: center; }
+  td.cross { color: #A04040; font-weight: 600; text-align: center; }
+  td.neutral { color: #717170; text-align: center; }
+  .reco {
+    background: #E6F3EE;
+    padding: 18px 20px;
+    margin: 28px 0;
+    border: 1px solid #B8D9CF;
+    page-break-inside: avoid;
+  }
+  .reco h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #1C6E54;
+  }
+  p { margin: 0 0 10px 0; }
+  ul { margin: 6px 0 14px 0; padding-left: 18px; }
+  li { margin-bottom: 4px; }
+  code {
+    background: #F5F5F5;
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-size: 9.5pt;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+  .mockup {
+    background: white;
+    border: 1px solid #E5E5E5;
+    padding: 14px;
+    margin: 10px 0 16px;
+    font-size: 9.5pt;
+  }
+  .mockup .input {
+    background: white;
+    border: 1px solid #E5E5E5;
+    padding: 9px 12px;
+    margin-bottom: 4px;
+    color: #aaa;
+  }
+  .mockup .input.focused { border-color: #248D6C; }
+  .mockup .dropdown {
+    background: white;
+    border: 1px solid #E5E5E5;
+    border-top: none;
+    padding: 0;
+  }
+  .mockup .dropdown .item {
+    padding: 8px 12px;
+    border-bottom: 1px solid #F0F0F0;
+    color: #4F4F4E;
+    font-size: 9.5pt;
+  }
+  .mockup .dropdown .item:last-child { border-bottom: none; }
+  .mockup .dropdown .item:first-child { background: #E6F3EE; color: #111; }
+  .mockup .pin { color: #248D6C; margin-right: 6px; }
+  .mockup .label {
+    font-size: 8.5pt;
+    font-weight: 500;
+    color: #888;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .costs td { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 9.5pt; }
+  .signature {
+    font-size: 9pt;
+    color: #999;
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 12px;
+    border-top: 1px solid #E5E5E5;
+  }
+  .pros-cons {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    margin: 10px 0 16px;
+    border-collapse: separate;
+    border-spacing: 8px 0;
+  }
+  .pros-cons .col {
+    display: table-cell;
+    padding: 10px 14px;
+    vertical-align: top;
+    font-size: 9.8pt;
+  }
+  .pros-cons .col.pros { background: #F0F8F4; border-left: 3px solid #248D6C; }
+  .pros-cons .col.cons { background: #FBF5F0; border-left: 3px solid #B88A5A; }
+  .pros-cons h4 {
+    margin: 0 0 8px 0;
+    font-size: 9pt;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .pros-cons .col.pros h4 { color: #1C6E54; }
+  .pros-cons .col.cons h4 { color: #8B5A2B; }
+  .pros-cons ul { margin: 0; padding-left: 16px; }
+  .pros-cons li { margin-bottom: 3px; }
+</style>
+</head>
+<body>
+
+<p class="eyebrow">Website decision brief</p>
+<h1>Pickup address input — which option?</h1>
+<p class="subtitle">Choosing how customers enter a custom pickup address when they're not at one of your 77 listed hotels.</p>
+<p class="meta">Prepared for Casa Venturas · 2026-04-19 · Project: micasaventuras.com rebuild · Requires ~5 min to decide</p>
+
+<h2>The problem</h2>
+
+<p>Today's El Yunque pickup field on the new website offers two paths:</p>
+<ol>
+  <li><strong>Listed hotel</strong> — customer searches from the 77 hotels you configured in Bókun (autocomplete works, 1-click selection, good UX).</li>
+  <li><strong>Custom address</strong> — customer clicks <em>"Not staying at a listed hotel?"</em> and types their address in a free text box.</li>
+</ol>
+
+<p>The free text box is functional but has real problems:</p>
+
+<div class="warning">
+  <strong>Risk 1 — typos and incomplete addresses.</strong> "calle loiza" vs "Calle Loíza 1510" vs "1510 Loíza St.". Your driver on the day of the tour has to guess the right one.<br><br>
+  <strong>Risk 2 — addresses outside your service area.</strong> Nothing stops a customer from typing a Dorado or Humacao address. You discover it the night before, and have to cancel.<br><br>
+  <strong>Risk 3 — no GPS coordinates.</strong> Driver cannot tap the address in Waze or Google Maps — has to search manually each time, losing 2–3 minutes per pickup.
+</div>
+
+<p>We want to add an <strong>address autocomplete</strong> — the same thing you see on Uber or Airbnb: as the customer types, real Puerto Rico addresses appear; they pick one; we store it accurately with GPS coordinates.</p>
+
+<h2>How the UX changes</h2>
+
+<div class="scenario">
+  <div class="label">Today (free text)</div>
+  <div class="mockup">
+    <div class="label">Pickup address</div>
+    <div class="input">Street, number, neighborhood…</div>
+  </div>
+  <p style="margin: 6px 0 0; color: #888; font-size: 9.5pt;">What customer types ends up exactly as-is in your Bókun notes, whatever they wrote.</p>
+</div>
+
+<div class="scenario">
+  <div class="label">With autocomplete (proposed)</div>
+  <div class="mockup">
+    <div class="label">Pickup address</div>
+    <div class="input focused">calle loiza</div>
+    <div class="dropdown">
+      <div class="item"><span class="pin">📍</span>1510 Calle Loíza, San Juan, PR 00911</div>
+      <div class="item"><span class="pin">📍</span>2301 Calle Loíza, San Juan, PR 00911</div>
+      <div class="item"><span class="pin">📍</span>Calle Loíza, Ocean Park, San Juan</div>
+    </div>
+  </div>
+  <p style="margin: 6px 0 0; color: #888; font-size: 9.5pt;">Customer picks a real address; we store street + zip + GPS in the Bókun booking notes. Your driver taps once to open Waze.</p>
+</div>
+
+<h2>Four realistic options</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 22%">Option</th>
+      <th style="width: 20%">Provider</th>
+      <th style="width: 18%" class="check">Cost at 40 bookings/day</th>
+      <th style="width: 22%">UX quality</th>
+      <th style="width: 18%">Client setup needed</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>A</strong> — Keep free text</td>
+      <td>None</td>
+      <td class="neutral">$0 / month</td>
+      <td>Basic, typo-prone</td>
+      <td class="neutral">None</td>
+    </tr>
+    <tr>
+      <td><strong>B</strong> — OpenStreetMap</td>
+      <td>OSM Nominatim (free open-source)</td>
+      <td class="neutral">$0 / month</td>
+      <td>Decent, Puerto Rico coverage lighter</td>
+      <td class="neutral">None</td>
+    </tr>
+    <tr>
+      <td><strong>C</strong> — Google Places <span style="color:#248D6C;">★ recommended</span></td>
+      <td>Google Maps Platform</td>
+      <td class="neutral">$0 / month (within free tier)</td>
+      <td>Best — universally familiar</td>
+      <td>API key + billing activation (~5 min)</td>
+    </tr>
+    <tr>
+      <td><strong>D</strong> — Mapbox</td>
+      <td>Mapbox Search</td>
+      <td class="neutral">~$0–0.50 / month</td>
+      <td>Clean, modern</td>
+      <td>API key + billing (~5 min)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>The numbers behind "within free tier"</h3>
+
+<p>We estimate ~5% of El Yunque bookings need a custom address (most guests stay at one of the 77 listed hotels).</p>
+
+<table class="costs">
+  <thead>
+    <tr><th>Assumption</th><th>Google Places</th><th>Mapbox</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Free tier per month</td>
+      <td>28 500 sessions</td>
+      <td>100 000 sessions</td>
+    </tr>
+    <tr>
+      <td>Expected sessions / month (5% of 40 bookings × 30 d)</td>
+      <td>~60</td>
+      <td>~60</td>
+    </tr>
+    <tr>
+      <td>Headroom before paying</td>
+      <td>475× free tier</td>
+      <td>1,666× free tier</td>
+    </tr>
+    <tr>
+      <td>Monthly bill at your volume</td>
+      <td><strong>$0</strong></td>
+      <td><strong>$0</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="font-size: 9.5pt; color: #666;">Even if Casa Venturas grew 100× in custom-address usage (6 000 sessions / month), the bill would still be approximately <strong>$0–2</strong>. Google offers a $200/month perpetual credit that covers all of Maps Platform.</p>
+
+<h2>Why we recommend Google Places</h2>
+
+<div class="reco">
+  <h3>★ Recommendation: Option C — Google Places Autocomplete</h3>
+  <p style="margin-bottom: 12px;">Three concrete reasons, in priority order:</p>
+  <ol style="margin-bottom: 0;">
+    <li><strong>Your drivers already use Google Maps / Waze.</strong> When we save a Google place_id, the driver can tap the pickup from the Bókun dashboard and open Waze in one tap with exact coordinates. No guessing, no re-searching.</li>
+    <li><strong>Your customers recognize it instantly.</strong> "Type your address, pick from the suggestions" is the exact pattern Uber, Airbnb, DoorDash, and every major app uses. Zero learning curve.</li>
+    <li><strong>It costs you $0.</strong> At 40 bookings/day (well above today's volume) with ~5% custom addresses, you'd use ~0.2% of Google's free tier.</li>
+  </ol>
+</div>
+
+<h2>What you need to do if you say YES to Google Places</h2>
+
+<ol>
+  <li>Go to <strong>console.cloud.google.com</strong> (log in with any Google account — your personal Gmail works fine).</li>
+  <li>Create a new project called <em>"Casa Venturas Website"</em>.</li>
+  <li>Enable the <strong>"Places API (New)"</strong> product — one click.</li>
+  <li>Create an <strong>API key</strong>.</li>
+  <li><strong>Restrict the key</strong> (important — 2 minutes):
+    <ul>
+      <li>HTTP referrers: <code>https://micasaventuras.com/*</code> and <code>http://localhost:3737/*</code></li>
+      <li>API restrictions: tick only <em>"Places API (New)"</em></li>
+    </ul>
+  </li>
+  <li>Activate billing — Google requires a credit card on file even for free usage. You'll never be charged at your volume. Set a <strong>monthly budget alert at $5</strong> for paranoia.</li>
+  <li>Copy the key (looks like <code>AIzaSyXXXXX...</code>) and send it to us.</li>
+</ol>
+
+<p>We plug it into the website, deploy, and the new autocomplete is live the same day.</p>
+
+<h2>The pros/cons of each option, side by side</h2>
+
+<h3>A — Keep free text (do nothing)</h3>
+<div class="pros-cons">
+  <div class="col pros">
+    <h4>Pros</h4>
+    <ul>
+      <li>Zero work, zero cost</li>
+      <li>Already shipped, proven to work</li>
+    </ul>
+  </div>
+  <div class="col cons">
+    <h4>Cons</h4>
+    <ul>
+      <li>Typos waste driver time every morning</li>
+      <li>No GPS → hard to navigate</li>
+      <li>Customers can book from outside your service area</li>
+    </ul>
+  </div>
+</div>
+
+<h3>B — OpenStreetMap (free, open-source)</h3>
+<div class="pros-cons">
+  <div class="col pros">
+    <h4>Pros</h4>
+    <ul>
+      <li>Zero cost, no billing setup</li>
+      <li>Open data, no vendor lock-in</li>
+    </ul>
+  </div>
+  <div class="col cons">
+    <h4>Cons</h4>
+    <ul>
+      <li>Puerto Rico coverage thinner than Google — some small streets missing</li>
+      <li>Rate limit of 1 request/second (a problem during peak booking times)</li>
+      <li>Less polished autocomplete UX (slower, fewer suggestions)</li>
+      <li>No place_id for deep-link into Waze</li>
+    </ul>
+  </div>
+</div>
+
+<h3>C — Google Places (recommended)</h3>
+<div class="pros-cons">
+  <div class="col pros">
+    <h4>Pros</h4>
+    <ul>
+      <li>Best Puerto Rico coverage (same data the USPS uses for shipping)</li>
+      <li>Instant, universally-recognized UX</li>
+      <li>place_id opens in Waze/Maps in one tap</li>
+      <li>$0/month at your volume, forever</li>
+      <li>Optional geo-restriction (country: PR) — blocks non-Puerto-Rico addresses</li>
+    </ul>
+  </div>
+  <div class="col cons">
+    <h4>Cons</h4>
+    <ul>
+      <li>Requires a Google Cloud account + billing activation (~5 min)</li>
+      <li>Vendor dependency — if Google changes pricing, you'd have to migrate (unlikely for years)</li>
+    </ul>
+  </div>
+</div>
+
+<h3>D — Mapbox Search</h3>
+<div class="pros-cons">
+  <div class="col pros">
+    <h4>Pros</h4>
+    <ul>
+      <li>Modern, clean UX — some designers prefer it to Google</li>
+      <li>Slightly larger free tier than Google</li>
+    </ul>
+  </div>
+  <div class="col cons">
+    <h4>Cons</h4>
+    <ul>
+      <li>Less universally recognized than Google</li>
+      <li>Puerto Rico coverage slightly weaker than Google</li>
+      <li>Same setup work as Google (account + billing)</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Decision</h2>
+
+<p style="margin-bottom: 8px;"><strong>Just reply to us with one of:</strong></p>
+
+<div class="callout">
+  <ul style="margin: 0; padding-left: 18px;">
+    <li><strong>"A" —</strong> Keep the free text input. No changes. We ship the site as-is.</li>
+    <li><strong>"B" —</strong> I'd like the free OpenStreetMap option (slightly worse UX, zero setup).</li>
+    <li><strong>"C" —</strong> Go with Google Places — I'll send you the API key in a day or two.</li>
+    <li><strong>"D" —</strong> I want Mapbox — same setup as Google but on Mapbox.</li>
+  </ul>
+</div>
+
+<p>If you pick C or D, we'll ship the autocomplete within a day of receiving your key. No impact on launch timing — the site can go live with free text first, then we swap to autocomplete whenever the key arrives.</p>
+
+<div class="signature">
+  Casa Venturas × website team — pickup address decision brief v1.0 — <em>reply in one letter</em>
+</div>
+
+</body>
+</html>
