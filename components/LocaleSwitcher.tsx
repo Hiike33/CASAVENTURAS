@@ -1,14 +1,14 @@
 'use client'
 import { useLocale, useTranslations } from 'next-intl'
-import { useParams } from 'next/navigation'
 import { useTransition } from 'react'
 import { routing } from '@/i18n/routing'
 import { usePathname, useRouter } from '@/i18n/navigation'
 
 // Compact language dropdown. Preserves the current path when switching
-// locales (next-intl's router does the locale negotiation for us). The
-// native <select> keeps the a11y and mobile UX solid without shipping a
-// custom popover; the surrounding wrapper adds the brand chevron + border.
+// locales. Our routes are static per locale (no /[slug] dynamic segments),
+// so we pass the locale-stripped `pathname` directly to router.replace —
+// passing { pathname, params } would re-inject the current locale from
+// useParams and trap the user on that language.
 export default function LocaleSwitcher({
   variant = 'desktop',
 }: {
@@ -18,19 +18,12 @@ export default function LocaleSwitcher({
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
-  const params = useParams()
   const [isPending, startTransition] = useTransition()
 
   function onChange(nextLocale: string) {
+    if (nextLocale === locale) return
     startTransition(() => {
-      // `pathname` from next-intl/navigation has the locale stripped, so we
-      // just hand it the same path + target locale and let next-intl rebuild
-      // the URL (adds /es or /fr prefix, strips for /en).
-      router.replace(
-        // @ts-expect-error — params typing is route-generic, runtime is fine
-        { pathname, params },
-        { locale: nextLocale },
-      )
+      router.replace(pathname, { locale: nextLocale })
     })
   }
 
