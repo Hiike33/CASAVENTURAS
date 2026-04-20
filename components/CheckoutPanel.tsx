@@ -1,0 +1,995 @@
+'use client'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { loadStripe, type Stripe } from '@stripe/stripe-js'
+import {
+  Elements,
+  CardElement,
+  useElements,
+  useStripe,
+} from '@stripe/react-stripe-js'
+import type { Tour } from '@/lib/tours'
+import type {
+  CheckoutContext,
+  PickupPlace,
+  PricingCategory,
+  StartPoint,
+} from '@/app/api/bokun/checkout-context/route'
+import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
+import { htmlToList } from '@/lib/html/to-list'
+
+// Inline checkout panel wired to Bókun + Stripe.
+//
+//   CHECKOUT_MODE=dev-mock — submit route returns a fake confirmed booking
+//     after ~700ms. Card iframe still mounts, token is created (valid
+//     Stripe call against pk_live_), but never used server-side so no
+//     charge happens.
+//   CHECKOUT_MODE=live     — real token is sent to Bókun /checkout.json/submit,
+//     the card is actually charged via the vendor's Stripe connection.
+//
+// Palette strictly aligned with BookingSidebar (#248D6C / #1C6E54 /
+// #E5E5E5 / #111 / #4F4F4E / #717170 / #FAFAFA / #E6F3EE).
+
+type Step = 'form' | 'submitting' | 'success' | 'error'
+
+const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+// Module-scope singleton — Stripe recommends calling loadStripe once. We
+// still handle the `null` case (missing key) inside the inner component
+// so the form degrades gracefully instead of crashing.
+const stripePromise: Promise<Stripe | null> = STRIPE_KEY
+  ? loadStripe(STRIPE_KEY)
+  : Promise.resolve(null)
+
+export type CheckoutPanelProps = {
+  tour: Tour
+  /** yyyy-MM-dd — from the BookingSidebar date picker */
+  date?: string
+  /** Bókun-issued slot id (the "startTimeId" in availabilities) */
+  startTimeId?: number
+  /** Bókun-issued rate id (from availability response) */
+  rateId?: number
+  /** Free-form label surfaced in the header (e.g., "Bus 2 · 08:00") */
+  startTimeLabel?: string
+  /** When true, renders the preview amber banner above the header. */
+  devMock?: boolean
+  /** Optional handler to close/dismiss the panel (e.g., drawer cancel). */
+  onClose?: () => void
+}
+
+export default function CheckoutPanel(props: CheckoutPanelProps) {
+  return (
+    <Elements stripe={stripePromise}>
+      <CheckoutPanelInner {...props} />
+    </Elements>
+  )
+}
+
+function CheckoutPanelInner({
+  tour,
+  date = '2026-05-15',
+  startTimeId = 0,
+  rateId = 0,
+  startTimeLabel = 'Bus 2 · 08:00',
+  devMock = CLIENT_CHECKOUT_MODE === 'dev-mock',
+  onClose,
+}: CheckoutPanelProps) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [step, setStep] = useState<Step>('form')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [confirmation, setConfirmation] = useState<{
+    code: string
+    total: number
+  } | null>(null)
+  const [ctx, setCtx] = useState<CheckoutContext | null>(null)
+  const [form, setForm] = useState({
+    title: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    pickupId: null as number | null,
+    pickupTitle: '',
+    roomNumber: '',
+    customPickup: false,
+    customPickupAddress: '',
+    answers: {} as Record<number, string>,
+    requests: '',
+  })
+  const [qty, setQty] = useState<Record<number, number>>({})
+
+  useEffect(() => {
+    if (!tour.bokunProductId) return
+    const ctrl = new AbortController()
+    fetch(`/api/bokun/checkout-context?productId=${tour.bokunProductId}`, {
+      signal: ctrl.signal,
+    })
+      .then(r => r.json())
+      .then((data: { ok: boolean; context?: CheckoutContext }) => {
+        if (!data.ok || !data.context) return
+        setCtx(data.context)
+        const seed: Record<number, number> = {}
+        for (const c of data.context.pricingCategories) {
+          seed[c.id] = c.defaultCategory ? 2 : 0
+        }
+        setQty(seed)
+      })
+      .catch(() => {})
+    return () => ctrl.abort()
+  }, [tour.bokunProductId])
+
+  const needs = (field: string) =>
+    ctx?.requiredCustomerFields?.includes(field) ?? false
+  const totalGuests = Object.values(qty).reduce((n, v) => n + v, 0)
+  const selectedPickup = ctx?.pickupPlaces.find(p => p.id === form.pickupId)
+  const needsRoomNumber =
+    !form.customPickup && selectedPickup?.askForRoomNumber === true
+
+  const total = useMemo(() => {
+    if (!ctx) return tour.price * Math.max(1, totalGuests)
+    return ctx.pricingCategories.reduce((sum, c) => {
+      const units = qty[c.id] ?? 0
+      const rate = c.ticketCategory === 'CHILD' ? tour.price * 0.5 : tour.price
+      return sum + units * rate
+    }, 0)
+  }, [ctx, qty, tour.price, totalGuests])
+
+  const meetingPoint = ctx?.startPoints?.[0]
+  const showMeetingPoint =
+    ctx?.meetingType === 'MEET_ON_LOCATION' && Boolean(meetingPoint)
+  const showPickup = Boolean(ctx?.pickupService) && (ctx?.pickupPlaces.length ?? 0) > 0
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!ctx) return
+    if (!stripe || !elements) {
+      setErrorMsg('Payment library not ready. Please retry in a moment.')
+      return
+    }
+    const card = elements.getElement(CardElement)
+    if (!card) {
+      setErrorMsg('Card input not found.')
+      return
+    }
+
+    setStep('submitting')
+    setErrorMsg('')
+
+    const { token, error: stripeError } = await stripe.createToken(card, {
+      name: `${form.firstName} ${form.lastName}`.trim(),
+    })
+    if (stripeError || !token) {
+      setStep('error')
+      setErrorMsg(stripeError?.message ?? 'Card could not be validated.')
+      return
+    }
+
+    const passengers = ctx.pricingCategories.flatMap(c =>
+      Array.from({ length: qty[c.id] ?? 0 }, () => ({
+        pricingCategoryId: c.id,
+        firstName: form.firstName,
+        lastName: form.lastName,
+      })),
+    )
+
+    try {
+      const res = await fetch('/api/bokun/checkout/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: ctx.productId,
+          startTimeId,
+          rateId,
+          date,
+          passengers,
+          pickupPlaceId:
+            !form.customPickup && form.pickupId ? form.pickupId : undefined,
+          roomNumber: !form.customPickup ? form.roomNumber || undefined : undefined,
+          customPickupAddress: form.customPickup
+            ? form.customPickupAddress
+            : undefined,
+          mainContactDetails: {
+            title: form.title || undefined,
+            firstName: form.firstName,
+            lastName: form.lastName,
+            email: form.email,
+            phone: form.phone || undefined,
+          },
+          answers: form.answers,
+          specialRequests: form.requests || undefined,
+          paymentToken: { token: token.id },
+          currency: 'USD',
+        }),
+      })
+      const data = (await res.json()) as
+        | { ok: true; booking: { confirmationCode: string; totalPrice?: number } }
+        | { ok: false; error: string }
+      if (!data.ok) {
+        setStep('error')
+        setErrorMsg(data.error)
+        return
+      }
+      setConfirmation({
+        code: data.booking.confirmationCode,
+        total: data.booking.totalPrice ?? total,
+      })
+      setStep('success')
+    } catch (err) {
+      setStep('error')
+      setErrorMsg(err instanceof Error ? err.message : 'Network error.')
+    }
+  }
+
+  if (step === 'success' && confirmation) {
+    return (
+      <SuccessState
+        tour={tour}
+        total={confirmation.total}
+        date={date}
+        code={confirmation.code}
+      />
+    )
+  }
+
+  return (
+    <aside className="border border-[#E5E5E5] bg-white">
+      {devMock && <DevMockBanner />}
+
+      <header className="bg-[#FAFAFA] border-b border-[#E5E5E5] px-6 py-5 flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C] mb-1.5">
+            Secure checkout
+          </p>
+          <p className="text-[#111] text-[15px] font-normal mb-1">
+            {ctx?.title ?? tour.name}
+          </p>
+          <p className="text-[12px] font-light text-[#717170]">
+            {date} · {startTimeLabel} · {totalGuests}{' '}
+            {totalGuests === 1 ? 'guest' : 'guests'}
+          </p>
+        </div>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-[#717170] hover:text-[#111] transition-colors text-[18px] leading-none px-2"
+            aria-label="Close checkout"
+          >
+            ×
+          </button>
+        )}
+      </header>
+
+      {showMeetingPoint && meetingPoint && (
+        <MeetingPointBlock point={meetingPoint} />
+      )}
+
+      <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        {ctx && ctx.pricingCategories.length > 0 && (
+          <Section title="Guests">
+            <div className="border border-[#E5E5E5]">
+              {ctx.pricingCategories.map((c, idx) => (
+                <PricingCategoryRow
+                  key={c.id}
+                  category={c}
+                  quantity={qty[c.id] ?? 0}
+                  unitPrice={
+                    c.ticketCategory === 'CHILD' ? tour.price * 0.5 : tour.price
+                  }
+                  onChange={v => setQty(q => ({ ...q, [c.id]: Math.max(0, v) }))}
+                  last={idx === ctx.pricingCategories.length - 1}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        <Section title="Guest details">
+          {needs('title') && (
+            <Field id="cp-title" label="Title" required>
+              <select
+                id="cp-title"
+                required
+                value={form.title}
+                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                className="w-full bg-white border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors"
+              >
+                <option value="">Select…</option>
+                <option value="MR">Mr</option>
+                <option value="MS">Ms</option>
+                <option value="MX">Mx</option>
+              </select>
+            </Field>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field id="cp-first" label="First name" required>
+              <input
+                id="cp-first"
+                type="text"
+                required
+                value={form.firstName}
+                onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                placeholder="Jane"
+                className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
+              />
+            </Field>
+            <Field id="cp-last" label="Last name" required>
+              <input
+                id="cp-last"
+                type="text"
+                required
+                value={form.lastName}
+                onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                placeholder="Doe"
+                className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
+              />
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field id="cp-email" label="Email" required>
+              <input
+                id="cp-email"
+                type="email"
+                required
+                value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                placeholder="jane@example.com"
+                className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
+              />
+            </Field>
+            <Field id="cp-phone" label="Phone" required={needs('phoneNumber')}>
+              <input
+                id="cp-phone"
+                type="tel"
+                required={needs('phoneNumber')}
+                value={form.phone}
+                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                placeholder="+1 555 0123"
+                className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
+              />
+            </Field>
+          </div>
+
+          {showPickup && ctx && (
+            <>
+              {!form.customPickup && (
+                <PickupCombobox
+                  places={ctx.pickupPlaces}
+                  value={form.pickupTitle}
+                  onSelect={p =>
+                    setForm(f => ({
+                      ...f,
+                      pickupId: p.id,
+                      pickupTitle: p.title,
+                      roomNumber: p.askForRoomNumber ? f.roomNumber : '',
+                    }))
+                  }
+                  onChange={v =>
+                    setForm(f => ({ ...f, pickupTitle: v, pickupId: null }))
+                  }
+                />
+              )}
+
+              {needsRoomNumber && !form.customPickup && (
+                <Field id="cp-room" label="Room number" required>
+                  <input
+                    id="cp-room"
+                    type="text"
+                    required
+                    value={form.roomNumber}
+                    onChange={e => setForm(f => ({ ...f, roomNumber: e.target.value }))}
+                    placeholder="e.g. 412"
+                    className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
+                  />
+                </Field>
+              )}
+
+              {ctx.customPickupAllowed && (
+                <CustomPickupToggle
+                  on={form.customPickup}
+                  onToggle={v =>
+                    setForm(f => ({
+                      ...f,
+                      customPickup: v,
+                      pickupId: v ? null : f.pickupId,
+                      pickupTitle: v ? '' : f.pickupTitle,
+                      roomNumber: v ? '' : f.roomNumber,
+                      customPickupAddress: v ? f.customPickupAddress : '',
+                    }))
+                  }
+                />
+              )}
+
+              {form.customPickup && ctx.customPickupAllowed && (
+                <Field id="cp-custom-addr" label="Pickup address" required>
+                  <textarea
+                    id="cp-custom-addr"
+                    rows={2}
+                    required
+                    value={form.customPickupAddress}
+                    onChange={e =>
+                      setForm(f => ({ ...f, customPickupAddress: e.target.value }))
+                    }
+                    placeholder="Street, number, neighborhood, city (San Juan metro area only)"
+                    className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa] resize-none"
+                  />
+                  <p className="text-[10px] font-light text-[#717170] mt-1">
+                    Our guide will contact you to confirm the exact pickup time.
+                  </p>
+                </Field>
+              )}
+            </>
+          )}
+        </Section>
+
+        {ctx && ctx.bookingQuestions.length > 0 && (
+          <Section title="A few more questions">
+            {ctx.bookingQuestions.map(q => (
+              <Field
+                key={q.id}
+                id={`cp-q-${q.id}`}
+                label={q.label}
+                required={q.required}
+              >
+                <input
+                  id={`cp-q-${q.id}`}
+                  type="text"
+                  required={q.required}
+                  value={form.answers[q.id] ?? ''}
+                  onChange={e =>
+                    setForm(f => ({
+                      ...f,
+                      answers: { ...f.answers, [q.id]: e.target.value },
+                    }))
+                  }
+                  className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors"
+                />
+              </Field>
+            ))}
+          </Section>
+        )}
+
+        <Field id="cp-requests" label="Special requests (optional)">
+          <textarea
+            id="cp-requests"
+            rows={2}
+            value={form.requests}
+            onChange={e => setForm(f => ({ ...f, requests: e.target.value }))}
+            placeholder="Dietary needs, celebration, anything useful…"
+            className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa] resize-none"
+          />
+        </Field>
+
+        {ctx && (
+          <WhatsIncludedPanel
+            included={ctx.content.included}
+            excluded={ctx.content.excluded}
+            attention={ctx.content.attention}
+            requirements={ctx.content.requirements}
+          />
+        )}
+
+        <div className="h-px bg-[#E5E5E5]" />
+
+        <Section title="Payment">
+          <StripeCard fallback={!STRIPE_KEY} />
+          <p className="text-[10px] font-light text-[#717170] leading-relaxed mt-1">
+            Payment is processed securely by Stripe. Your card details never reach our servers.
+          </p>
+        </Section>
+
+        {step === 'error' && errorMsg && (
+          <div className="bg-red-50 border border-red-200 px-3.5 py-2.5 text-[12px] font-light text-red-700">
+            {errorMsg}
+          </div>
+        )}
+
+        <div className="bg-[#FAFAFA] border border-[#E5E5E5] px-4 py-3 flex items-baseline justify-between">
+          <span className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#717170]">
+            Total
+          </span>
+          <span className="text-[26px] font-light text-[#111] tracking-tight leading-none">
+            ${total}
+          </span>
+        </div>
+
+        <button
+          type="submit"
+          disabled={step === 'submitting' || totalGuests === 0 || !stripe}
+          className="w-full bg-[#248D6C] text-white text-[10px] font-semibold tracking-[0.16em] uppercase py-4 hover:bg-[#1C6E54] transition-colors disabled:opacity-60"
+        >
+          {step === 'submitting' ? 'Processing…' : `Pay $${total} & confirm booking`}
+        </button>
+
+        <CancellationLine policy={ctx?.cancellationPolicy} />
+      </form>
+    </aside>
+  )
+}
+
+function StripeCard({ fallback }: { fallback: boolean }) {
+  if (fallback) {
+    return (
+      <div className="border border-[#E5E5E5] bg-white px-3.5 py-3 flex items-center gap-3">
+        <span className="text-[11px] font-light text-[#717170]">
+          Stripe publishable key missing — card input disabled. Set{' '}
+          <code className="text-[#4F4F4E]">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code>.
+        </span>
+      </div>
+    )
+  }
+  return (
+    <div className="border border-[#E5E5E5] bg-white px-3.5 py-[11px] focus-within:border-[#248D6C] transition-colors">
+      <CardElement
+        options={{
+          style: {
+            base: {
+              fontSize: '13px',
+              fontWeight: '300',
+              fontFamily:
+                'Figtree, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+              color: '#111111',
+              '::placeholder': { color: '#aaaaaa' },
+              iconColor: '#717170',
+            },
+            invalid: { color: '#b91c1c', iconColor: '#b91c1c' },
+          },
+          hidePostalCode: false,
+        }}
+      />
+    </div>
+  )
+}
+
+function MeetingPointBlock({ point }: { point: StartPoint }) {
+  const lines = [
+    point.addressLine1,
+    point.addressLine2,
+    [point.city, point.state, point.postalCode].filter(Boolean).join(', '),
+    point.countryCode,
+  ].filter((l): l is string => Boolean(l))
+  const mapsQuery = encodeURIComponent(
+    [point.title, point.addressLine1, point.city, point.state, point.countryCode]
+      .filter(Boolean)
+      .join(', '),
+  )
+  return (
+    <div className="bg-[#E6F3EE] border-b border-[#B8D9CF] px-6 py-4">
+      <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C] mb-1.5 flex items-center gap-2">
+        <PinIcon /> Meeting point
+      </p>
+      <p className="text-[#111] text-[13px] font-medium leading-tight">{point.title}</p>
+      <p className="text-[12px] font-light text-[#4F4F4E] leading-[1.6] mt-0.5">
+        {lines.join(' · ')}
+      </p>
+      <a
+        href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-block mt-2 text-[10px] font-medium tracking-[0.14em] uppercase text-[#248D6C] border-b border-[#248D6C]/30 hover:border-[#248D6C] transition-colors"
+      >
+        View on map →
+      </a>
+    </div>
+  )
+}
+
+function CustomPickupToggle({
+  on,
+  onToggle,
+}: {
+  on: boolean
+  onToggle: (v: boolean) => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(!on)}
+      className="w-full text-left text-[11px] font-medium tracking-[0.08em] text-[#248D6C] border-t border-[#E5E5E5] pt-3 hover:text-[#1C6E54] transition-colors"
+    >
+      {on
+        ? '← Choose a listed hotel instead'
+        : '✎ Not staying at a listed hotel? Enter custom address'}
+    </button>
+  )
+}
+
+function WhatsIncludedPanel({
+  included,
+  excluded,
+  attention,
+  requirements,
+}: {
+  included?: string
+  excluded?: string
+  attention?: string
+  requirements?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const includedList = htmlToList(included)
+  const excludedList = htmlToList(excluded)
+  const attentionList = htmlToList(attention)
+  const requirementsList = htmlToList(requirements)
+  const hasAny =
+    includedList.length || excludedList.length || attentionList.length || requirementsList.length
+  if (!hasAny) return null
+  return (
+    <div className="border border-[#E5E5E5]">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-[#FAFAFA] transition-colors"
+      >
+        <span className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C]">
+          What&apos;s included &amp; good to know
+        </span>
+        <span
+          className={`text-[#717170] transition-transform ${open ? 'rotate-180' : ''}`}
+        >
+          <ChevronIcon />
+        </span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 pt-1 space-y-4">
+          {includedList.length > 0 && (
+            <IncludeExcludeList title="Included" items={includedList} positive />
+          )}
+          {excludedList.length > 0 && (
+            <IncludeExcludeList title="Not included" items={excludedList} positive={false} />
+          )}
+          {attentionList.length > 0 && (
+            <div>
+              <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#717170] mb-2">
+                Please note
+              </p>
+              <ul className="space-y-1.5">
+                {attentionList.map((t, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-2 text-[12px] font-light text-[#4F4F4E] leading-[1.5]"
+                  >
+                    <span className="inline-block w-1 h-1 bg-[#717170] mt-[7px] flex-shrink-0" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {requirementsList.length > 0 && (
+            <div>
+              <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#717170] mb-2">
+                Requirements
+              </p>
+              <p className="text-[12px] font-light text-[#4F4F4E] leading-[1.6]">
+                {requirementsList.join(' ')}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function IncludeExcludeList({
+  title,
+  items,
+  positive,
+}: {
+  title: string
+  items: string[]
+  positive: boolean
+}) {
+  return (
+    <div>
+      <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#717170] mb-2">
+        {title}
+      </p>
+      <ul className="space-y-1.5">
+        {items.map((t, i) => (
+          <li
+            key={i}
+            className="flex items-start gap-2 text-[12px] font-light text-[#4F4F4E] leading-[1.5]"
+          >
+            {positive ? (
+              <span className="text-[#248D6C] mt-[-1px] font-medium">✓</span>
+            ) : (
+              <span className="text-[#717170] mt-[-1px]">×</span>
+            )}
+            <span>{t}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function PricingCategoryRow({
+  category,
+  quantity,
+  unitPrice,
+  onChange,
+  last,
+}: {
+  category: PricingCategory
+  quantity: number
+  unitPrice: number
+  onChange: (v: number) => void
+  last: boolean
+}) {
+  const ageHint =
+    category.minAge && category.maxAge && category.maxAge > 0
+      ? `${category.minAge}–${category.maxAge} yrs`
+      : null
+  return (
+    <div
+      className={`flex items-center justify-between px-4 py-3 ${last ? '' : 'border-b border-[#E5E5E5]'}`}
+    >
+      <div>
+        <p className="text-[13px] font-normal text-[#111]">{category.title}</p>
+        {ageHint && (
+          <p className="text-[10px] font-light text-[#717170] mt-0.5">{ageHint}</p>
+        )}
+      </div>
+      <div className="flex items-center gap-4">
+        <span className="text-[12px] font-light text-[#4F4F4E]">${unitPrice}</span>
+        <QtyStepper value={quantity} onChange={onChange} />
+      </div>
+    </div>
+  )
+}
+
+function QtyStepper({
+  value,
+  onChange,
+}: {
+  value: number
+  onChange: (v: number) => void
+}) {
+  const btnClass =
+    'w-7 h-7 flex items-center justify-center border border-[#E5E5E5] text-[#4F4F4E] hover:border-[#248D6C] hover:text-[#248D6C] transition-colors disabled:opacity-40 disabled:hover:border-[#E5E5E5] disabled:hover:text-[#4F4F4E]'
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={() => onChange(value - 1)}
+        disabled={value <= 0}
+        className={btnClass}
+        aria-label="Decrease"
+      >
+        −
+      </button>
+      <span className="text-[13px] font-medium text-[#111] w-5 text-center tabular-nums">
+        {value}
+      </span>
+      <button
+        type="button"
+        onClick={() => onChange(value + 1)}
+        className={btnClass}
+        aria-label="Increase"
+      >
+        +
+      </button>
+    </div>
+  )
+}
+
+function PickupCombobox({
+  places,
+  value,
+  onSelect,
+  onChange,
+}: {
+  places: PickupPlace[]
+  value: string
+  onSelect: (p: PickupPlace) => void
+  onChange: (v: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const onDocClick = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [open])
+  const q = value.trim().toLowerCase()
+  const filtered = useMemo(
+    () =>
+      q === ''
+        ? places.slice(0, 12)
+        : places.filter(p => p.title.toLowerCase().includes(q)).slice(0, 12),
+    [q, places],
+  )
+  return (
+    <div ref={wrapRef} className="relative">
+      <label
+        htmlFor="cp-pickup"
+        className="block text-[9px] font-normal tracking-[0.14em] uppercase text-[#888] mb-1.5"
+      >
+        Hotel pickup <span className="text-[#248D6C]">*</span>
+      </label>
+      <div className="relative">
+        <input
+          id="cp-pickup"
+          type="text"
+          required
+          value={value}
+          onFocus={() => setOpen(true)}
+          onChange={e => {
+            onChange(e.target.value)
+            setOpen(true)
+          }}
+          placeholder="Search your hotel…"
+          autoComplete="off"
+          className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 pr-9 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
+        />
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#717170]">
+          <ChevronIcon />
+        </span>
+      </div>
+      {open && filtered.length > 0 && (
+        <ul
+          role="listbox"
+          className="absolute z-10 left-0 right-0 mt-1 bg-white border border-[#E5E5E5] max-h-[260px] overflow-y-auto"
+        >
+          {filtered.map(p => (
+            <li key={p.id} role="option" aria-selected={false}>
+              <button
+                type="button"
+                onClick={() => {
+                  onSelect(p)
+                  setOpen(false)
+                }}
+                className="w-full text-left text-[13px] font-light text-[#4F4F4E] px-3.5 py-2.5 hover:bg-[#E6F3EE] hover:text-[#111] transition-colors border-b border-[#F0F0F0] last:border-b-0"
+              >
+                {p.title}
+                {p.askForRoomNumber && (
+                  <span className="ml-2 text-[9px] tracking-[0.12em] uppercase text-[#717170]">
+                    Room # required
+                  </span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {open && filtered.length === 0 && q !== '' && (
+        <p className="absolute z-10 left-0 right-0 mt-1 bg-white border border-[#E5E5E5] px-3.5 py-3 text-[12px] font-light text-[#717170]">
+          No hotel matches &quot;{value}&quot;.
+        </p>
+      )}
+      <p className="text-[10px] font-light text-[#717170] mt-1.5">
+        {places.length} pickup locations available · start typing to filter
+      </p>
+    </div>
+  )
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3">
+      <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C]">{title}</p>
+      <div className="space-y-3">{children}</div>
+    </div>
+  )
+}
+
+function Field({
+  id,
+  label,
+  required,
+  children,
+}: {
+  id: string
+  label: string
+  required?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      <label
+        htmlFor={id}
+        className="block text-[9px] font-normal tracking-[0.14em] uppercase text-[#888] mb-1.5"
+      >
+        {label}
+        {required && <span className="text-[#248D6C] ml-1">*</span>}
+      </label>
+      {children}
+    </div>
+  )
+}
+
+function CancellationLine({
+  policy,
+}: {
+  policy?: { title: string; fullRefundBeforeHours?: number }
+}) {
+  const hours = policy?.fullRefundBeforeHours
+  const text =
+    hours === undefined
+      ? 'Instant confirmation · Powered by Bókun & Stripe'
+      : `Free cancellation up to ${hours}h · Instant confirmation · Powered by Bókun & Stripe`
+  return <p className="text-[9.5px] text-center text-[#aaa] font-light">{text}</p>
+}
+
+function ChevronIcon() {
+  return (
+    <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden>
+      <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.2" fill="none" />
+    </svg>
+  )
+}
+
+function PinIcon() {
+  return (
+    <svg width="12" height="14" viewBox="0 0 12 14" fill="none" aria-hidden>
+      <path
+        d="M6 1C3.24 1 1 3.24 1 6c0 3.75 5 7 5 7s5-3.25 5-7c0-2.76-2.24-5-5-5z"
+        stroke="#248D6C"
+        strokeWidth="1.2"
+        fill="none"
+      />
+      <circle cx="6" cy="6" r="1.5" fill="#248D6C" />
+    </svg>
+  )
+}
+
+function DevMockBanner() {
+  return (
+    <div className="bg-[#FFF8E1] border-b border-[#E6D89A] px-6 py-2 text-[10px] font-medium tracking-[0.14em] uppercase text-[#8A6A0F]">
+      ⚠ Dev preview — no real booking or charge will be made
+    </div>
+  )
+}
+
+function SuccessState({
+  tour,
+  total,
+  date,
+  code,
+}: {
+  tour: Tour
+  total: number
+  date: string
+  code: string
+}) {
+  return (
+    <aside className="border border-[#E5E5E5] bg-white">
+      <div className="bg-[#E6F3EE] border-b border-[#B8D9CF] px-6 py-5">
+        <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C] mb-1.5 flex items-center gap-2">
+          <CheckIcon /> Booking confirmed
+        </p>
+        <p className="text-[#111] text-[20px] font-light leading-tight">{tour.name}</p>
+        <p className="text-[12px] font-light text-[#4F4F4E] mt-1">
+          {date} · confirmation code <span className="font-medium text-[#111]">{code}</span>
+        </p>
+      </div>
+      <div className="p-6 space-y-4 text-[13px] font-light text-[#4F4F4E] leading-[1.7]">
+        <p>
+          A confirmation email with your travel documents is on its way. Keep the code{' '}
+          <span className="font-medium text-[#111]">{code}</span> for any reference.
+        </p>
+        <div className="border-t border-[#E5E5E5] pt-4 flex items-baseline justify-between">
+          <span className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#717170]">
+            Amount paid
+          </span>
+          <span className="text-[20px] font-light text-[#111]">${total}</span>
+        </div>
+      </div>
+    </aside>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path d="M2 7.5L5.5 11L12 3.5" stroke="#248D6C" strokeWidth="1.5" fill="none" />
+    </svg>
+  )
+}
