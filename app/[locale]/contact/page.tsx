@@ -7,6 +7,7 @@ import SchemaOrg from '@/components/SchemaOrg'
 import Breadcrumb from '@/components/Breadcrumb'
 import ContactForm from '@/components/ContactForm'
 import { toursFor, siteConfigFor } from '@/lib/cms/client'
+import { localizedAlternates } from '@/lib/seo/alternates'
 import { generalFaqs as generalFaqsEn } from '@/lib/cms/data/faqs.en'
 import { generalFaqs as generalFaqsEs } from '@/lib/cms/data/faqs.es'
 import type { Locale } from '@/i18n/routing'
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: `${siteConfig.url}/contact` },
+    alternates: localizedAlternates('/contact', locale, siteConfig.url),
     openGraph: {
       title,
       description: t('intro'),

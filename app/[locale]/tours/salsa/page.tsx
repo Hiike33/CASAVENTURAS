@@ -13,6 +13,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import StickyMobileCTA from '@/components/StickyMobileCTA'
 import HeroVideo from '@/components/HeroVideo'
 import { getCMS } from '@/lib/cms'
+import { localizedAlternates } from '@/lib/seo/alternates'
 import { routing, type Locale } from '@/i18n/routing'
 
 type Props = { params: Promise<{ locale: string }> }
@@ -125,7 +126,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description: tour.description,
-    alternates: { canonical: locale === routing.defaultLocale ? `${siteConfig.url}/tours/salsa` : `${siteConfig.url}/${locale}/tours/salsa` },
+    alternates: localizedAlternates('/tours/salsa', locale as Locale, siteConfig.url),
     openGraph: {
       title: tour.name,
       description: tour.description,

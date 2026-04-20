@@ -6,6 +6,7 @@ import Breadcrumb from '@/components/Breadcrumb'
 import SchemaOrg from '@/components/SchemaOrg'
 import LegalPageLayout from '@/components/LegalPageLayout'
 import { legalFor, siteConfigFor } from '@/lib/cms/client'
+import { localizedAlternates } from '@/lib/seo/alternates'
 import type { Locale } from '@/i18n/routing'
 
 type Props = { params: Promise<{ locale: Locale }> }
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t('title'),
     description: page.metaDescription,
-    alternates: { canonical: `${siteConfig.url}/terms` },
+    alternates: localizedAlternates('/terms', locale, siteConfig.url),
     robots: { index: true, follow: true },
     openGraph: {
       title: `${t('title')} · Casa Venturas`,
