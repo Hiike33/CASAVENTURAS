@@ -1,7 +1,7 @@
 # Cloudflare Pages Deployment — Casa Venturas
 
 **Target domain**: `casaventuras.com` (registered on Cloudflare Registrar, account `Elie.belkheir@gmail.com`)
-**Repo**: https://github.com/VictoHughes/casaventuras-next
+**Repo**: https://github.com/VictoHughes/casaventuras
 **Stack**: Next.js 14 App Router · Node runtime (API routes use Anthropic + Resend)
 
 ---
@@ -47,7 +47,7 @@ Add `wrangler.jsonc` at repo root (created by `opennextjs init`).
 ### 1. Connect GitHub to Cloudflare Pages
 
 1. Dashboard → **Workers & Pages** → **Create** → **Pages** tab → **Connect to Git**
-2. Authorize Cloudflare on the GitHub account that owns `VictoHughes/casaventuras-next`
+2. Authorize Cloudflare on the GitHub account that owns `VictoHughes/casaventuras`
 3. Select the repo
 4. Production branch: `main`
 
@@ -82,7 +82,7 @@ BOKUN_BOOKING_CHANNEL_UUID= ...                         [Plain text]
 
 ### 4. First deployment
 
-Click **Save and Deploy**. Build takes ~3-5 min first time. Result: live at `casaventuras-next.pages.dev` (temporary URL).
+Click **Save and Deploy**. Build takes ~3-5 min first time. Result: live at `casaventuras.pages.dev` (temporary URL).
 
 Verify at this URL:
 - [ ] Home loads, hero video plays
