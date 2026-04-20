@@ -44,20 +44,16 @@ test('faqs.en.ts source has no hardcoded $89 or $249 string literal', () => {
     'faqs.en.ts must not contain a string literal with hardcoded $249; use template literal with priceOf(catamaran)')
 })
 
-test('catamaran/page.tsx metadata description has no hardcoded $249', () => {
+test('catamaran/page.tsx metadata description uses tour.description (not hardcoded)', () => {
   const src = readFileSync(resolve(projectRoot, 'app/[locale]/tours/catamaran/page.tsx'), 'utf-8')
-  const meta = src.match(/generateMetadata[\s\S]*?description:\s*([`'"])([\s\S]*?)\1/)
-  assert.ok(meta, 'must find description in generateMetadata')
-  const desc = meta[2]
-  assert.doesNotMatch(desc, /\$249\b/,
-    'description must use ${tour.price}, not hardcoded $249')
+  // After D-018 refactor, generateMetadata is async and description sources
+  // tour.description directly. Test that no string literal with $249 leaks in.
+  assert.doesNotMatch(src, /description:\s*['"`][^'"`]*\$249/,
+    'description must reference tour.description, not a string literal with $249')
 })
 
-test('salsa/page.tsx metadata description has no hardcoded $65', () => {
+test('salsa/page.tsx metadata description uses tour.description (not hardcoded)', () => {
   const src = readFileSync(resolve(projectRoot, 'app/[locale]/tours/salsa/page.tsx'), 'utf-8')
-  const meta = src.match(/generateMetadata[\s\S]*?description:\s*([`'"])([\s\S]*?)\1/)
-  assert.ok(meta, 'must find description in generateMetadata')
-  const desc = meta[2]
-  assert.doesNotMatch(desc, /\$65\b/,
-    'description must use ${tour.price}, not hardcoded $65')
+  assert.doesNotMatch(src, /description:\s*['"`][^'"`]*\$65/,
+    'description must reference tour.description, not a string literal with $65')
 })

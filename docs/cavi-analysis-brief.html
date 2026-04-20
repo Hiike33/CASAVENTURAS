@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Casa Venturas — Cavi Bot Analysis Brief</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  html, body {
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    color: #2b2b2b;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0;
+  }
+  h1 {
+    font-size: 26pt;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+    color: #111;
+    margin: 0 0 6px 0;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 15pt;
+    font-weight: 500;
+    color: #111;
+    margin: 28px 0 10px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #E5E5E5;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: #248D6C;
+    margin: 22px 0 6px 0;
+    page-break-after: avoid;
+  }
+  .eyebrow {
+    font-size: 9pt;
+    font-weight: 600;
+    letter-spacing: 2.2px;
+    text-transform: uppercase;
+    color: #248D6C;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    color: #6f6f6f;
+    font-size: 11pt;
+    font-weight: 300;
+    margin-bottom: 22px;
+  }
+  .meta {
+    font-size: 9pt;
+    color: #888;
+    margin-bottom: 28px;
+    border-bottom: 1px solid #E5E5E5;
+    padding-bottom: 12px;
+  }
+  .callout {
+    background: #E6F3EE;
+    border-left: 3px solid #248D6C;
+    padding: 12px 16px;
+    margin: 14px 0 20px;
+    font-size: 10pt;
+  }
+  .callout strong { color: #1C6E54; }
+  .warning {
+    background: #FFF8E1;
+    border-left: 3px solid #D4A017;
+    padding: 12px 16px;
+    margin: 14px 0 20px;
+    font-size: 10pt;
+  }
+  .prompt-box {
+    background: #FAFAFA;
+    border: 1px solid #E5E5E5;
+    border-radius: 2px;
+    padding: 14px 18px;
+    margin: 10px 0 14px 0;
+    font-family: "SF Mono", "Monaco", "Menlo", monospace;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    color: #1c1c1c;
+    white-space: pre-wrap;
+    page-break-inside: avoid;
+  }
+  .deliverable {
+    font-size: 9.5pt;
+    color: #4F4F4E;
+    margin: 8px 0 14px 0;
+    padding-left: 14px;
+    border-left: 2px solid #248D6C;
+  }
+  .deliverable strong { color: #111; }
+  ul, ol { padding-left: 20px; margin: 8px 0 16px; }
+  li { margin-bottom: 4px; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+    font-size: 9.5pt;
+  }
+  th, td {
+    text-align: left;
+    padding: 7px 10px;
+    border-bottom: 1px solid #E5E5E5;
+  }
+  th {
+    background: #FAFAFA;
+    font-weight: 600;
+    color: #111;
+  }
+  .axis {
+    page-break-inside: avoid;
+  }
+  .axis-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 24px;
+    margin-bottom: 6px;
+  }
+  .axis-num {
+    font-size: 22pt;
+    font-weight: 300;
+    color: #248D6C;
+    line-height: 1;
+    min-width: 40px;
+  }
+  .axis-title {
+    font-size: 13pt;
+    font-weight: 600;
+    color: #111;
+    flex: 1;
+  }
+  .footer-line {
+    text-align: center;
+    font-size: 8pt;
+    color: #999;
+    margin-top: 40px;
+    border-top: 1px solid #E5E5E5;
+    padding-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="eyebrow">Casa Venturas · Internal Brief</div>
+<h1>Cavi Bot — Email Analysis Brief</h1>
+<p class="subtitle">Guide d'analyse pour construire un chatbot client qui représente réellement la voix et l'expérience de Casa Venturas.</p>
+
+<div class="meta">
+  Préparé pour : Elie (Casa Venturas) · Préparé par : Stan (KWS Studio)<br>
+  Date : 19 avril 2026 · Version : 1.0
+</div>
+
+<h2>Contexte</h2>
+<p>L'objectif est de remplacer le system prompt générique actuel de Cavi par un bot <strong>réellement calibré</strong> sur ta manière de parler, les vraies questions de tes clients, et les objections récurrentes. Pour cela, on va exploiter l'actif le plus précieux à ta disposition : les échanges email passés avec tes clients.</p>
+
+<div class="callout">
+  <strong>Principe clé :</strong> les raw emails <strong>ne sortiront jamais</strong> de ta boîte Gmail. Tu feras l'analyse toi-même dans ton compte Claude.ai personnel via le Gmail Connector. Les seules sorties seront des <strong>patterns anonymisés</strong> — aucune PII client.
+</div>
+
+<h2>Pré-requis (10 min)</h2>
+<ol>
+  <li>Login sur <strong>claude.ai</strong> (compte perso) — plan Pro recommandé ($20/mois) pour un volume d'analyse décent</li>
+  <li>Settings → Connectors → <strong>Gmail</strong> → Connect → autorise l'accès à <code>micasaventuras@gmail.com</code></li>
+  <li>Ouvre une nouvelle conversation — nomme-la <em>"Cavi analysis – Casa Venturas"</em></li>
+  <li>Vérifie que Claude peut lire ton inbox en lui demandant : <em>"How many emails are in my inbox from the last 6 months ?"</em> — si chiffre cohérent, tout est bon</li>
+</ol>
+
+<h2>Méthode — Deux passes complémentaires</h2>
+
+<table>
+  <tr>
+    <th style="width:18%">Passe</th>
+    <th style="width:32%">Scope email</th>
+    <th>But</th>
+  </tr>
+  <tr>
+    <td><strong>Pass 1 — Global</strong></td>
+    <td>Totalité de l'inbox (toute l'histoire Casa Venturas)</td>
+    <td>Patterns structurels, voix de marque, FAQs de fond</td>
+  </tr>
+  <tr>
+    <td><strong>Pass 2 — Récent (6 mois)</strong></td>
+    <td>Emails du 19 oct 2025 au 19 avril 2026</td>
+    <td>Tendances récentes, évolutions saisonnières, questions nouvelles</td>
+  </tr>
+</table>
+
+<p>Pour chaque axe ci-dessous, tu poses <strong>deux fois la question</strong> à Claude — une fois sur la totalité, une fois sur les 6 derniers mois. Compare les deux réponses : si gros écart → signal d'évolution à prendre en compte. Si cohérent → patterns stables.</p>
+
+<div class="warning">
+  <strong>⚠️ Attention :</strong> si Claude te dit "trop d'emails, je ne peux pas tout analyser", scinde par trimestre (Q1 2024, Q2 2024, etc.) et demande un résumé de chaque, puis un résumé des résumés. Ne force jamais Claude à traiter plus de ~1 000 emails d'un coup.
+</div>
+
+<h2>Les 12 axes d'analyse</h2>
+
+<div class="axis">
+  <div class="axis-header">
+    <span class="axis-num">01</span>
+    <span class="axis-title">Top FAQs — les questions les plus fréquentes</span>
+  </div>
+  <p><strong>Pourquoi :</strong> alimente directement le knowledge base de Cavi. ROI immédiat.</p>
+  <div class="prompt-box">Analyse <strong>tous les emails entrants</strong> de clients potentiels (avant booking) dans mon inbox Gmail. Classe les questions posées en 20 catégories par fréquence décroissante. Pour chaque catégorie donne-moi : (1) le pourcentage estimé du total, (2) la formulation type en une phrase, (3) la réponse type que j'envoie en général. Anonymise les exemples — pas de nom, ville ou date identifiable.
+
+Ensuite <strong>fais la même analyse sur uniquement les 6 derniers mois</strong> et indique les écarts notables (questions en hausse, questions en baisse, questions nouvelles).</div>
+  <div class="deliverable"><strong>Livrable :</strong> tableau 20 FAQ global + tableau 20 FAQ récent + diff.</div>
+</div>
+
+<div class="axis">
+  <div class="axis-header">
+    <span class="axis-num">02</span>
+    <span class="axis-title">Objections et frictions de booking</span>
+  </div>
+  <p><strong>Pourquoi :</strong> identifier pourquoi les leads ne convertissent pas. Cavi peut adresser en amont.</p>
+  <div class="prompt-box">Dans les emails de clients qui ont demandé des infos mais <strong>n'ont PAS booké ensuite</strong> (pas de suivi, excuse polie, ghosting), quelles sont les objections récurrentes ? Classe par thème : prix, horaires, météo, condition physique, safety/cliff jumps, taille de groupe, logistique pickup, politique enfants.
+
+Fais cette analyse sur <strong>la totalité du corpus</strong>, puis répète sur <strong>les 6 derniers mois</strong>. Indique le top 10 objections global + top 10 récent + delta.</div>
+  <div class="deliverable"><strong>Livrable :</strong> 10 objections à intégrer dans le system prompt de Cavi en mode "reassurance proactive".</div>
+</div>
+
+<div class="axis">
+  <div class="axis-header">
+    <span class="axis-num">03</span>
+    <span class="axis-title">Gaps d'information du site actuel</span>
+  </div>
+  <p><strong>Pourquoi :</strong> si les gens demandent par email, c'est que le site ne répond pas. Double gain : update contenu + Cavi.</p>
+  <div class="prompt-box">Quelles infos les gens demandent par email que <strong>je m'attendrais normalement à trouver sur un site web de tour operator</strong> ? Points d'attention : pickup exact, what to wear, pet policy, drone allowed, nut/food allergies, insurance coverage, lost items policy, tipping, group discount, private charter.
+
+Sur la totalité d'abord, puis sur les 6 derniers mois. Donne les 15 demandes récurrentes avec % estimé pour chaque passe, et indique celles qui sont nouvelles vs structurelles.</div>
+  <div class="deliverable"><strong>Livrable :</strong> audit de contenu manquant sur les pages tours. À ajouter sur le site ET dans Cavi.</div>
+</div>
+
+<div class="axis">
+  <div class="axis-header">
+    <span class="axis-num">04</span>
+    <span class="axis-title">Répartition linguistique et culturelle</span>
+  </div>
+  <p><strong>Pourquoi :</strong> décision stratégique sur le multilingue de Cavi.</p>
+  <div class="prompt-box">Sur la totalité de mon inbox, quelle est la répartition des langues utilisées par mes clients entrants : anglais, espagnol, français, autre ? Les emails en espagnol viennent-ils plutôt de locaux Puerto Rico ou de touristes latino-américains/espagnols ?
+
+Refais l'analyse sur les 6 derniers mois — y a-t-il une tendance (plus d'espagnol ? plus de français ?). Donne-moi des pourcentages estimés pour chaque passe.</div>
+  <div class="deliverable"><strong>Livrable :</strong> si ES > 20% → Cavi bilingue EN/ES recommandé. Sinon, EN suffit.</div>
+</div>
+
+<div class="axis">
+  <div class="axis-header">
+    <span class="axis-num">05</span>
+    <span class="axis-title">Demandes de customisation et cas spéciaux</span>
+  </div>
+  <p><strong>Pourquoi :</strong> Cavi peut soit router vers un formulaire dédié, soit traiter directement les cas simples.</p>
+  <div class="prompt-box">Combien d'emails demandent des arrangements spéciaux ? Classe par type : date privée hors horaires, groupe privé complet (catamaran), extension horaire, repas spécifique (veggie, kosher), pickup hôtel zone éloignée, accessibilité (fauteuil, enfant bas âge, senior fragile), événement privé (anniversaire, proposal, honeymoon).
+
+Donne les chiffres sur la totalité puis sur les 6 derniers mois. Identifie les patterns saisonniers (proposals en décembre ?).</div>
+  <div class="deliverable"><strong>Livrable :</strong> liste des demandes spéciales + décision routing (Cavi direct vs formulaire dédié).</div>
+</div>
+
+<div class="axis">
+  <div class="axis-header">
+    <span class="axis-num">06</span>
+    <span class="axis-title">Inquiétudes de sécurité — El Yunque en priorité</span>
+  </div>
+  <p><strong>Pourquoi :</strong> les cliff jumps génèrent des questions sensibles. Cavi doit rassurer précisément, pas avec du "yes it's safe" vague.</p>
+  <div class="prompt-box">Quelles sont les inquiétudes de sécurité récurrentes concernant El Yunque ? Attention particulière : hauteur exacte des sauts, profondeur de l'eau, âge minimum recommandé, condition physique requise, encadrement professionnel, assurance/secours, historique d'incidents.
+
+Sur la totalité d'abord, puis sur les 6 derniers mois. Y a-t-il eu des emails de clients inquiets APRÈS le tour (incident, peur rétrospective, complaint formelle) ? Combien, si oui ?
+
+Même exercice pour le catamaran (tempêtes, mal de mer, sécurité enfants) et la salsa (intoxication alcool, harcèlement).</div>
+  <div class="deliverable"><strong>Livrable :</strong> contenu rassurant factuel pour chaque tour. Cavi répond avec des chiffres et des faits, pas avec du marketing.</div>
+</div>
+
+<div class="axis">
+  <div class="axis-header">
+    <span class="axis-num">07</span>
+    <span class="axis-title">Météo, annulations et reschedules</span>
+  </div>
+  <p><strong>Pourquoi :</strong> PR = météo imprévisible. Cavi doit connaître la politique et pouvoir checker la météo en temps réel.</p>
+  <div class="prompt-box">Combien d'emails concernent la météo ou l'annulation/reschedule ? Quel est le pattern d'envoi : demande proactive 3 jours avant, ou réactive le matin même ? Quelle politique ai-je communiquée dans mes réponses ? Distinction pluie vs storm warning vs hurricane.
+
+Analyse globale puis 6 derniers mois — la saison des ouragans (juin-novembre) génère-t-elle des pics ?</div>
+  <div class="deliverable"><strong>Livrable :</strong> politique météo cristallisée + option intégration API météo dans Cavi.</div>
+</div>
+
+<div class="axis">
+  <div class="axis-header">
+    <span class="axis-num">08</span>
+    <span class="axis-title">Questions de prix et transparence financière</span>
+  </div>
+  <p><strong>Pourquoi :</strong> toute question prix = signal de friction. Cavi doit anticiper.</p>
+  <div class="prompt-box">Quelles questions de prix reviennent ? Détaille : prix cachés redoutés, group discount, deposit vs full payment upfront, tipping (obligatoire ? montant ?), currency exchange, cartes acceptées, payment plans, remboursement si annulation.
+
+Refais sur les 6 derniers mois. Y a-t-il beaucoup de négociation (clients demandent un rabais) ? Les questions de tipping ont-elles évolué ?</div>
+  <div class="deliverable"><strong>Livrable :</strong> FAQ prix complète pour Cavi. Signal si la pricing strategy doit évoluer.</div>
+</div>
+
+<div class="axis">
+  <div class="axis-header">
+    <span class="axis-num">09</span>
+    <span class="axis-title">Voix de marque — ton et style</span>
+  </div>
+  <p><strong>Pourquoi :</strong> le plus important. Cavi doit parler comme toi, pas comme un bot corporate.</p>
+  <div class="prompt-box">Analyse 30 de mes emails de <strong>RÉPONSE</strong> (envoyés par moi, pas reçus) à des clients. Extrais mon style de communication :
+- Tone général (formel, amical, chaleureux, direct)
+- Longueur typique des réponses
+- Emojis utilisés ou pas
+- Formules d'ouverture récurrentes
+- Formules de fermeture récurrentes
+- Niveau de formalité (you vs we, first name basis)
+- Expressions idiomatiques ou tics de langage perso
+
+Produis un <strong>mini style-guide de 1 page</strong> utilisable pour calibrer un bot qui me représente fidèlement.
+
+Même analyse sur les 6 derniers mois — mon style a-t-il évolué récemment ?</div>
+  <div class="deliverable"><strong>Livrable :</strong> style guide 1 page → intégré dans le system prompt de Cavi. C'est la pièce la plus importante.</div>
+</div>
+
+<div class="axis">
+  <div class="axis-header">
+    <span class="axis-num">10</span>
+    <span class="axis-title">Parcours de conversion typique</span>
+  </div>
+  <p><strong>Pourquoi :</strong> comprendre ce qui fait booker.</p>
+  <div class="prompt-box">Analyse 20 threads complets où un client a booké au final. Pour chacun, donne-moi :
+- Nombre d'allers-retours avant conversion
+- Longueur du cycle (minutes ? heures ? jours ?)
+- Quels sont les moments décisifs (la question qui fait basculer)
+- Quel type de réponse déclenche la conversion (réassurance safety, offre customisée, photo/video, urgence/availability pressure)
+
+Fais cette analyse sur la totalité puis sur les 6 derniers mois. Identifie les patterns de closing qui marchent le mieux.</div>
+  <div class="deliverable"><strong>Livrable :</strong> Cavi peut reproduire les triggers efficaces. Exemple : proposer une photo ou vidéo quand le client hésite.</div>
+</div>
+
+<div class="axis">
+  <div class="axis-header">
+    <span class="axis-num">11</span>
+    <span class="axis-title">Feedback post-tour</span>
+  </div>
+  <p><strong>Pourquoi :</strong> Cavi doit mettre en avant les vrais points forts, pas des claims marketing.</p>
+  <div class="prompt-box">Dans les emails <strong>post-tour</strong> (remerciements envoyés par les clients, reviews privés, complaints, questions après expérience), identifie :
+- Les 5 points les plus COMPLIMENTÉS (qu'est-ce qui fait "wow")
+- Les 5 points les plus CRITIQUÉS (qu'est-ce qui crée de la friction)
+- Mentions de guides par prénom (quels guides sont le plus cités positivement)
+- Patterns saisonniers (critiques été vs hiver)
+
+Totalité puis 6 derniers mois. Les complaints ont-elles évolué récemment ?</div>
+  <div class="deliverable"><strong>Livrable :</strong> points forts à mettre en avant dans Cavi + remontée au client pour améliorer le service réel.</div>
+</div>
+
+<div class="axis">
+  <div class="axis-header">
+    <span class="axis-num">12</span>
+    <span class="axis-title">Personas clients</span>
+  </div>
+  <p><strong>Pourquoi :</strong> Cavi peut adapter ton et angle si le premier message révèle le persona.</p>
+  <div class="prompt-box">À partir de mon corpus email, identifie 4 à 5 personas de clients. Pour chaque persona donne :
+- Nom du persona (ex: "Lune de miel 30-40", "Famille avec ados", "Groupe d'amis 25-30 aventure")
+- Priorités (safety, fun, luxe, photos, culture locale)
+- Objections typiques
+- Budget estimé
+- Canal de découverte probable (TripAdvisor, Instagram, bouche-à-oreille)
+- Signaux linguistiques qui permettent de les détecter dans un premier message
+
+Compare la distribution de ces personas totalité vs 6 derniers mois — y a-t-il un shift démographique récent ?</div>
+  <div class="deliverable"><strong>Livrable :</strong> matrice de personas → Cavi détecte le persona au premier message et adapte son angle de réponse.</div>
+</div>
+
+<h2>Bonus — Prompt meta pour un récap final</h2>
+
+<p>Après avoir fait les 12 axes, termine par un prompt de synthèse :</p>
+
+<div class="prompt-box">À partir des 12 analyses précédentes, donne-moi en 1 page maximum :
+- Les 5 actions les plus rentables à implémenter dans un bot chatbot site web (ROI estimé)
+- Les 3 pièges à éviter absolument (ce que le bot ne doit PAS dire / faire)
+- Le <strong>system prompt complet proposé</strong> pour un bot Claude qui représenterait Casa Venturas fidèlement — prêt à copier-coller
+- Une estimation du volume de questions par jour qu'un tel bot recevrait, basée sur le volume historique de mon inbox</div>
+
+<h2>Livraison</h2>
+
+<ol>
+  <li>Tu fais les 13 analyses sur Claude.ai (compte 2-3 heures de travail réparti sur 1-2 jours)</li>
+  <li>Tu exportes le contenu dans un doc Google Docs ou Notion (copier-coller les réponses de Claude)</li>
+  <li>Tu me l'envoies par email ou WhatsApp</li>
+  <li>Je synthétise et produis Cavi v2 (system prompt + tool calling + tests) en ~2-3 jours</li>
+  <li>Déploiement sur <code>casaventuras.com</code> une fois validé</li>
+</ol>
+
+<h2>Sécurité et confidentialité</h2>
+
+<ul>
+  <li><strong>Raw emails never leave your inbox.</strong> L'analyse se fait dans ton compte Claude.ai personnel, qui a accès Read-Only via le Gmail Connector officiel.</li>
+  <li>Les <strong>sorties demandées sont anonymisées</strong> (patterns, %, style guides). Pas de noms, emails, téléphones, dates précises.</li>
+  <li>Anthropic <strong>ne s'entraîne pas</strong> sur les données des conversations Claude.ai API business (politique officielle). Pour les conversations Claude.ai perso, tu peux désactiver "Help improve Claude" dans Settings → Privacy.</li>
+  <li>Rien dans ce processus ne contourne le RGPD : tu traites tes propres données en tant que <strong>data controller</strong>, pour un intérêt légitime (améliorer ton service), sans exporter de données vers des tiers non autorisés.</li>
+</ul>
+
+<div class="callout">
+  <strong>Option prudence :</strong> si tu as le moindre doute sur un email contenant des données sensibles (santé, mineurs, incident judiciaire), exclus-le manuellement de l'analyse. Claude.ai te laisse filtrer par label ou date.
+</div>
+
+<div class="footer-line">
+  Casa Venturas × KWS Studio — Cavi v2 Email Analysis Brief — 19 avril 2026
+</div>
+
+</body>
+</html>

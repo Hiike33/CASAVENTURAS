@@ -1,14 +1,14 @@
 import type { Tour } from '@/lib/types/cms'
 
 /**
- * Casa Venturas tours — traducción al español (Puerto Rico).
+ * Casa Venturas tours , traducción al español (Puerto Rico).
  *
  * Fuente: lib/cms/data/tours.en.ts. Toda modificación debe mantener paridad
  * estructural con la versión EN (mismos slugs, mismos precios, mismas URLs
  * de imágenes). Solo el texto visible cambia.
  *
  * Aplicación del contrato docs/i18n-translation-contract.md :
- *  - Cero em-dashes (—).
+ *  - Cero em-dashes (,).
  *  - Forma "tú" (directa, tono de bienvenida caribeña).
  *  - Nombres propios conservados (El Yunque, Vieques, Casa Santurce, Zoe).
  *  - Precios en USD conservados tal cual.

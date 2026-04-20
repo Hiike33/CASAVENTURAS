@@ -1,7 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { matchIntent, matchIntentId, buildMailto, buildWhatsapp, INTENT_FAQ_REFS } from './cavi-intents.ts'
+import { matchIntent, matchIntentId, buildMailto, buildWhatsapp, INTENT_FAQ_REFS, detectLocale } from './cavi-intents.ts'
 import { faqById } from './cms/data/faqs.en.ts'
+import { faqById as faqByIdEs } from './cms/data/faqs.es.ts'
 
 // ─── Intent → FAQ id mapping ──────────────────────────────────────────
 // For each probe, we assert the intent that fires AND (when faq-backed)
@@ -108,4 +109,51 @@ test('buildWhatsapp appends text parameter to wa.me URL', () => {
   const url = buildWhatsapp('Can we book 6 people?')
   assert.match(url, /^https:\/\/wa\.me\/\d+\?text=/)
   assert.match(url, /text=Can%20we%20book%206%20people%3F/)
+})
+
+// ─── Multilingual detection + matching ────────────────────────────────
+
+test('detectLocale recognizes Spanish via ¿ / ¡', () => {
+  assert.equal(detectLocale('¿Cuánto cuesta?'), 'es')
+  assert.equal(detectLocale('¡Hola, soy nuevo aquí!'), 'es')
+})
+
+test('detectLocale recognizes French via common particles', () => {
+  assert.equal(detectLocale("C'est sûr pour les enfants ?"), 'fr')
+  assert.equal(detectLocale('Combien de temps dure le tour ?'), 'fr')
+})
+
+test('detectLocale defaults to English when nothing matches', () => {
+  assert.equal(detectLocale('How much is the tour?'), 'en')
+})
+
+test('ES probe "¿es seguro para niños?" routes to generic-family-kids (ES intents)', () => {
+  assert.equal(matchIntentId('¿es seguro para niños?'), 'generic-family-kids')
+})
+
+test('ES probe "¿cuánto cuesta?" routes to price-overview', () => {
+  assert.equal(matchIntentId('¿cuánto cuesta?'), 'price-overview')
+})
+
+test('ES probe "¿qué está incluido en el catamarán?" routes to cat-inclusions', () => {
+  assert.equal(matchIntentId('¿qué está incluido en el catamarán?'), 'cat-inclusions')
+})
+
+test('FR probe "combien ça coûte" routes to price-overview', () => {
+  assert.equal(matchIntentId('combien ça coûte ?'), 'price-overview')
+})
+
+test('FR probe "est-ce sûr pour les enfants" routes to generic-family-kids', () => {
+  assert.equal(matchIntentId("est-ce sûr pour les enfants ?"), 'generic-family-kids')
+})
+
+test('ES fallback text is Spanish when locale forced', () => {
+  const r = matchIntent('flux capacitor quantique', 'es')
+  assert.match(r.text, /encantador|equipo|ya mismo/i)
+})
+
+test('ES matched intent returns Spanish FAQ answer', () => {
+  const r = matchIntent('¿me voy a marear?')
+  assert.match(r.text, /Vieques Sound|mareo|Dramamine/i)
+  assert.ok(faqByIdEs['cat-seasickness'])
 })

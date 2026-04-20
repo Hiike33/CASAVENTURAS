@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Image from 'next/image'
 
 type Props = {
   videoId: string
@@ -30,11 +31,12 @@ export default function YouTubeFacade({ videoId, title, className = '', aspectRa
           className="absolute inset-0 w-full h-full group"
           aria-label={`Play video: ${title}`}
         >
-          <img
+          <Image
             src={poster}
             alt={title}
-            loading="lazy"
-            className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-85 transition-opacity"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-cover opacity-70 group-hover:opacity-85 transition-opacity"
           />
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-16 h-16 bg-[#248D6C] flex items-center justify-center group-hover:bg-[#1C6E54] transition-colors">

@@ -1,7 +1,7 @@
 import type { SiteConfig } from '@/lib/types/cms'
 
 /**
- * Configuración del sitio Casa Venturas — variante ES.
+ * Configuración del sitio Casa Venturas , variante ES.
  * Paridad de claves con site-config.en.ts.
  * Valores técnicos (email, teléfono, URLs, WhatsApp) se conservan sin traducir.
  */
