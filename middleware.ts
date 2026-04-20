@@ -1,23 +1,25 @@
+import createMiddleware from 'next-intl/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
+import { routing } from './i18n/routing'
 
-// Single source of truth for response security headers. Runs on every
-// request that matches the matcher (all pages + API routes; static assets
-// are excluded — they don't need CSP and would bloat image requests).
+// Composes two responsibilities:
+//   1. next-intl handles locale detection and routing (rewrites /es/tours/...
+//      to /[locale]/tours/ internally, sets NEXT_LOCALE cookie, handles
+//      redirects when the URL is missing a locale prefix).
+//   2. We overlay the security headers on whatever response it produced.
 //
 // Trade-offs documented inline:
 // - 'unsafe-inline' in script-src is required because Next.js App Router
 //   emits inline runtime scripts and JSON-LD <script> tags on every page.
-//   Upgrading to nonce-based CSP requires making pages dynamic (not SSG),
-//   which hurts CDN caching. Accepted for MVP — revisit when volume grows.
 // - img-src allows all https: because tour photos pull from OTA feeds
 //   (TripAdvisor, Viator photo URLs). Safe since we never execute images.
-// - frame-ancestors 'none' blocks click-jacking globally (no one iframes us).
+// - frame-ancestors 'none' blocks click-jacking globally.
 
 const CSP_DIRECTIVES: Record<string, readonly string[]> = {
   'default-src': ["'self'"],
   'script-src': [
     "'self'",
-    "'unsafe-inline'", // Next.js inline scripts + JSON-LD data
+    "'unsafe-inline'",
     'https://js.stripe.com',
     'https://widgets.bokun.io',
     'https://static.bokun.io',
@@ -52,22 +54,13 @@ const CSP_VALUE = Object.entries(CSP_DIRECTIVES)
   .map(([k, v]) => (v.length ? `${k} ${v.join(' ')}` : k))
   .join('; ')
 
-export function middleware(_req: NextRequest) {
-  const res = NextResponse.next()
-  // HSTS: 1 year, includes subdomains, submitted to preload list after GA.
-  res.headers.set(
-    'Strict-Transport-Security',
-    'max-age=31536000; includeSubDomains',
-  )
-  // Prevent MIME type sniffing (old IE / Chrome) — pair with correct Content-Type.
+const intlMiddleware = createMiddleware(routing)
+
+function applySecurityHeaders(res: NextResponse): NextResponse {
+  res.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
   res.headers.set('X-Content-Type-Options', 'nosniff')
-  // Tell browsers to send full URL only to same-origin navigations.
   res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  // Block iframing except same-origin (defence-in-depth to frame-ancestors).
   res.headers.set('X-Frame-Options', 'SAMEORIGIN')
-  // Disable all powerful browser APIs we don't use. Tour booking site ≠
-  // anything that needs camera/mic/geolocation/USB/payment (Stripe iframe
-  // has its own allowance via Payment Request API scoped to its own frame).
   res.headers.set(
     'Permissions-Policy',
     [
@@ -82,9 +75,18 @@ export function middleware(_req: NextRequest) {
     ].join(', '),
   )
   res.headers.set('Content-Security-Policy', CSP_VALUE)
-  // Hide framework identity — small infoleak, cheap to suppress.
   res.headers.delete('X-Powered-By')
   return res
+}
+
+export default function middleware(req: NextRequest) {
+  // API routes skip i18n routing (they return JSON, not localized pages) but
+  // still get security headers applied.
+  if (req.nextUrl.pathname.startsWith('/api')) {
+    return applySecurityHeaders(NextResponse.next())
+  }
+  const res = intlMiddleware(req)
+  return applySecurityHeaders(res)
 }
 
 export const config = {

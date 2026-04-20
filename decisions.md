@@ -261,6 +261,48 @@ Changements :
 
 ---
 
+## 2026-04-20 — i18n EN/ES/FR
+
+### D-018 · [ARCH/i18n] Site multilingue EN (default) + ES + FR via next-intl
+**Décidé** :
+1. Stack i18n : `next-intl` (Next 15 App Router compatible) avec routing `app/[locale]/*`. URLs : `/` (EN), `/es/*`, `/fr/*`. Pas de redirect forcé — le visiteur choisit ou son browser suggère.
+2. Ordre de déploiement : ES d'abord (PR hispanophone, ROI local immédiat), puis FR (même infrastructure). Une locale complètement validée avant la suivante.
+3. Infrastructure CMS : fichiers par locale (`tours.en.ts`, `tours.es.ts`, `tours.fr.ts` etc.) avec fallback EN si une entrée manque. Adapter gagne un paramètre `locale?: Locale`.
+4. Cavi multilingue : détection langue au 1er message + override par URL locale. 3 listes d'intents parallèles (EN/ES/FR) avec keywords spécifiques à chaque langue.
+5. Légal (privacy/terms/cookies) traduit en Phase 1.
+6. Reviews TripAdvisor : texte natif EN conservé (authenticité), seul le `title` est traduit pour social proof accessible.
+7. Fallback : si une traduction manque côté contenu, afficher la version EN. Pas d'erreur 404 jamais pour cause de traduction.
+8. Contrat de traduction formalisé dans `docs/i18n-translation-contract.md` (CCS+METACERTIF avec interdits typographiques, adverbes robotiques blacklist, criteria d'acceptation A1-A11).
+
+**Raison** :
+1. **ROI local** — Puerto Rico est hispanophone. Viser le visitor ES avant FR aligne avec le marché.
+2. **CMS ready** — L'adapter pattern (`lib/cms/adapter.ts`) et le système FAQ avec `id` stable (D-017) étaient architecturalement pré-disposés pour l'i18n.
+3. **Stabilité du contrat** — Codifier les règles anti-em-dash et anti-LLM-talk en fichier versionné prévient la dérive stylistique entre sessions et agents.
+4. **Fallback EN = sécurité** — Si une traduction rate, le site ne casse jamais.
+
+**Alternatives rejetées** :
+- next-i18next → deprecated au profit de next-intl pour App Router
+- Duplicate pages par locale (app/fr/, app/es/) → viole D-005
+- Runtime LLM translation → contredit D-016 (pas de LLM user-facing) + coût + latence
+- Headless CMS avec i18n natif (Sanity/Contentful) → overkill pour 3 tours MVP
+- Traduire Reviews TripAdvisor → modifierait du contenu tiers, authenticité perdue
+
+**Impact** :
+- Fichiers créés : `i18n.ts`, `messages/{en,es,fr}.json`, `lib/cms/data/{tours,faqs,guides,site-config}.{es,fr}.ts`, tour/contact/legal pages multi-locales, `docs/i18n-translation-contract.md`, `scripts/validate-translations.sh`, `lib/cavi-intents.{es,fr}.ts` (ou structure unified par locale)
+- Fichiers renommés : `tours.ts` → `tours.en.ts` etc.
+- Fichiers modifiés structurels : `middleware.ts` (chaining), `app/layout.tsx` (move + lang dynamic), `app/sitemap.ts`, `app/robots.ts`, `components/SchemaOrg.tsx`, `lib/cavi-intents.ts`, 14 composants UI, 6 pages + preview
+- Déplacement massif : `app/*` (sauf api/) → `app/[locale]/*`
+- Bundle delta : home 131 kB → ~145 kB (+11%, acceptable)
+- Coût traduction : ~$0.50 LLM one-shot + 1 jour Elie revue async
+- Volume : ~11,600 mots par locale = ~23,200 mots total
+
+**Invalidation** :
+- Si traffic ES ou FR < 2% après 60 jours → désactivation de la locale concernée
+- Si conflits hreflang détectés par Google Search Console → correction urgente
+- Si Elie flag passages factuels incorrects → correction + redeploy avant toute claim de livraison
+
+---
+
 ## Règles pour ajouter une décision
 
 1. Format strict : `### D-XXX · [SCOPE] Titre court`

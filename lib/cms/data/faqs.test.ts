@@ -45,7 +45,7 @@ test('faqs.ts source has no hardcoded $89 or $249 string literal', () => {
 })
 
 test('catamaran/page.tsx metadata description has no hardcoded $249', () => {
-  const src = readFileSync(resolve(projectRoot, 'app/tours/catamaran/page.tsx'), 'utf-8')
+  const src = readFileSync(resolve(projectRoot, 'app/[locale]/tours/catamaran/page.tsx'), 'utf-8')
   const meta = src.match(/generateMetadata[\s\S]*?description:\s*([`'"])([\s\S]*?)\1/)
   assert.ok(meta, 'must find description in generateMetadata')
   const desc = meta[2]
@@ -54,7 +54,7 @@ test('catamaran/page.tsx metadata description has no hardcoded $249', () => {
 })
 
 test('salsa/page.tsx metadata description has no hardcoded $65', () => {
-  const src = readFileSync(resolve(projectRoot, 'app/tours/salsa/page.tsx'), 'utf-8')
+  const src = readFileSync(resolve(projectRoot, 'app/[locale]/tours/salsa/page.tsx'), 'utf-8')
   const meta = src.match(/generateMetadata[\s\S]*?description:\s*([`'"])([\s\S]*?)\1/)
   assert.ok(meta, 'must find description in generateMetadata')
   const desc = meta[2]

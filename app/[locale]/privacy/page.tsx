@@ -9,11 +9,18 @@ import { siteConfig } from '@/lib/tours'
 const LAST_UPDATED = '2026-04-18'
 
 export function generateMetadata(): Metadata {
+  const description = 'How Casa Venturas collects, uses, and protects your personal information. Compliant with Puerto Rico Act 39, Act 111-2005, CalOPPA, and GDPR.'
   return {
     title: 'Privacy Policy',
-    description: 'How Casa Venturas collects, uses, and protects your personal information. Compliant with Puerto Rico Act 39, Act 111-2005, CalOPPA, and GDPR.',
+    description,
     alternates: { canonical: `${siteConfig.url}/privacy` },
     robots: { index: true, follow: true },
+    openGraph: {
+      title: 'Privacy Policy · Casa Venturas',
+      description,
+      url: `${siteConfig.url}/privacy`,
+      type: 'website',
+    },
   }
 }
 

@@ -9,11 +9,18 @@ import { siteConfig } from '@/lib/tours'
 const LAST_UPDATED = '2026-04-18'
 
 export function generateMetadata(): Metadata {
+  const description = 'Terms and conditions for booking tours directly on casaventuras.com. Cancellation policy, liability, conduct, and governing law (Commonwealth of Puerto Rico).'
   return {
     title: 'Terms of Service',
-    description: 'Terms and conditions for booking tours directly on casaventuras.com. Cancellation policy, liability, conduct, and governing law (Commonwealth of Puerto Rico).',
+    description,
     alternates: { canonical: `${siteConfig.url}/terms` },
     robots: { index: true, follow: true },
+    openGraph: {
+      title: 'Terms of Service · Casa Venturas',
+      description,
+      url: `${siteConfig.url}/terms`,
+      type: 'website',
+    },
   }
 }
 

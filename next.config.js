@@ -1,3 +1,8 @@
+const createNextIntlPlugin = require('next-intl/plugin')
+
+// next-intl resolves messages per locale via i18n/request.ts at the path below.
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -12,4 +17,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withNextIntl(nextConfig)

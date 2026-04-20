@@ -1,0 +1,29 @@
+{
+  "Nav": {
+    "experiences": "Experiencias",
+    "reviews": "Reseñas",
+    "about": "Nosotros",
+    "contact": "Contacto",
+    "bookNow": "Reserva ahora",
+    "viewAll": "Ver todas las experiencias",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "priceFrom": "${price}"
+  },
+  "Footer": {
+    "craftedBy": "Hecho por KWS Studio",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "cookies": "Cookies",
+    "copyright": "© {year} {name}"
+  },
+  "Common": {
+    "loading": "Cargando",
+    "sending": "Enviando",
+    "sent": "Enviado",
+    "error": "Algo salió mal",
+    "tryAgain": "Intenta de nuevo",
+    "required": "Obligatorio",
+    "optional": "Opcional"
+  }
+}

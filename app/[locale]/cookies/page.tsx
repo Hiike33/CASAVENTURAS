@@ -9,11 +9,18 @@ import { siteConfig } from '@/lib/tours'
 const LAST_UPDATED = '2026-04-20'
 
 export function generateMetadata(): Metadata {
+  const description = 'How Casa Venturas uses cookies and similar technologies. We do not use analytics or advertising trackers — only strictly necessary cookies and the Bókun booking widget.'
   return {
     title: 'Cookie Policy',
-    description: 'How Casa Venturas uses cookies and similar technologies. We do not use analytics or advertising trackers — only strictly necessary cookies and the Bókun booking widget.',
+    description,
     alternates: { canonical: `${siteConfig.url}/cookies` },
     robots: { index: true, follow: true },
+    openGraph: {
+      title: 'Cookie Policy · Casa Venturas',
+      description,
+      url: `${siteConfig.url}/cookies`,
+      type: 'website',
+    },
   }
 }
 

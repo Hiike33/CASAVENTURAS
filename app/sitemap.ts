@@ -1,19 +1,37 @@
 import type { MetadataRoute } from 'next'
 import { tours, siteConfig } from '@/lib/tours'
+import { routing } from '@/i18n/routing'
 
+// Multilingual sitemap. Each URL is emitted once per locale with an
+// `alternates.languages` block so Google understands the three versions
+// are translations of the same content, not duplicates. The default
+// locale (EN) keeps the bare URL without a prefix.
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
-  return [
-    { url: `${siteConfig.url}/`, lastModified: now, changeFrequency: 'weekly', priority: 1.0 },
-    { url: `${siteConfig.url}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${siteConfig.url}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
-    { url: `${siteConfig.url}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
-    { url: `${siteConfig.url}/cookies`, lastModified: now, changeFrequency: 'yearly', priority: 0.2 },
-    ...tours.map(t => ({
-      url: `${siteConfig.url}/tours/${t.slug}`,
-      lastModified: now,
-      changeFrequency: 'weekly' as const,
-      priority: 0.9,
-    })),
+  const base = siteConfig.url
+
+  const pathFor = (locale: string, path: string) =>
+    locale === routing.defaultLocale ? `${base}${path}` : `${base}/${locale}${path}`
+
+  const alternatesFor = (path: string) =>
+    Object.fromEntries(routing.locales.map(l => [l, pathFor(l, path)]))
+
+  const paths: Array<{ path: string; changeFrequency: 'weekly' | 'monthly' | 'yearly'; priority: number }> = [
+    { path: '/', changeFrequency: 'weekly', priority: 1.0 },
+    { path: '/contact', changeFrequency: 'monthly', priority: 0.7 },
+    { path: '/privacy', changeFrequency: 'yearly', priority: 0.2 },
+    { path: '/terms', changeFrequency: 'yearly', priority: 0.2 },
+    { path: '/cookies', changeFrequency: 'yearly', priority: 0.2 },
+    ...tours.map(t => ({ path: `/tours/${t.slug}`, changeFrequency: 'weekly' as const, priority: 0.9 })),
   ]
+
+  return routing.locales.flatMap(locale =>
+    paths.map(({ path, changeFrequency, priority }) => ({
+      url: pathFor(locale, path),
+      lastModified: now,
+      changeFrequency,
+      priority,
+      alternates: { languages: alternatesFor(path) },
+    })),
+  )
 }
