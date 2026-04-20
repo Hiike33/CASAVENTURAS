@@ -303,6 +303,46 @@ Changements :
 
 ---
 
+## 2026-04-20 — Direction luxe Aman Tropical Editorial
+
+### D-019 · [DESIGN] Débloquer radii 2px + hairline shadows + serif Cormorant Garamond (Direction C "luxe")
+**Décidé** : faire évoluer les règles strictes héritées de D-011/D-012 pour permettre une direction éditoriale luxe inspirée des sites Aman / Belmond / Singita. Trois relâchements ciblés et opt-in uniquement :
+
+1. **Border-radius opt-in** : le global `* { border-radius: 0 !important; }` dans `globals.css` est RETIRÉ. Les composants default restent à 0 via `tailwind.config.ts` (`borderRadius.DEFAULT: '0px'` inchangé), mais peuvent désormais utiliser `rounded-sm` (2px) explicitement. Effet de bord positif : 3 pulse dots (`ChatWidget.tsx:101`, `contact/page.tsx:95`, `gallery-preview/page.tsx:272`) qui demandaient `rounded-full` mais étaient forcés carrés deviennent enfin ronds comme leur code l'intentait.
+2. **Hairline shadows** : ajout de deux utilities Tailwind dédiées — `shadow-hairline` (`0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)`) pour l'elevation éditoriale subtile et `shadow-frost` (`0 8px 32px rgba(0,0,0,0.06)`) pour les glass panels à venir (Phase 2).
+3. **Serif secondaire Cormorant Garamond** : ajout d'un `@import` Google Fonts (poids 300/400/500 + italiques 300/400) et d'une famille Tailwind `font-serif`. Réservé STRICTEMENT aux pull-quotes, italiques éditoriaux, accents décoratifs. **INTERDIT** sur display headings, CTAs, body, nav, formulaires.
+
+**Raison** :
+1. **Demande produit Stan (session 2026-04-20)** après audit comparatif : "le site peut être plus luxe ? glass effect peut-être ? il peut upscale ?" → analyse proposant 3 directions (A Editorial Minimal / B Glass+Motion / C Aman Tropical Editorial), choix C explicite.
+2. **Positionnement produit** : un catamaran privé à 249$/personne appelle un vocabulaire visuel luxe cohérent avec le prix. Les refs industrie luxe (aman.com, belmond.com, singita.com) utilisent toutes micro-radii + hairline shadows + serif secondaire en italique pour les reviews et pull-quotes.
+3. **Opt-in only** : aucun changement forcé sur les composants existants en Phase 1. Migration progressive planifiée pour Phases 2 (composants) et 3 (upscale vidéos).
+
+**Alternatives rejetées** :
+- Direction A (Editorial Minimal pur Aesop/Kinfolk) → conserve les règles actuelles mais le gain "luxe" est limité pour le tarif catamaran 249$.
+- Direction B (Glass-heavy + framer-motion) → effet "tech SaaS" plus que "luxury travel", coût JS (+30 kB framer-motion).
+- Autoriser les radii > 2px → contre le DNA flat/editorial (2px max est la norme Aman, Belmond va 0-4px, Singita 0px).
+- Serif display (ex: Didot sur H1) → violerait le contrat "Figtree light display" de D-007/D-012, perte de cohérence brand.
+
+**Impact — Phase 1 (ce commit)** :
+- Fichiers modifiés : 4
+  - `app/[locale]/globals.css` : +1 `@import` Cormorant Garamond, -1 override `* { border-radius: 0 !important; }`, commentaire explicatif
+  - `tailwind.config.ts` : +fontFamily.serif, +boxShadow.hairline, +boxShadow.frost, +borderRadius.sm
+  - `CLAUDE.md` : section Design Principles + Typography màj pour refléter D-019
+  - `decisions.md` : cette entrée
+- Composants touchés : 0 (migration = Phase 2)
+- Tests : unit (20) doivent rester verts — aucun ne dépend de CSS
+- Bundle CSS runtime : +~30 kB Cormorant Garamond (lazy côté Google Fonts CDN, n'affecte pas LCP tant que Phase 2 ne l'utilise pas)
+
+**Invalidation / rollback** :
+- Si le client rejette le serif en review Phase 2 → rollback trivial : restauration du `!important` + retrait de `@import` + retrait de `font-serif` dans Tailwind. Zéro dette puisque Phase 1 n'applique le serif nulle part.
+- Si les 3 pulse dots ronds choquent visuellement → ajouter `.rounded-0` class local sur eux (coût : 3 lignes).
+
+**Futur (Phases 2-3, hors scope D-019)** :
+- Phase 2 : migration composants ciblée (TourCard.tsx glass frosted panels avec hover cross-dissolve, ReviewsStrip.tsx italic pull-quote en Cormorant Garamond, cards et formulaires à `shadow-hairline` + `rounded-sm` ponctuel)
+- Phase 3 : upscale 4 vidéos hero (`hero-catamaran.mp4` déjà croppé + `hero-el-yunque.mp4` + `hero-home.mp4` + `hero-salsa.mp4`) via ffmpeg lanczos x2 ou Real-ESRGAN
+
+---
+
 ## Règles pour ajouter une décision
 
 1. Format strict : `### D-XXX · [SCOPE] Titre court`

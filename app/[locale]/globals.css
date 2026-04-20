@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -49,8 +50,9 @@ body {
   text-transform: uppercase;
 }
 
-/* No border-radius anywhere */
-* { border-radius: 0 !important; }
+/* Radius defaults to 0 via tailwind.config.ts (borderRadius.DEFAULT).
+   Opt-in only: components may use `rounded-sm` (2px) or `rounded-full`
+   for decorative dots. D-019 unlocks this — see decisions.md. */
 
 /* Reviews strip drag scroll */
 .reviews-strip {

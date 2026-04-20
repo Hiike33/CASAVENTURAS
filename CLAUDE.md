@@ -5,7 +5,7 @@
 - TypeScript
 - Tailwind CSS
 - Cloudflare Pages (deployment)
-- Google Fonts: Figtree (300/400/500/600)
+- Google Fonts: Figtree (300/400/500/600, primary) + Cormorant Garamond (300/400/500 + italic 300/400, secondary — pull-quotes only, D-019)
 
 ## Design System
 
@@ -43,14 +43,15 @@ Tour thumb fallbacks (dark, masqués par les photos) :
 - Aucune section de contenu avec fond sombre (#111/#0d0d0d/#1a1a1a). Les seules apparitions de noir sont : bullets de liste 6×6px, traits burger icon, fallbacks de photos tours.
 - Brand accent = VERT `#248D6C` (CTAs, links, icons, eyebrows). Hover = `#1C6E54`. Tint = `#E6F3EE`. Contraste WCAG AA OK sur blanc.
 - `#F5A623` = GOLD ÉTOILES UNIQUEMENT (TripAdvisor 5★). JAMAIS sur CTAs, links, ou bg de section.
-- NO serif fonts. Figtree 300/400/500/600 only.
+- Serif `font-serif` (Cormorant Garamond) autorisée UNIQUEMENT sur pull-quotes / italiques éditoriaux (reviews, decorative accents). JAMAIS sur display headings, CTAs, body, nav, formulaires. Voir D-019.
 
 ### Typography
-- Font: Figtree (Google Fonts)
-- Display headings: font-weight 300, letter-spacing -0.02em
-- Body: font-weight 300–400
-- Labels/CTAs: font-weight 500–600, letter-spacing 0.12–0.22em, uppercase
-- NO serif fonts anywhere
+- Primary font: Figtree (Google Fonts) — display, body, labels, CTAs, nav, forms
+- Secondary font: Cormorant Garamond (D-019) — pull-quotes, italic editorial accents ONLY
+- Display headings: Figtree font-weight 300, letter-spacing -0.02em
+- Body: Figtree font-weight 300–400
+- Labels/CTAs: Figtree font-weight 500–600, letter-spacing 0.12–0.22em, uppercase
+- Pull-quote / italic editorial: `font-serif italic` — reserved zone, never for UI chrome
 
 ### Key Design Principles
 - White background sections — photos carry the color
@@ -58,8 +59,8 @@ Tour thumb fallbacks (dark, masqués par les photos) :
 - Tour selector icons at bottom of hero (like surf-spirit.com)
 - All-caps labels with generous letter-spacing
 - Thin borders: 1px solid #E8E8E8
-- No rounded corners (border-radius: 0)
-- No shadows (flat design)
+- Rounded corners: default 0 (flat). Opt-in `rounded-sm` (2px) allowed on cards / glass panels / editorial elements only (D-019). Never > 2px.
+- Shadows: flat by default. Opt-in utilities `shadow-hairline` (editorial elevation) and `shadow-frost` (frosted glass panels) are authorized (D-019). No heavy drop shadows.
 
 ## Page Structure
 

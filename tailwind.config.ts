@@ -10,6 +10,9 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ['Figtree', 'system-ui', 'sans-serif'],
+        // Secondary serif — pull-quotes, review italics, editorial accents only.
+        // Never for display headings or body (see CLAUDE.md Design Principles).
+        serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
       },
       colors: {
         cv: {
@@ -37,6 +40,13 @@ const config: Config = {
       },
       borderRadius: {
         DEFAULT: '0px',
+        sm: '2px', // editorial micro-radius for cards / glass panels (D-019)
+      },
+      boxShadow: {
+        // Hairline shadow for editorial elevation — barely perceptible,
+        // adds depth without breaking the flat aesthetic. D-019.
+        hairline: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
+        frost: '0 8px 32px rgba(0,0,0,0.06)', // for frosted glass panels
       },
     },
   },
