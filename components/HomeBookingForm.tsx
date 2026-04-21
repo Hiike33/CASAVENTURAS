@@ -6,6 +6,7 @@ import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
 import CheckoutPanel from '@/components/CheckoutPanel'
 import { toursFor, siteConfigFor } from '@/lib/cms/client'
 import { getDisplayTime, getDisplayDaysLabel, formatStartTime, getBookingTotal } from '@/lib/bokun/snapshot'
+import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 import type { Locale } from '@/i18n/routing'
 
 type AvailabilityState =
@@ -181,13 +182,10 @@ export default function HomeBookingForm() {
       <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
           <label htmlFor="hb-date" className="block text-[9px] font-medium tracking-[0.14em] uppercase text-[#888] mb-1.5">{t('date')}</label>
-          <input
-            id="hb-date"
-            type="date"
-            value={date}
-            onChange={e => setDate(e.target.value)}
-            min={new Date().toISOString().slice(0, 10)}
-            className="w-full bg-white border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors"
+          <AvailabilityCalendar
+            productId={productId}
+            selected={date}
+            onSelect={setDate}
           />
         </div>
         <div>

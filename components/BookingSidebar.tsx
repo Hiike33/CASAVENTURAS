@@ -4,6 +4,7 @@ import type { Tour } from '@/lib/tours'
 import type { BokunAvailability, BokunAvailabilityResponse } from '@/lib/bokun/types'
 import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
 import { formatStartTime, getBookingTotal } from '@/lib/bokun/snapshot'
+import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 import CheckoutPanel from '@/components/CheckoutPanel'
 
 type AvailabilityState =
@@ -125,13 +126,10 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
       <div className="p-6 space-y-3">
         <div>
           <label htmlFor="bs-date" className="block text-[9px] font-normal tracking-[0.14em] uppercase text-[#888] mb-1.5">Preferred date</label>
-          <input
-            id="bs-date"
-            type="date"
-            value={date}
-            onChange={e => setDate(e.target.value)}
-            min={new Date().toISOString().slice(0, 10)}
-            className="w-full border border-[#e8e8e8] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors"
+          <AvailabilityCalendar
+            productId={tour.bokunProductId}
+            selected={date}
+            onSelect={setDate}
           />
         </div>
 
