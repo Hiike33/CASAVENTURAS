@@ -5,7 +5,7 @@ import type { BokunAvailability, BokunAvailabilityResponse } from '@/lib/bokun/t
 import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
 import CheckoutPanel from '@/components/CheckoutPanel'
 import { toursFor, siteConfigFor } from '@/lib/cms/client'
-import { getDisplayTime, getDisplayDaysLabel, formatStartTime } from '@/lib/bokun/snapshot'
+import { getDisplayTime, getDisplayDaysLabel, formatStartTime, getBookingTotal } from '@/lib/bokun/snapshot'
 import type { Locale } from '@/i18n/routing'
 
 type AvailabilityState =
@@ -92,8 +92,10 @@ export default function HomeBookingForm() {
       : undefined
 
   const guestsNum = Math.max(1, Number(guests) || 1)
-  const price = selectedTour?.price ?? 0
-  const total = price * guestsNum
+  // Total respects selectedTour.pricedPerPerson (set by Bokun enrichment).
+  // Flat-fee tours (private catamaran charter) charge a single amount
+  // regardless of guest count , getBookingTotal handles both modes.
+  const total = selectedTour ? getBookingTotal(selectedTour, guestsNum) : 0
 
   const bokunCheckoutUrl = bokunConfigured
     ? `https://widgets.bokun.io/online-sales/${BOKUN_CHANNEL_UUID}/experience/${productId}`
@@ -156,7 +158,7 @@ export default function HomeBookingForm() {
       >
         {tours.map(tour => (
           <option key={tour.slug} value={tour.slug}>
-            {t('optionPerPerson', { name: tour.name, price: tour.price })}
+            {t(tour.pricedPerPerson === false ? 'optionPerGroup' : 'optionPerPerson', { name: tour.name, price: tour.price })}
           </option>
         ))}
       </select>

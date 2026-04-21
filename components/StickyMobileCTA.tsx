@@ -5,11 +5,14 @@ import { Link } from '@/i18n/navigation'
 
 type Props = {
   label?: string
-  fromPrice: number
+  /** Kept on the prop for backward compat with tour page callsites.
+      Phase 5 decision: prices live in the booking engine only, so this
+      sticky CTA no longer surfaces price info , just the label + button. */
+  fromPrice?: number
   href: string
 }
 
-export default function StickyMobileCTA({ label, fromPrice, href }: Props) {
+export default function StickyMobileCTA({ label, href }: Props) {
   const t = useTranslations('StickyCTA')
   const [visible, setVisible] = useState(false)
 
@@ -26,18 +29,12 @@ export default function StickyMobileCTA({ label, fromPrice, href }: Props) {
         visible ? 'translate-y-0' : 'translate-y-full'
       }`}
     >
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-[9px] font-medium tracking-[0.16em] uppercase text-[#888]">{t('from')}</p>
-          <p className="text-[20px] font-light text-[#111] leading-none">${fromPrice}<span className="text-[11px] text-[#888] ml-1 font-light">{t('perPerson')}</span></p>
-        </div>
-        <Link
-          href={href}
-          className="bg-[#248D6C] text-white text-[11px] font-semibold tracking-[0.14em] uppercase px-6 py-3 hover:bg-[#1C6E54] transition-colors"
-        >
-          {label ?? t('bookNow')}
-        </Link>
-      </div>
+      <Link
+        href={href}
+        className="block w-full bg-[#248D6C] text-white text-center text-[11px] font-semibold tracking-[0.14em] uppercase px-6 py-3.5 hover:bg-[#1C6E54] transition-colors"
+      >
+        {label ?? t('bookNow')}
+      </Link>
     </div>
   )
 }

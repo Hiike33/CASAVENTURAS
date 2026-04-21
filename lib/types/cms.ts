@@ -32,6 +32,14 @@ export type Tour = {
   tagColor: string
   thumbBg: string
   price: number
+  /**
+   * Whether the price is charged per guest (true, default) or as a flat
+   * fee for the whole booking (false, e.g. private catamaran charter).
+   * Overridden at enrichment time from the Bokun rate config , see
+   * lib/bokun/snapshot.ts::enrichToursWithSnapshot. If absent, treated
+   * as per-person (back-compat for tours created before Phase 5).
+   */
+  pricedPerPerson?: boolean
   priceNote: string
   duration: string
   groupSize: string

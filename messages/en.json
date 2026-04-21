@@ -66,7 +66,8 @@
     "mailtoSubject": "Booking request, {tour}",
     "mailtoBody": "Hello,\n\nI'd like to book: {tour}\nDate: {date}\nGuests: {guests}\n",
     "flexible": "flexible",
-    "optionPerPerson": "{name} · ${price}/person"
+    "optionPerPerson": "{name} · ${price}/person",
+    "optionPerGroup": "{name} · ${price} / group"
   },
   "ContactForm": {
     "eyebrow": "Send a message",

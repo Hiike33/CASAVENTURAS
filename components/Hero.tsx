@@ -76,7 +76,6 @@ export default function Hero() {
             <span className="text-[8.5px] font-medium tracking-[0.14em] uppercase text-white/70 text-center leading-tight">
               {tour.shortName}
             </span>
-            <span className="text-[9px] text-[#72D4A0] font-light">from ${tour.price}</span>
           </Link>
         ))}
       </div>

@@ -216,17 +216,24 @@ export function getDisplayDaysLabel(tour: Tour): string | undefined {
 }
 
 /**
- * Attach a snapshot to each matching tour without mutating the price.
- * Pure function: same inputs → same outputs, no fs, no network. Tours
- * without a matching snapshot pass through unchanged.
+ * Attach a snapshot to each matching tour AND override the retail fields
+ * (price, pricedPerPerson) with the live values Bokun is showing on the
+ * vendor's public widget. Tours without a matching snapshot pass through
+ * unchanged (CMS price + default pricedPerPerson behavior).
  *
- * Why we do NOT override tour.price here:
- *   Live Bókun inspection showed defaultPrice is null on this vendor's
- *   availabilities; prices live in pricesByRate[] and can be net/OTA
- *   rates that differ from the retail widget price. Displaying the raw
- *   API number would mislead customers. The raw data is still carried
- *   under bokunSnapshot.ratePrices for a future price-aware commit once
- *   the vendor confirms which rate row is the retail source of truth.
+ * Why we override price NOW (Phase 5) when we did not in Phase 1:
+ *   Phase 1 held off because OTA/retail rate mapping was unclear.
+ *   Live inspection of the vendor's Bokun widget on micasaventuras.com
+ *   has since confirmed that ratePrices[0] (the default rate) IS the
+ *   retail price shown to customers. Aligning `tour.price` to this
+ *   value keeps the on-site headlines, JSON-LD, and checkout total in
+ *   lockstep with what the widget charges , D-020 SSOT policy.
+ *
+ * Mode detection:
+ *   - pricedPerPerson=true → use pricePerCategoryUnit[0].amount (ADULT rate)
+ *   - pricedPerPerson=false → use pricePerBooking.amount (flat group charter)
+ *   The per-booking branch also flips tour.pricedPerPerson=false so UI
+ *   code that calculates totals knows not to multiply by guest count.
  */
 export function enrichToursWithSnapshot(
   tours: ReadonlyArray<Tour>,
@@ -235,6 +242,30 @@ export function enrichToursWithSnapshot(
   return tours.map(t => {
     const snap = snapshot[t.slug]
     if (!snap) return t
-    return { ...t, bokunSnapshot: snap }
+    const rate = snap.ratePrices?.[0]
+    let price = t.price
+    let pricedPerPerson = t.pricedPerPerson ?? true
+    if (rate) {
+      if (rate.pricedPerPerson && rate.pricePerCategoryUnit && rate.pricePerCategoryUnit.length > 0) {
+        price = rate.pricePerCategoryUnit[0].amount
+        pricedPerPerson = true
+      } else if (rate.pricePerBooking) {
+        price = rate.pricePerBooking.amount
+        pricedPerPerson = false
+      }
+    }
+    return { ...t, price, pricedPerPerson, bokunSnapshot: snap }
   })
+}
+
+/**
+ * Compute the total charge for a booking given the tour and guest count.
+ * Per-person tours multiply; flat-fee tours (private charter catamaran)
+ * return the flat price regardless of guests. Guards against NaN / <1
+ * input by clamping to 1.
+ */
+export function getBookingTotal(tour: Tour, guests: number): number {
+  const g = Number.isFinite(guests) && guests > 0 ? Math.floor(guests) : 1
+  if (tour.pricedPerPerson === false) return tour.price
+  return tour.price * g
 }

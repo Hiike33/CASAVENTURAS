@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import type { Tour } from '@/lib/tours'
 import type { BokunAvailability, BokunAvailabilityResponse } from '@/lib/bokun/types'
 import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
-import { formatStartTime } from '@/lib/bokun/snapshot'
+import { formatStartTime, getBookingTotal } from '@/lib/bokun/snapshot'
 import CheckoutPanel from '@/components/CheckoutPanel'
 
 type AvailabilityState =
@@ -75,7 +75,10 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
       ? availability.availabilities.find(s => s.id === selectedSlotId) ?? availability.firstSlot
       : undefined
 
-  const total = tour.price * Math.max(1, Number(guests) || 1)
+  // Total respects tour.pricedPerPerson (set by Bokun enrichment). Flat-
+  // fee tours like the private catamaran charter charge the same amount
+  // regardless of guest count.
+  const total = getBookingTotal(tour, Number(guests) || 1)
   const bokunConfigured = Boolean(tour.bokunProductId && BOKUN_CHANNEL_UUID)
   const bokunCheckoutUrl = bokunConfigured
     ? `https://widgets.bokun.io/online-sales/${BOKUN_CHANNEL_UUID}/experience/${tour.bokunProductId}`
