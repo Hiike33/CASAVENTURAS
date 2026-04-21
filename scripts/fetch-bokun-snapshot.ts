@@ -101,6 +101,8 @@ type BokunActivity = {
 type BokunAvailabilityItem = {
   startTime?: string
   startTimeLabel?: string
+  /** Unix timestamp in milliseconds (midnight UTC of the tour day) */
+  date?: number
   soldOut: boolean
   defaultRateId?: number
   pricesByRate?: Array<{
@@ -111,6 +113,17 @@ type BokunAvailabilityItem = {
       amount: { amount: number; currency: string }
     }>
   }>
+}
+
+// Day index from a Bokun availability.date. Bokun dates are ms-since-epoch
+// at midnight UTC of the tour day. new Date(ms).getUTCDay() returns 0..6
+// with 0 = Sunday, which we remap to Mon..Sun for human-first ordering.
+const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
+
+function dayAbbrFromMs(ms: number): string | null {
+  const d = new Date(ms)
+  if (Number.isNaN(d.getTime())) return null
+  return DAY_ABBR[d.getUTCDay()] ?? null
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────
@@ -151,14 +164,31 @@ async function fetchOne(slug: string, productId: number): Promise<BokunTourSnaps
   if (!availRes.ok) throw new Error(`[${slug}] availabilities fetch ${availRes.status}`)
   const availArr = (await availRes.json()) as BokunAvailabilityItem[]
 
-  // Distinct start time labels/strings, capped at 8 so the snapshot stays tight.
+  // Distinct start times in HH:mm form, capped at 8 so the snapshot stays
+  // tight. We deliberately ignore startTimeLabel (e.g. "Bus 2") , labels
+  // are internal ops metadata (pickup bus assignment) and never meaningful
+  // as a customer-facing time.
   const startTimes = Array.from(
     new Set(
       availArr
-        .map(a => (a.startTimeLabel?.trim() ? a.startTimeLabel.trim() : a.startTime))
-        .filter((s): s is string => Boolean(s && s.trim())),
+        .map(a => a.startTime)
+        .filter((s): s is string => Boolean(s && /^\d{1,2}:\d{2}$/.test(s))),
     ),
-  ).slice(0, 8)
+  )
+    .sort()
+    .slice(0, 8)
+
+  // Days of the week that carry at least one non-soldout slot. Lets the UI
+  // say "Fridays at 5 PM" instead of a fake "Daily" label when Bokun is the
+  // source of truth. Store as Mon..Sun abbreviations in canonical order.
+  const daysSet = new Set<string>()
+  for (const a of availArr) {
+    if (typeof a.date !== 'number' || a.soldOut) continue
+    const abbr = dayAbbrFromMs(a.date)
+    if (abbr) daysSet.add(abbr)
+  }
+  const DAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  const daysOfWeek = DAY_ORDER.filter(d => daysSet.has(d))
 
   // Rate metadata lookup so ratePrices entries get a human title + pricing type.
   const rateMeta = new Map<number, { title?: string; pricedPerPerson?: boolean }>()
@@ -184,6 +214,7 @@ async function fetchOne(slug: string, productId: number): Promise<BokunTourSnaps
     productId,
     cancellationHours: deriveCancellationHours(act.cancellationPolicy?.penaltyRules),
     startTimes: startTimes.length > 0 ? startTimes : undefined,
+    daysOfWeek: daysOfWeek.length > 0 ? daysOfWeek : undefined,
     pricingCategories,
     ratePrices: ratePrices.length > 0 ? ratePrices : undefined,
     fetchedAt: new Date().toISOString(),

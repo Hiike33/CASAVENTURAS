@@ -5,6 +5,7 @@ import type { BokunAvailability, BokunAvailabilityResponse } from '@/lib/bokun/t
 import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
 import CheckoutPanel from '@/components/CheckoutPanel'
 import { toursFor, siteConfigFor } from '@/lib/cms/client'
+import { getDisplayTime, getDisplayDaysLabel } from '@/lib/bokun/snapshot'
 import type { Locale } from '@/i18n/routing'
 
 type AvailabilityState =
@@ -131,7 +132,7 @@ export default function HomeBookingForm() {
         id="hb-tour"
         value={tourSlug}
         onChange={e => setTourSlug(e.target.value)}
-        className="w-full bg-white border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 mb-4 outline-none focus:border-[#248D6C] transition-colors"
+        className="w-full bg-white border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors"
       >
         {tours.map(tour => (
           <option key={tour.slug} value={tour.slug}>
@@ -139,6 +140,21 @@ export default function HomeBookingForm() {
           </option>
         ))}
       </select>
+
+      {/* Schedule hint from live Bokun snapshot (D-020 SSOT): displays
+          "5 PM · Friday" for single-day tours, "8 AM · Daily" for 7-day. */}
+      {(() => {
+        if (!selectedTour) return <div className="mb-4" aria-hidden />
+        const t0 = getDisplayTime(selectedTour)
+        const d0 = getDisplayDaysLabel(selectedTour)
+        if (!t0 && !d0) return <div className="mb-4" aria-hidden />
+        const label = [t0, d0].filter(Boolean).join(' · ')
+        return (
+          <p className="text-[10px] font-medium tracking-[0.16em] uppercase text-[#248D6C] mt-2 mb-4">
+            {label}
+          </p>
+        )
+      })()}
 
       <div className="grid grid-cols-2 gap-3 mb-3">
         <div>

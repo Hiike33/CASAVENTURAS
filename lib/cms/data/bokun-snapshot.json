@@ -3,10 +3,19 @@
     "productId": 448405,
     "cancellationHours": 24,
     "startTimes": [
-      "Bus 2",
-      "Bus 1",
-      "Bus 4",
-      "Bus 3"
+      "08:00",
+      "08:10",
+      "08:20",
+      "08:30"
+    ],
+    "daysOfWeek": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
     ],
     "pricingCategories": [
       {
@@ -60,13 +69,22 @@
         ]
       }
     ],
-    "fetchedAt": "2026-04-21T00:28:02.170Z"
+    "fetchedAt": "2026-04-21T01:25:23.252Z"
   },
   "catamaran": {
     "productId": 1134501,
     "cancellationHours": 24,
     "startTimes": [
       "10:00"
+    ],
+    "daysOfWeek": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
     ],
     "pricingCategories": [
       {
@@ -96,13 +114,16 @@
         }
       }
     ],
-    "fetchedAt": "2026-04-21T00:28:02.559Z"
+    "fetchedAt": "2026-04-21T01:25:22.147Z"
   },
   "salsa": {
     "productId": 680641,
     "cancellationHours": 24,
     "startTimes": [
       "17:00"
+    ],
+    "daysOfWeek": [
+      "Fri"
     ],
     "pricingCategories": [
       {
@@ -127,6 +148,6 @@
         ]
       }
     ],
-    "fetchedAt": "2026-04-21T00:28:02.325Z"
+    "fetchedAt": "2026-04-21T01:25:25.022Z"
   }
 }

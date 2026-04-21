@@ -39,7 +39,6 @@ const rawTours: Tour[] = [
     duration: '6–7h',
     groupSize: '≤ 13',
     level: 'Moderado',
-    time: '8 AM todos los días',
     description: 'Toboganes naturales, saltos desde acantilados de 5 a 20 pies, lianas sobre el río y senderos de selva fangosa. Tu guía local te abre la puerta a los rincones escondidos del bosque, con historia y cultura incluidas. Transporte desde tu hotel incluido.',
     highlights: [
       'Tobogán natural tallado en el río del bosque',
@@ -90,7 +89,6 @@ const rawTours: Tour[] = [
     duration: 'Día completo',
     groupSize: '≤ 12',
     level: undefined,
-    time: '10 AM todos los días',
     includes: 'Almuerzo y barra',
     description: 'Sube a bordo de un catamarán Bali de 40 pies y disfruta de una experiencia privada inolvidable por las aguas cristalinas de Vieques. Diseñado para tu comodidad, amplitud y estilo, reservado solo para tu grupo.',
     highlights: [
@@ -154,7 +152,6 @@ const rawTours: Tour[] = [
       'Llega 10 minutos antes',
     ],
     address: '1050 Calle Marianna, 00907 San Juan, Casa Santurce Rooftop',
-    time: '5 PM todos los días',
     heroTag: 'Baile · Casa Santurce Rooftop',
     photos: [
       '/images/tours/salsa/salsapic7-hd.jpg',

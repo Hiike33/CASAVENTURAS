@@ -37,7 +37,6 @@ const rawTours: Tour[] = [
     duration: '6–7h',
     groupSize: '≤ 13',
     level: 'Moderate',
-    time: '8 AM daily',
     description: 'Natural waterslides, cliff jumps from 5 to 20ft, rope swings, and muddy jungle trails. Your local guide brings the rainforest alive with history and hidden spots. Transport from your hotel included.',
     highlights: [
       'Natural waterslide carved into the rainforest river',
@@ -88,7 +87,6 @@ const rawTours: Tour[] = [
     duration: 'Full day',
     groupSize: '≤ 12',
     level: undefined,
-    time: '10 AM daily',
     includes: 'Lunch + bar',
     description: 'Step aboard a 40-foot Bali catamaran and enjoy an unforgettable private sailing experience through the pristine waters of Vieques. Designed for comfort, space, and style — exclusively for your group.',
     highlights: [
@@ -152,7 +150,6 @@ const rawTours: Tour[] = [
       'Arrive 10 minutes early',
     ],
     address: '1050 Calle Marianna, 00907 San Juan — Casa Santurce Rooftop',
-    time: '5 PM daily',
     heroTag: 'Dance · Casa Santurce Rooftop',
     photos: [
       '/images/tours/salsa/salsapic7-hd.jpg',

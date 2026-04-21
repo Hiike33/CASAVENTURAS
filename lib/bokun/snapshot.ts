@@ -59,8 +59,15 @@ export type BokunTourSnapshot = {
    * no penalty rule (tour is either fully flexible or fully non-refundable).
    */
   cancellationHours?: number
-  /** Distinct start-time labels observed in the near-term availability window, e.g. ["08:00", "09:30"] */
+  /** Distinct HH:mm start times observed in the near-term availability window, e.g. ["08:00", "09:30"] */
   startTimes?: string[]
+  /**
+   * Days of week on which Bokun exposes availability. Stored as 3-letter
+   * English abbreviations ("Mon".."Sun") derived from availability.date so
+   * the UI can map to any locale without parsing localized strings. Order
+   * is canonical: Mon first, Sun last.
+   */
+  daysOfWeek?: string[]
   /** Full pricing category list from Bókun (ADULT, CHILD, INFANT, …) */
   pricingCategories?: BokunPricingCategory[]
   /**
@@ -89,6 +96,75 @@ export function deriveCancellationHours(
   const charging = rules.filter(r => r.charge > 0)
   if (charging.length === 0) return undefined
   return Math.min(...charging.map(r => r.cutoffHours))
+}
+
+/**
+ * Format a Bokun startTime ("HH:mm") as a user-facing 12-hour string.
+ * "08:00" → "8 AM" · "10:00" → "10 AM" · "17:00" → "5 PM" · "12:30" →
+ * "12:30 PM". Noon is PM, midnight is AM. Returns undefined for inputs
+ * that are not HH:mm so callers can safely chain with a fallback.
+ *
+ * We deliberately do not append "daily" or any locale-dependent suffix ,
+ * the UI composes that itself (or omits it) based on its own copy deck.
+ */
+export function formatStartTime(hhmm: string | undefined): string | undefined {
+  if (!hhmm) return undefined
+  const parts = hhmm.split(':')
+  if (parts.length !== 2) return undefined
+  const h = Number(parts[0])
+  const m = Number(parts[1])
+  if (!Number.isInteger(h) || !Number.isInteger(m) || h < 0 || h > 23 || m < 0 || m > 59) {
+    return undefined
+  }
+  const suffix = h >= 12 ? 'PM' : 'AM'
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h
+  return m === 0 ? `${h12} ${suffix}` : `${h12}:${String(m).padStart(2, '0')} ${suffix}`
+}
+
+/**
+ * Resolve the canonical display time for a Tour. Reads EXCLUSIVELY from
+ * the Bokun snapshot (D-020 policy: Bokun is the source, always, and
+ * stays dynamic). Returns undefined when Bokun exposes no time for this
+ * slug , the UI hides the surface in that case rather than falling back
+ * to a stale CMS string. If you see an empty schedule line, the fix is
+ * to refresh the snapshot (npm run bokun:snapshot), not to edit the CMS.
+ */
+export function getDisplayTime(tour: Tour): string | undefined {
+  return formatStartTime(tour.bokunSnapshot?.startTimes?.[0])
+}
+
+const DAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
+const FULL_DAY: Record<string, string> = {
+  Mon: 'Monday',
+  Tue: 'Tuesday',
+  Wed: 'Wednesday',
+  Thu: 'Thursday',
+  Fri: 'Friday',
+  Sat: 'Saturday',
+  Sun: 'Sunday',
+}
+
+/**
+ * Human-readable schedule label for the days Bokun has availability on.
+ *   7 days → "Daily"
+ *   1 day  → full name, e.g. "Friday"
+ *   subset → comma-separated 3-letter list, e.g. "Mon, Wed, Fri"
+ *   none   → undefined (the UI should hide the label surface)
+ *
+ * English-only output by design: "Fri" / "Daily" read well for a PR tour
+ * site that's mostly Anglo-tourist anyway, and it dodges a translation
+ * dictionary per day name. If we later need FR/ES, swap this for a
+ * locale-aware variant , the BookingSidebar date picker is the
+ * authoritative availability surface in any case.
+ */
+export function getDisplayDaysLabel(tour: Tour): string | undefined {
+  const days = tour.bokunSnapshot?.daysOfWeek
+  if (!days || days.length === 0) return undefined
+  if (days.length >= 7) return 'Daily'
+  if (days.length === 1) return FULL_DAY[days[0]] ?? days[0]
+  // Reorder per canonical Mon..Sun sequence before joining.
+  const sorted = DAY_ORDER.filter(d => days.includes(d))
+  return sorted.join(', ')
 }
 
 /**

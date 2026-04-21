@@ -41,7 +41,6 @@ export type Tour = {
   highlights: string[]
   whatToBring?: string[]
   address?: string
-  time?: string
   heroTag: string
   photos: string[]
   galleryPhotos?: string[]
