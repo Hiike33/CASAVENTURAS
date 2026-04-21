@@ -1,6 +1,16 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { matchIntent, matchIntentId, buildMailto, buildWhatsapp, INTENT_FAQ_REFS, detectLocale } from './cavi-intents.ts'
+import {
+  matchIntent,
+  matchIntentId,
+  buildMailto,
+  buildWhatsapp,
+  INTENT_FAQ_REFS,
+  detectLocale,
+  CATEGORIES,
+  getFollowups,
+  getContactReply,
+} from './cavi-intents.ts'
 import { faqById } from './cms/data/faqs.en.ts'
 import { faqById as faqByIdEs } from './cms/data/faqs.es.ts'
 
@@ -156,4 +166,81 @@ test('ES matched intent returns Spanish FAQ answer', () => {
   const r = matchIntent('¿me voy a marear?')
   assert.match(r.text, /Vieques Sound|mareo|Dramamine/i)
   assert.ok(faqByIdEs['cat-seasickness'])
+})
+
+// ─── Guided navigation tree (6-category arbre) ───────────────────────
+// CAVI ships without a free-text input (D-AUDIT 2026-04-21). All intents
+// must be reachable via the 6-category menu, otherwise the bot becomes
+// partially dead. These tests guard the tree against regressions.
+
+test('CATEGORIES exposes 6 entries for every locale', () => {
+  for (const loc of ['en', 'es', 'fr'] as const) {
+    assert.equal(CATEGORIES[loc].length, 6, `${loc} must have 6 categories`)
+  }
+})
+
+test('CATEGORIES: each entry has id/label/prompt/questions fields', () => {
+  for (const loc of ['en', 'es', 'fr'] as const) {
+    for (const cat of CATEGORIES[loc]) {
+      assert.ok(cat.id, `${loc}: missing id`)
+      assert.ok(cat.label, `${loc}/${cat.id}: missing label`)
+      assert.equal(typeof cat.prompt, 'string', `${loc}/${cat.id}: prompt must be string`)
+      assert.ok(Array.isArray(cat.questions), `${loc}/${cat.id}: questions must be array`)
+    }
+  }
+})
+
+test('CATEGORIES: every drill-down question resolves to a real intent (no dead-end buttons)', () => {
+  for (const loc of ['en', 'es', 'fr'] as const) {
+    for (const cat of CATEGORIES[loc]) {
+      for (const q of cat.questions) {
+        const id = matchIntentId(q, loc)
+        assert.ok(id, `${loc}/${cat.id}: question "${q}" matches no intent`)
+      }
+    }
+  }
+})
+
+test('CATEGORIES: contact category is present with empty questions (special drill)', () => {
+  for (const loc of ['en', 'es', 'fr'] as const) {
+    const contact = CATEGORIES[loc].find(c => c.id === 'contact')
+    assert.ok(contact, `${loc}: contact category missing`)
+    assert.equal(contact!.questions.length, 0, `${loc}: contact must not have drill-down questions`)
+  }
+})
+
+test('getFollowups returns same-category questions excluding the asked one', () => {
+  const asked = 'How long is El Yunque?'
+  const f = getFollowups('ey-duration', 'en', asked)
+  assert.ok(f.length >= 1, 'expected at least 1 follow-up')
+  assert.ok(f.length <= 2, 'follow-ups capped at 2')
+  assert.ok(!f.some(q => q.toLowerCase() === asked.toLowerCase()), 'must exclude asked question')
+})
+
+test('getFollowups returns [] for unknown intent ids', () => {
+  const f = getFollowups('non-existent-intent', 'en', '')
+  assert.deepEqual(f, [])
+})
+
+test('matchIntent faq-backed reply now attaches follow-ups (fixes "ends too early")', () => {
+  const r = matchIntent('How long is the rainforest tour?', 'en')
+  assert.ok(r.suggestions, 'faq reply must include suggestions')
+  assert.ok(r.suggestions!.length > 0, 'suggestions must not be empty')
+})
+
+test('matchIntent preserves hand-picked suggestions on composed replies', () => {
+  const r = matchIntent('how much does it all cost?', 'en')
+  assert.ok(r.suggestions && r.suggestions.length > 0)
+  // makePriceOverview hand-picks these specific follow-ups
+  assert.ok(r.suggestions!.some(s => /included|catamaran/i.test(s)))
+})
+
+test('getContactReply returns the contact message with email + whatsapp CTAs', () => {
+  for (const loc of ['en', 'es', 'fr'] as const) {
+    const r = getContactReply(loc)
+    assert.ok(r.text.length > 0, `${loc}: contact text empty`)
+    assert.equal(r.ctas?.length, 2, `${loc}: expected 2 CTAs`)
+    assert.equal(r.ctas?.[0].type, 'email')
+    assert.equal(r.ctas?.[1].type, 'whatsapp')
+  }
 })

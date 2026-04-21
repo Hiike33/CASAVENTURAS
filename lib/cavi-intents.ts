@@ -28,6 +28,19 @@ export type CaviReply = {
   ctas?: CaviCta[]
 }
 
+// Guided navigation tree. Cavi ships without a free-text input
+// (D-AUDIT 2026-04-21) so every reachable intent must be listed under
+// one of the 6 categories — otherwise that intent becomes dead code.
+// `questions` are user-phrased strings that each route to a concrete
+// intent via matchIntent. An empty `questions` array marks a category
+// that triggers a direct reply (used by the "Talk to a human" tile).
+export type CaviCategory = {
+  id: string
+  label: string
+  prompt: string
+  questions: string[]
+}
+
 type Intent = {
   id: string
   match: (msg: string) => boolean
@@ -236,6 +249,295 @@ const FR_INTENTS: Intent[] = [
 
 const INTENTS: Record<Locale, Intent[]> = { en: EN_INTENTS, es: ES_INTENTS, fr: FR_INTENTS }
 
+// ─── Category tree (guided navigation) ──────────────────────────────
+// Order matters: categories render top-to-bottom in the chat widget.
+// Each question MUST route to a real intent (enforced by test
+// "CATEGORIES: every drill-down question resolves to a real intent").
+
+export const CATEGORIES: Record<Locale, CaviCategory[]> = {
+  en: [
+    {
+      id: 'el-yunque',
+      label: 'El Yunque',
+      prompt: 'What do you want to know about El Yunque?',
+      questions: [
+        'How long is El Yunque?',
+        'What should I bring to El Yunque?',
+        'Is El Yunque safe for kids?',
+        'How difficult is the El Yunque hike?',
+        'What if it rains on El Yunque?',
+        'What is the minimum age for cliff jumps?',
+        'Do I need a recreation.gov permit?',
+      ],
+    },
+    {
+      id: 'catamaran',
+      label: 'Catamaran',
+      prompt: 'What do you want to know about the catamaran?',
+      questions: [
+        'How much is the catamaran?',
+        'What is included on the catamaran?',
+        'How many people fit on the catamaran?',
+        'Where does the catamaran depart from?',
+        'Minimum age on the catamaran?',
+        'Is there a bathroom on the catamaran?',
+        'Can minors drink on the catamaran?',
+        'What if the weather is bad on the catamaran?',
+      ],
+    },
+    {
+      id: 'salsa',
+      label: 'Salsa Rooftop',
+      prompt: 'What do you want to know about Salsa Rooftop?',
+      questions: [
+        'Do I need a partner for salsa?',
+        'What time does salsa start?',
+        'Where is the salsa class?',
+        'What should I wear for salsa class?',
+        "I'm a beginner in salsa, is it ok?",
+        'Is the rooftop wheelchair accessible?',
+        'Can I book a private salsa class?',
+      ],
+    },
+    {
+      id: 'price-book',
+      label: 'Prices & Booking',
+      prompt: 'Prices & booking — pick one:',
+      questions: [
+        'How much does each tour cost?',
+        'How do I book online?',
+        'What is your cancellation policy?',
+        'Can I combine tours?',
+        'What is the group size?',
+      ],
+    },
+    {
+      id: 'safety',
+      label: 'Safety & Family',
+      prompt: 'Safety & family — pick one:',
+      questions: [
+        'Is Puerto Rico safe?',
+        'Is it safe for kids?',
+        'What about mosquitoes?',
+        'Do I need a passport?',
+        'Do you speak English?',
+      ],
+    },
+    {
+      id: 'contact',
+      label: 'Talk to a human',
+      prompt: '',
+      questions: [],
+    },
+  ],
+  es: [
+    {
+      id: 'el-yunque',
+      label: 'El Yunque',
+      prompt: '¿Qué quieres saber sobre El Yunque?',
+      questions: [
+        '¿Cuánto dura El Yunque?',
+        '¿Qué llevar a El Yunque?',
+        '¿Es seguro para niños en El Yunque?',
+        '¿Es difícil la caminata del Yunque?',
+        '¿Y si llueve en El Yunque?',
+        '¿Edad mínima para los saltos?',
+        '¿Necesito permiso recreation.gov?',
+      ],
+    },
+    {
+      id: 'catamaran',
+      label: 'Catamarán',
+      prompt: '¿Qué quieres saber sobre el catamarán?',
+      questions: [
+        '¿Cuánto cuesta el catamarán?',
+        '¿Qué incluye el catamarán?',
+        '¿Cuántas personas caben en el catamarán?',
+        '¿De dónde sale el catamarán?',
+        '¿Edad mínima en el catamarán?',
+        '¿Hay baño en el catamarán?',
+        '¿Los menores pueden beber en el catamarán?',
+        '¿Mal tiempo en el catamarán?',
+      ],
+    },
+    {
+      id: 'salsa',
+      label: 'Salsa en la azotea',
+      prompt: '¿Qué quieres saber sobre la salsa en la azotea?',
+      questions: [
+        '¿Necesito pareja para la salsa?',
+        '¿A qué hora empieza la salsa?',
+        '¿Dónde es la clase de salsa?',
+        '¿Qué ropa llevo para la salsa?',
+        '¿Soy principiante, puedo ir a salsa?',
+        '¿La azotea es accesible?',
+        '¿Puedo reservar clase privada de salsa?',
+      ],
+    },
+    {
+      id: 'price-book',
+      label: 'Precios y reservas',
+      prompt: 'Precios y reservas — elige una:',
+      questions: [
+        '¿Cuánto cuesta cada tour?',
+        '¿Cómo reservo en línea?',
+        '¿Cuál es la política de cancelación?',
+        '¿Puedo combinar tours?',
+        '¿Cuál es el tamaño del grupo?',
+      ],
+    },
+    {
+      id: 'safety',
+      label: 'Seguridad y familia',
+      prompt: 'Seguridad y familia — elige una:',
+      questions: [
+        '¿Es seguro Puerto Rico?',
+        '¿Es seguro para niños?',
+        '¿Hay muchos mosquitos?',
+        '¿Necesito pasaporte?',
+        '¿Hablan inglés?',
+      ],
+    },
+    {
+      id: 'contact',
+      label: 'Habla con un humano',
+      prompt: '',
+      questions: [],
+    },
+  ],
+  fr: [
+    {
+      id: 'el-yunque',
+      label: 'El Yunque',
+      prompt: 'Qu\'est-ce que tu veux savoir sur El Yunque ?',
+      questions: [
+        'Combien de temps dure El Yunque ?',
+        'Qu\'apporter à El Yunque ?',
+        'Est-ce sûr pour les enfants à El Yunque ?',
+        'Est-ce difficile la randonnée à El Yunque ?',
+        'Et s\'il pleut à El Yunque ?',
+        'Âge minimum pour les sauts ?',
+        'Permis recreation.gov ?',
+      ],
+    },
+    {
+      id: 'catamaran',
+      label: 'Catamaran',
+      prompt: 'Qu\'est-ce que tu veux savoir sur le catamaran ?',
+      questions: [
+        'Combien coûte le catamaran ?',
+        'Qu\'est-ce qui est inclus dans le catamaran ?',
+        'Combien de personnes sur le catamaran ?',
+        'De quelle marina part le catamaran ?',
+        'Âge minimum sur le catamaran ?',
+        'Y a-t-il des toilettes sur le catamaran ?',
+        'Les mineurs peuvent boire sur le catamaran ?',
+        'Mauvaise météo sur le catamaran ?',
+      ],
+    },
+    {
+      id: 'salsa',
+      label: 'Salsa Rooftop',
+      prompt: 'Qu\'est-ce que tu veux savoir sur la Salsa Rooftop ?',
+      questions: [
+        'Besoin d\'un partenaire pour la salsa ?',
+        'À quelle heure commence la salsa ?',
+        'Où est le cours de salsa ?',
+        'Quelle tenue pour la salsa ?',
+        'Je suis débutant en salsa, ça va ?',
+        'Le rooftop est-il accessible ?',
+        'Cours privé de salsa possible ?',
+      ],
+    },
+    {
+      id: 'price-book',
+      label: 'Prix et réservation',
+      prompt: 'Prix et réservation — choisis une :',
+      questions: [
+        'Combien coûte chaque tour ?',
+        'Comment réserver en ligne ?',
+        'Quelle est la politique d\'annulation ?',
+        'Puis-je combiner plusieurs tours ?',
+        'Quelle est la taille du groupe ?',
+      ],
+    },
+    {
+      id: 'safety',
+      label: 'Sécurité et famille',
+      prompt: 'Sécurité et famille — choisis une :',
+      questions: [
+        'Porto Rico est-il sûr ?',
+        'Est-ce sûr pour les enfants ?',
+        'Les moustiques posent problème ?',
+        'Faut-il un passeport ?',
+        'Parlez-vous français ?',
+      ],
+    },
+    {
+      id: 'contact',
+      label: 'Parler à un humain',
+      prompt: '',
+      questions: [],
+    },
+  ],
+}
+
+// Maps an intent id to its canonical category. Used to derive contextual
+// follow-ups when a reply doesn't ship its own hand-picked suggestions.
+// Intents without an entry here (greeting, contact-team) return [].
+const INTENT_TO_CATEGORY: Record<string, string> = {
+  'ey-duration': 'el-yunque',
+  'ey-rain': 'el-yunque',
+  'ey-cliff-age': 'el-yunque',
+  'ey-reservation-gov': 'el-yunque',
+  'ey-fitness': 'el-yunque',
+  'ey-what-to-bring': 'el-yunque',
+  'ey-kids-seniors': 'el-yunque',
+  'ey-why-us': 'el-yunque',
+  'cat-age': 'catamaran',
+  'cat-alcohol': 'catamaran',
+  'cat-seasick': 'catamaran',
+  'cat-bathroom': 'catamaran',
+  'cat-departure': 'catamaran',
+  'cat-capacity': 'catamaran',
+  'cat-weather': 'catamaran',
+  'cat-inclusions': 'catamaran',
+  'sal-partner': 'salsa',
+  'sal-accessibility': 'salsa',
+  'sal-private': 'salsa',
+  'sal-time': 'salsa',
+  'sal-wear': 'salsa',
+  'sal-experience': 'salsa',
+  'sal-location': 'salsa',
+  'price-overview': 'price-book',
+  'gen-how-to-book': 'price-book',
+  'gen-cancellation': 'price-book',
+  'combine-tours': 'price-book',
+  'gen-group-size': 'price-book',
+  'gen-pickup': 'price-book',
+  'gen-tripadvisor': 'price-book',
+  'gen-safety': 'safety',
+  'gen-mosquitoes': 'safety',
+  'gen-passport': 'safety',
+  'gen-languages': 'safety',
+  'gen-best-time': 'safety',
+  'gen-tipping': 'safety',
+  'gen-location-info': 'safety',
+  'generic-family-kids': 'safety',
+  'generic-difficulty': 'safety',
+  'generic-what-to-bring': 'safety',
+  'generic-duration': 'safety',
+}
+
+export function getFollowups(intentId: string, locale: Locale, askedQuestion = ''): string[] {
+  const catId = INTENT_TO_CATEGORY[intentId]
+  if (!catId) return []
+  const cat = CATEGORIES[locale].find(c => c.id === catId)
+  if (!cat) return []
+  const asked = askedQuestion.toLowerCase().trim()
+  return cat.questions.filter(q => q.toLowerCase() !== asked).slice(0, 2)
+}
+
 // ─── Shared dynamic replies (composed from tours[locale]) ───────────
 
 function priceLines(locale: Locale) {
@@ -324,6 +626,10 @@ function makeCombineReply(locale: Locale): CaviReply {
   }
 }
 
+export function getContactReply(locale: Locale): CaviReply {
+  return makeContactReply(locale)
+}
+
 function makeContactReply(locale: Locale): CaviReply {
   const site = SITE[locale]
   const text = {
@@ -367,9 +673,16 @@ export function matchIntent(message: string, locale?: Locale): CaviReply {
     if (intent.match(msg)) {
       if (intent.faqId) {
         const faq = FAQS[effective][intent.faqId]
-        if (faq) return { text: faq.answer }
+        if (faq) return {
+          text: faq.answer,
+          suggestions: getFollowups(intent.id, effective, message),
+        }
       }
-      if (intent.reply) return intent.reply()
+      if (intent.reply) {
+        const r = intent.reply()
+        if (r.suggestions && r.suggestions.length > 0) return r
+        return { ...r, suggestions: getFollowups(intent.id, effective, message) }
+      }
     }
   }
   return FALLBACK[effective]
