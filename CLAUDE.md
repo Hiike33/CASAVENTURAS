@@ -100,7 +100,7 @@ Salsa Rooftop:
 - Price: $65/person
 - Instructor: Zoe
 - Location: 1050 Calle Marianna, 00907 San Juan — Casa Santurce Rooftop
-- Time: 6PM daily
+- Time: 5 PM daily (per Bokun SSOT, D-020)
 - Includes: Free Piña Colada
 - Level: absolute beginners welcome
 

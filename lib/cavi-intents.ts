@@ -311,9 +311,9 @@ function makeDurationOverview(locale: Locale): CaviReply {
 
 function makeCombineReply(locale: Locale): CaviReply {
   const text = {
-    en: 'El Yunque (morning to early afternoon) pairs well with Salsa Rooftop at 6 PM the same day. Catamaran is a full-day trip, so we recommend a standalone day for it. Want to book multiple? Email us and we will sequence them cleanly.',
-    es: 'El Yunque (de la mañana a primera hora de la tarde) combina bien con la salsa en la azotea a las 6 PM el mismo día. El catamarán es de día completo, así que recomendamos un día dedicado. ¿Quieres reservar varios? Escríbenos y te los ordenamos.',
-    fr: "El Yunque (matin jusqu'en début d'après-midi) se combine bien avec la Salsa Rooftop à 18h le même jour. Le catamaran prend la journée complète, on te recommande une journée dédiée. Tu veux réserver plusieurs tours ? Écris-nous, on te les enchaîne proprement.",
+    en: 'El Yunque (morning to early afternoon) pairs well with Salsa Rooftop at 5 PM the same day. Catamaran is a full-day trip, so we recommend a standalone day for it. Want to book multiple? Email us and we will sequence them cleanly.',
+    es: 'El Yunque (de la mañana a primera hora de la tarde) combina bien con la salsa en la azotea a las 5 PM el mismo día. El catamarán es de día completo, así que recomendamos un día dedicado. ¿Quieres reservar varios? Escríbenos y te los ordenamos.',
+    fr: "El Yunque (matin jusqu'en début d'après-midi) se combine bien avec la Salsa Rooftop à 17h le même jour. Le catamaran prend la journée complète, on te recommande une journée dédiée. Tu veux réserver plusieurs tours ? Écris-nous, on te les enchaîne proprement.",
   }[locale]
   return {
     text,

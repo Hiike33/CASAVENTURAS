@@ -182,7 +182,7 @@ export const tourFaqs: Record<string, FAQ[]> = {
     {
       id: 'sal-time',
       question: '¿A qué hora empieza la clase de salsa?',
-      answer: 'Todos los días a las 6 PM. La clase dura 2 a 3 horas e incluye una piña colada gratis al final mientras el sol se esconde sobre el skyline de San Juan.',
+      answer: 'Todos los días a las 5 PM. La clase dura 2 a 3 horas e incluye una piña colada gratis al final mientras el sol se esconde sobre el skyline de San Juan.',
     },
     {
       id: 'sal-wear',
@@ -201,7 +201,7 @@ export const tourFaqs: Record<string, FAQ[]> = {
     },
     {
       id: 'sal-private',
-      question: '¿Qué pasa si no puedo ir a la clase de las 6 PM?',
+      question: '¿Qué pasa si no puedo ir a la clase de las 5 PM?',
       answer: 'Hay clases privadas en horarios flexibles bajo petición. Mismo precio, misma instructora, y podemos coordinar una sede distinta si hace falta. Escríbenos para organizarlo.',
     },
   ],

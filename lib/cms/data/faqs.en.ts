@@ -183,7 +183,7 @@ export const tourFaqs: Record<string, FAQ[]> = {
     {
       id: 'sal-time',
       question: 'What time does the salsa class start?',
-      answer: 'Every day at 6 PM. The class lasts 2 to 3 hours and includes a free Piña Colada at the end while the sun sets over the San Juan skyline.',
+      answer: 'Every day at 5 PM. The class lasts 2 to 3 hours and includes a free Piña Colada at the end while the sun sets over the San Juan skyline.',
     },
     {
       id: 'sal-wear',
@@ -202,7 +202,7 @@ export const tourFaqs: Record<string, FAQ[]> = {
     },
     {
       id: 'sal-private',
-      question: 'What if I cannot make the 6 PM daily class?',
+      question: 'What if I cannot make the 5 PM daily class?',
       answer: 'Private lessons at flexible times are available on request. Same price, same instructor, and we can arrange a different venue if needed. Email us to set it up.',
     },
   ],
