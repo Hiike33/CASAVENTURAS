@@ -250,31 +250,27 @@ export default async function SalsaPage({ params }: Props) {
               <span className="inline-block w-1.5 h-1.5 bg-[#111] mt-2 flex-shrink-0" aria-hidden />
               {t.uberNote}
             </li>
+            <li className="flex items-start gap-3 text-[13.5px] font-light text-[#354040] leading-[1.65]">
+              <span className="inline-block w-1.5 h-1.5 bg-[#111] mt-2 flex-shrink-0" aria-hidden />
+              {t.afterBooking}
+            </li>
           </ul>
         </div>
       </section>
 
       <section className="px-6 md:px-12 lg:px-16 xl:px-24 pb-24 md:pb-32">
-        <div className="grid gap-14 lg:grid-cols-[1fr_380px] items-start">
-          <article>
-            <div className="p-5 bg-[#f5f5f5] border-l-[3px] border-[#248D6C] text-[13.5px] font-light text-[#354040] leading-[1.7]">
-              {t.afterBooking}
-            </div>
-          </article>
-
-          <div id="book">
-            <div className="mb-4 p-5 bg-[#E6F3EE] border border-[#B8D9CF]">
-              <p className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#248D6C] mb-2">{t.fullDayEyebrow}</p>
-              <p className="text-[12.5px] font-light text-[#354040] leading-relaxed mb-3">
-                {t.fullDayBody}
-              </p>
-              <Link href="/#booking" className="inline-block bg-[#248D6C] text-white text-[10px] font-semibold tracking-[0.14em] uppercase px-5 py-2.5 hover:bg-[#1C6E54] transition-colors">
-                {t.planCavi}
-              </Link>
-            </div>
-
-            <BookingSidebar tour={tour} />
+        <div id="book" className="max-w-md mx-auto">
+          <div className="mb-4 p-5 bg-[#E6F3EE] border border-[#B8D9CF]">
+            <p className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#248D6C] mb-2">{t.fullDayEyebrow}</p>
+            <p className="text-[12.5px] font-light text-[#354040] leading-relaxed mb-3">
+              {t.fullDayBody}
+            </p>
+            <Link href="/#booking" className="inline-block bg-[#248D6C] text-white text-[10px] font-semibold tracking-[0.14em] uppercase px-5 py-2.5 hover:bg-[#1C6E54] transition-colors">
+              {t.planCavi}
+            </Link>
           </div>
+
+          <BookingSidebar tour={tour} />
         </div>
       </section>
 
