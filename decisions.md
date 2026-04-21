@@ -343,6 +343,46 @@ Changements :
 
 ---
 
+## 2026-04-21 — Sécurité : CSP reporting + SRI Bokun
+
+### D-020bis · [SEC] CSP violation reporting (report-uri + report-to + Reporting-Endpoints)
+**Décidé** : émettre des directives CSP `report-uri /api/csp-report` et `report-to csp-endpoint` plus un header `Reporting-Endpoints: csp-endpoint="/api/csp-report"`. Nouvel endpoint `app/api/csp-report/route.ts` qui accepte les deux formats (legacy `application/csp-report` + moderne Reporting API), normalise via `lib/csp-report.ts` et log via `console.warn`.
+
+**Raison** : avant ce fix, toute violation CSP était silencieuse côté navigateur → 0 visibilité sur ce que la policy bloque réellement en prod. Les logs Cloudflare Workers capturent les `console.warn`, ce qui suffit comme premier niveau d'observabilité avant d'éventuellement router vers un agrégateur dédié.
+
+**Alternatives rejetées** :
+- Router tout de suite vers Sentry/Datadog → sur-ingénierie MVP, zéro data de baseline pour dimensionner.
+- `report-to` seul → Safari < 16 et Firefox < 93 ne supportent pas, perte de visibilité sur ces user agents.
+- `report-uri` seul → déprécié, Chrome pourrait le retirer à terme.
+
+**Impact** :
+- `middleware.ts` : +2 directives CSP (`report-uri`, `report-to`) + 1 header `Reporting-Endpoints`.
+- `app/api/csp-report/route.ts` : nouveau, 35 lignes, répond 204 systématiquement.
+- `lib/csp-report.ts` : parser pur, 50 lignes.
+- `lib/csp-report.test.ts` : 4 tests unitaires (legacy, moderne, malformed, filtrage non-csp).
+- Bundle client : 0 impact. Header CSP : +~70 bytes.
+
+**Invalide si** : volume de reports devient ingérable → mettre un sampler `Math.random() < 0.01` dans la route ou basculer sur un aggregator externe.
+
+### D-021 · [SEC] SRI non appliqué sur le loader Bokun (risque accepté)
+**Décidé** : ne pas ajouter d'attribut `integrity=` sur le `<script src="https://widgets.bokun.io/...">` chargé par `components/BokunScript.tsx`. Documenter le risque et ne pas revenir dessus tant que Bokun ne publie pas un hash stable par version.
+
+**Raison** :
+1. Le loader Bokun est hébergé par le vendor et peut être mis à jour sans préavis (hotfix sécurité, feature flag côté Bokun).
+2. Un SRI figé casse le widget dès que le vendor push une nouvelle version → impact direct conversion (checkout HS sans alerte).
+3. Le script est chargé depuis `widgets.bokun.io` déjà autorisé par CSP `script-src` + servi en HTTPS, donc la surface d'attaque résiduelle (compromission du CDN Bokun) n'est pas significativement réduite par SRI dans ce modèle de menace (on dépend déjà totalement de Bokun pour le checkout).
+4. Stripe — autre script externe évoqué lors de l'audit — est importé via `@stripe/stripe-js` (package NPM), donc bundlé avec contenthash Next par défaut : SRI automatique, pas un gap.
+
+**Alternatives rejetées** :
+- SRI avec `integrity` figé → counterexample : vendor hotfix push → widget bloqué navigateur.
+- Self-host du loader Bokun → viole les conditions vendor + devient notre responsabilité de tracker les updates.
+
+**Impact** : aucun code. Cette entrée sert de référence pour les prochains audits — ne pas ré-ouvrir le sujet sans nouvelle information (ex: Bokun publie un `loader-[hash].js` stable).
+
+**Invalide si** : Bokun publie un hash SRI officiel par release OU on décide de self-host le loader (autre D-XXX à ouvrir alors).
+
+---
+
 ## Règles pour ajouter une décision
 
 1. Format strict : `### D-XXX · [SCOPE] Titre court`

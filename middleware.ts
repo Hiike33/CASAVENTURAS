@@ -48,6 +48,11 @@ const CSP_DIRECTIVES: Record<string, readonly string[]> = {
   'form-action': ["'self'"],
   'frame-ancestors': ["'none'"],
   'upgrade-insecure-requests': [],
+  // Violation reporting — `report-uri` is legacy, `report-to` is modern.
+  // We emit both so older browsers keep sending reports while newer ones
+  // prefer the Reporting API endpoint declared via Reporting-Endpoints.
+  'report-uri': ['/api/csp-report'],
+  'report-to': ['csp-endpoint'],
 }
 
 const CSP_VALUE = Object.entries(CSP_DIRECTIVES)
@@ -75,6 +80,7 @@ function applySecurityHeaders(res: NextResponse): NextResponse {
     ].join(', '),
   )
   res.headers.set('Content-Security-Policy', CSP_VALUE)
+  res.headers.set('Reporting-Endpoints', 'csp-endpoint="/api/csp-report"')
   res.headers.delete('X-Powered-By')
   return res
 }
