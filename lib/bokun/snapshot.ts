@@ -121,6 +121,54 @@ export function formatStartTime(hhmm: string | undefined): string | undefined {
   return m === 0 ? `${h12} ${suffix}` : `${h12}:${String(m).padStart(2, '0')} ${suffix}`
 }
 
+function hhmmToMinutes(hhmm: string): number | null {
+  const parts = hhmm.split(':')
+  if (parts.length !== 2) return null
+  const h = Number(parts[0])
+  const m = Number(parts[1])
+  if (!Number.isInteger(h) || !Number.isInteger(m)) return null
+  return h * 60 + m
+}
+
+/**
+ * Aggregate a list of Bokun HH:mm start times into one readable string.
+ *
+ *   []                                 -> undefined
+ *   ["17:00"]                          -> "5 PM"
+ *   ["08:00","08:10","08:20","08:30"]  -> "8–8:30 AM"     (span <= 60 min)
+ *   ["09:00","14:00"]                  -> "9 AM, 2 PM"    (spread > 60 min)
+ *
+ * The range form is useful for El Yunque where 4 staggered bus pickups
+ * within a 30-minute window are really one morning departure. The list
+ * form would surface afternoon-plus-morning departures, if a tour ever
+ * exposed them , currently none of the 3 products do, but it is cheap
+ * insurance against future schedule changes.
+ */
+export function formatStartTimeRange(times: ReadonlyArray<string> | undefined): string | undefined {
+  if (!times || times.length === 0) return undefined
+  const sorted = [...times].sort()
+  const formatted = sorted.map(formatStartTime).filter((s): s is string => Boolean(s))
+  if (formatted.length === 0) return undefined
+  if (formatted.length === 1) return formatted[0]
+
+  const first = sorted[0]
+  const last = sorted[sorted.length - 1]
+  const firstMin = hhmmToMinutes(first)
+  const lastMin = hhmmToMinutes(last)
+  if (firstMin === null || lastMin === null) return formatted.join(', ')
+
+  if (lastMin - firstMin <= 60) {
+    // Same am/pm window , drop the redundant suffix on the left side.
+    const lastFull = formatted[formatted.length - 1]
+    const lastSuffix = lastFull.endsWith('AM') ? 'AM' : lastFull.endsWith('PM') ? 'PM' : ''
+    const firstFull = formatted[0]
+    const firstSameSuffix = firstFull.endsWith(lastSuffix)
+    const firstTrimmed = firstSameSuffix ? firstFull.replace(/\s?(AM|PM)$/, '') : firstFull
+    return `${firstTrimmed}–${lastFull}`
+  }
+  return formatted.join(', ')
+}
+
 /**
  * Resolve the canonical display time for a Tour. Reads EXCLUSIVELY from
  * the Bokun snapshot (D-020 policy: Bokun is the source, always, and
@@ -130,7 +178,7 @@ export function formatStartTime(hhmm: string | undefined): string | undefined {
  * to refresh the snapshot (npm run bokun:snapshot), not to edit the CMS.
  */
 export function getDisplayTime(tour: Tour): string | undefined {
-  return formatStartTime(tour.bokunSnapshot?.startTimes?.[0])
+  return formatStartTimeRange(tour.bokunSnapshot?.startTimes)
 }
 
 const DAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const

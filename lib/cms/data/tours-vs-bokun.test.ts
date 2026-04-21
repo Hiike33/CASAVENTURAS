@@ -5,7 +5,13 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Tour } from '../../types/cms.ts'
 import { tours } from './tours.en.ts'
-import { enrichToursWithSnapshot, formatStartTime, getDisplayTime, getDisplayDaysLabel } from '../../bokun/snapshot.ts'
+import {
+  enrichToursWithSnapshot,
+  formatStartTime,
+  formatStartTimeRange,
+  getDisplayTime,
+  getDisplayDaysLabel,
+} from '../../bokun/snapshot.ts'
 import type { BokunSnapshotMap, BokunTourSnapshot } from '../../bokun/snapshot.ts'
 
 // Load the real Bokun snapshot committed alongside the code. If the file is
@@ -35,6 +41,27 @@ test('formatStartTime: afternoon/evening hours render as PM', () => {
 test('formatStartTime: non-zero minutes keep HH:mm form with AM/PM', () => {
   assert.equal(formatStartTime('08:30'), '8:30 AM')
   assert.equal(formatStartTime('14:45'), '2:45 PM')
+})
+
+test('formatStartTimeRange: empty or undefined returns undefined', () => {
+  assert.equal(formatStartTimeRange(undefined), undefined)
+  assert.equal(formatStartTimeRange([]), undefined)
+})
+
+test('formatStartTimeRange: single time renders as single time', () => {
+  assert.equal(formatStartTimeRange(['17:00']), '5 PM')
+  assert.equal(formatStartTimeRange(['10:00']), '10 AM')
+})
+
+test('formatStartTimeRange: span <=60min renders compact range', () => {
+  // El Yunque real case: 4 staggered bus pickups 08:00..08:30.
+  assert.equal(formatStartTimeRange(['08:00', '08:10', '08:20', '08:30']), '8–8:30 AM')
+  assert.equal(formatStartTimeRange(['08:30', '08:00']), '8–8:30 AM') // sorting
+  assert.equal(formatStartTimeRange(['09:00', '10:00']), '9–10 AM')
+})
+
+test('formatStartTimeRange: spread >60min renders comma list', () => {
+  assert.equal(formatStartTimeRange(['09:00', '14:00']), '9 AM, 2 PM')
 })
 
 test('formatStartTime: invalid inputs return undefined', () => {
@@ -81,13 +108,13 @@ test('getDisplayTime: returns undefined when snapshot has no startTimes', () => 
   assert.equal(getDisplayTime(mkTour('no-times', snap)), undefined)
 })
 
-test('getDisplayTime: picks first startTime entry', () => {
+test('getDisplayTime: multi staggered times render as range', () => {
   const snap: BokunTourSnapshot = {
     productId: 0,
     startTimes: ['08:00', '08:10', '08:20'],
     fetchedAt: '2026-04-20T00:00:00Z',
   }
-  assert.equal(getDisplayTime(mkTour('el-yunque', snap)), '8 AM')
+  assert.equal(getDisplayTime(mkTour('el-yunque', snap)), '8–8:20 AM')
 })
 
 // ─── Live snapshot integration ──────────────────────────────────────────
