@@ -204,6 +204,9 @@ export default function HomeBookingForm() {
 
       <HomeAvailabilityLine state={availability} date={date} bokunConfigured={bokunConfigured} t={t} />
 
+      {availability.kind === 'ok' && !availability.soldOut && availability.availabilities.length === 1 && (
+        <SlotLine slot={availability.availabilities[0]} t={t} />
+      )}
       {availability.kind === 'ok' && availability.availabilities.length > 1 && (
         <SlotPicker
           slots={availability.availabilities}
@@ -261,6 +264,25 @@ export default function HomeBookingForm() {
 }
 
 type FormT = ReturnType<typeof useTranslations<'HomeBookingForm'>>
+
+function SlotLine({ slot, t }: { slot: BokunAvailability; t: FormT }) {
+  // Static single-slot label. Same visual shell as SlotPicker row so the
+  // booking engine reads consistently whether Bokun exposes 1 time or
+  // several. No radio input: nothing to choose between.
+  const time = formatStartTime(slot.startTime) ?? slot.startTime ?? slot.id
+  const count = slot.availabilityCount ?? 0
+  return (
+    <div
+      className="mb-3 border border-[#E5E5E5] flex items-center justify-between gap-4 px-3.5 py-2.5 bg-[#FAFAFA]"
+      data-test="slot-line"
+    >
+      <span className="text-[13px] font-light text-[#111]">{time}</span>
+      <span className="text-[11px] font-light text-[#4F4F4E]">
+        {t('spotsShort', { count })}
+      </span>
+    </div>
+  )
+}
 
 function SlotPicker({
   slots,

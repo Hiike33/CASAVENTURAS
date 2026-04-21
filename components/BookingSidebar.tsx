@@ -147,6 +147,9 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
 
         <AvailabilityLine state={availability} date={date} />
 
+        {availability.kind === 'ok' && !availability.soldOut && availability.availabilities.length === 1 && (
+          <SidebarSlotLine slot={availability.availabilities[0]} />
+        )}
         {availability.kind === 'ok' && availability.availabilities.length > 1 && (
           <SidebarSlotPicker
             slots={availability.availabilities}
@@ -200,6 +203,24 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
         </p>
       </div>
     </aside>
+  )
+}
+
+function SidebarSlotLine({ slot }: { slot: BokunAvailability }) {
+  // Static single-slot label for the tour detail sidebar. Visual echoes
+  // SidebarSlotPicker row so the two variants read as one family.
+  const time = formatStartTime(slot.startTime) ?? slot.startTime ?? slot.id
+  const count = slot.availabilityCount ?? 0
+  return (
+    <div
+      className="border border-[#E5E5E5] flex items-center justify-between gap-4 px-3 py-2.5 bg-[#FAFAFA]"
+      data-test="sidebar-slot-line"
+    >
+      <span className="text-[13px] font-light text-[#111]">{time}</span>
+      <span className="text-[11px] font-light text-[#4F4F4E]">
+        {count} {count === 1 ? 'spot' : 'spots'}
+      </span>
+    </div>
   )
 }
 
