@@ -5,7 +5,7 @@ import type { BokunAvailability, BokunAvailabilityResponse } from '@/lib/bokun/t
 import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
 import CheckoutPanel from '@/components/CheckoutPanel'
 import { toursFor, siteConfigFor } from '@/lib/cms/client'
-import { getDisplayTime, getDisplayDaysLabel } from '@/lib/bokun/snapshot'
+import { getDisplayTime, getDisplayDaysLabel, formatStartTime } from '@/lib/bokun/snapshot'
 import type { Locale } from '@/i18n/routing'
 
 type AvailabilityState =
@@ -16,6 +16,10 @@ type AvailabilityState =
       kind: 'ok'
       slots: number
       soldOut: boolean
+      /** Full slot list, needed so we can render the pickup-time picker
+          when Bokun returns more than one slot for the same date (e.g.
+          El Yunque has 4 staggered bus pickups 08:00..08:30). */
+      availabilities: BokunAvailability[]
       firstSlot?: BokunAvailability
     }
 
@@ -31,6 +35,7 @@ export default function HomeBookingForm() {
   const [date, setDate] = useState('')
   const [guests, setGuests] = useState('2')
   const [availability, setAvailability] = useState<AvailabilityState>({ kind: 'idle' })
+  const [selectedSlotId, setSelectedSlotId] = useState<string | undefined>(undefined)
   const [inCheckout, setInCheckout] = useState(false)
 
   const selectedTour = tours.find(tour => tour.slug === tourSlug)
@@ -39,6 +44,7 @@ export default function HomeBookingForm() {
 
   useEffect(() => {
     setAvailability({ kind: 'idle' })
+    setSelectedSlotId(undefined)
     setInCheckout(false)
     if (!date || !productId) return
     const ctrl = new AbortController()
@@ -60,7 +66,15 @@ export default function HomeBookingForm() {
           data.availabilities.length > 0 && data.availabilities.every(a => a.soldOut)
         const firstSlot =
           data.availabilities.find(a => !a.soldOut) ?? data.availabilities[0]
-        setAvailability({ kind: 'ok', slots: sumSlots, soldOut, firstSlot })
+        setAvailability({
+          kind: 'ok',
+          slots: sumSlots,
+          soldOut,
+          availabilities: data.availabilities,
+          firstSlot,
+        })
+        // Seed the slot picker with the earliest non-soldout option.
+        setSelectedSlotId(firstSlot?.id)
       })
       .catch(err => {
         if (err?.name === 'AbortError') return
@@ -68,6 +82,14 @@ export default function HomeBookingForm() {
       })
     return () => ctrl.abort()
   }, [date, productId, t])
+
+  // Resolve the currently-selected slot each render from the state. When
+  // only one slot exists, selectedSlot === firstSlot; when multiple, it
+  // reflects the user's radio choice.
+  const selectedSlot =
+    availability.kind === 'ok'
+      ? availability.availabilities.find(s => s.id === selectedSlotId) ?? availability.firstSlot
+      : undefined
 
   const guestsNum = Math.max(1, Number(guests) || 1)
   const price = selectedTour?.price ?? 0
@@ -95,9 +117,9 @@ export default function HomeBookingForm() {
     inCheckout &&
     selectedTour &&
     availability.kind === 'ok' &&
-    availability.firstSlot
+    selectedSlot
   ) {
-    const slot = availability.firstSlot
+    const slot = selectedSlot
     const slotDate =
       typeof slot.date === 'number'
         ? new Date(slot.date).toISOString().slice(0, 10)
@@ -119,9 +141,7 @@ export default function HomeBookingForm() {
 
   const disableSubmit =
     customCheckoutEnabled &&
-    (availability.kind !== 'ok' ||
-      availability.soldOut ||
-      !availability.firstSlot)
+    (availability.kind !== 'ok' || availability.soldOut || !selectedSlot)
 
   return (
     <div className="bg-white border border-[#E5E5E5] p-8 shadow-hairline rounded-sm">
@@ -184,6 +204,15 @@ export default function HomeBookingForm() {
 
       <HomeAvailabilityLine state={availability} date={date} bokunConfigured={bokunConfigured} t={t} />
 
+      {availability.kind === 'ok' && availability.availabilities.length > 1 && (
+        <SlotPicker
+          slots={availability.availabilities}
+          selectedId={selectedSlotId}
+          onSelect={setSelectedSlotId}
+          t={t}
+        />
+      )}
+
       {selectedTour && (
         <div className="flex items-baseline justify-between py-2.5 border-t border-[#f0f0f0] mb-3">
           <span className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#888]">{t('total')}</span>
@@ -232,6 +261,70 @@ export default function HomeBookingForm() {
 }
 
 type FormT = ReturnType<typeof useTranslations<'HomeBookingForm'>>
+
+function SlotPicker({
+  slots,
+  selectedId,
+  onSelect,
+  t,
+}: {
+  slots: BokunAvailability[]
+  selectedId: string | undefined
+  onSelect: (id: string) => void
+  t: FormT
+}) {
+  // Sorted by startTime so the picker always reads top-to-bottom earliest
+  // to latest, independent of the order Bokun returns the slots in.
+  const ordered = [...slots].sort((a, b) => (a.startTime ?? '').localeCompare(b.startTime ?? ''))
+  return (
+    <div
+      role="radiogroup"
+      aria-label={t('pickupTime')}
+      className="mb-3 border border-[#E5E5E5] divide-y divide-[#E5E5E5]"
+    >
+      <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#888] px-3.5 py-2 bg-[#FAFAFA]">
+        {t('pickupTime')}
+      </p>
+      {ordered.map(slot => {
+        const disabled = slot.soldOut || (slot.availabilityCount ?? 0) <= 0
+        const time = formatStartTime(slot.startTime) ?? slot.startTime ?? slot.id
+        const isSelected = slot.id === selectedId
+        return (
+          <label
+            key={slot.id}
+            data-test={`slot-option-${slot.id}`}
+            data-selected={isSelected}
+            className={`flex items-center justify-between gap-4 px-3.5 py-2.5 cursor-pointer transition-colors ${
+              disabled
+                ? 'opacity-50 cursor-not-allowed'
+                : isSelected
+                  ? 'bg-[#E6F3EE]'
+                  : 'hover:bg-[#FAFAFA]'
+            }`}
+          >
+            <span className="inline-flex items-center gap-2.5">
+              <input
+                type="radio"
+                name="slot"
+                value={slot.id}
+                checked={isSelected}
+                disabled={disabled}
+                onChange={() => onSelect(slot.id)}
+                className="accent-[#248D6C]"
+              />
+              <span className="text-[13px] font-light text-[#111]">{time}</span>
+            </span>
+            <span className="text-[11px] font-light text-[#4F4F4E]">
+              {disabled
+                ? t('soldOutShort')
+                : t('spotsShort', { count: slot.availabilityCount ?? 0 })}
+            </span>
+          </label>
+        )
+      })}
+    </div>
+  )
+}
 
 function HomeAvailabilityLine({
   state,

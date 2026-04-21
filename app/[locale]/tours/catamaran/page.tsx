@@ -13,7 +13,6 @@ import Breadcrumb from '@/components/Breadcrumb'
 import StickyMobileCTA from '@/components/StickyMobileCTA'
 import HeroVideo from '@/components/HeroVideo'
 import { getCMS } from '@/lib/cms'
-import { getDisplayTime, getDisplayDaysLabel } from '@/lib/bokun/snapshot'
 import { localizedAlternates } from '@/lib/seo/alternates'
 import { routing, type Locale } from '@/i18n/routing'
 
@@ -198,17 +197,6 @@ export default async function CatamaranPage({ params }: Props) {
         </div>
       </section>
 
-      {(() => {
-        const t0 = getDisplayTime(tour)
-        const d0 = getDisplayDaysLabel(tour)
-        if (!t0 && !d0) return null
-        const label = [t0, d0].filter(Boolean).join(' · ')
-        return (
-          <p className="text-center bg-[#E6F3EE] text-[10.5px] font-medium tracking-[0.18em] uppercase text-[#248D6C] py-3">
-            {label}
-          </p>
-        )
-      })()}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#e8e8e8]">
         {[
           { n: `$${tour.price}`, l: t.perPerson },

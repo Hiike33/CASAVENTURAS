@@ -13,7 +13,6 @@ import Breadcrumb from '@/components/Breadcrumb'
 import StickyMobileCTA from '@/components/StickyMobileCTA'
 import HeroVideo from '@/components/HeroVideo'
 import { getCMS } from '@/lib/cms'
-import { getDisplayTime, getDisplayDaysLabel } from '@/lib/bokun/snapshot'
 import { localizedAlternates } from '@/lib/seo/alternates'
 import { routing, type Locale } from '@/i18n/routing'
 
@@ -199,7 +198,7 @@ export default async function SalsaPage({ params }: Props) {
         {[
           { n: `$${tour.price}`, l: t.perPerson },
           { n: tour.duration, l: t.durationLabel },
-          { n: getDisplayTime(tour) ?? '—', l: getDisplayDaysLabel(tour) ?? t.daily },
+          { n: '5 PM', l: t.daily },
           { n: t.beginner, l: t.noExperience },
         ].map((s, i) => (
           <div key={i} className="bg-[#f5f5f5] text-center py-6 px-4">
