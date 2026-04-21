@@ -1,6 +1,7 @@
 import type { Tour, Review, SiteConfig, FAQ, Guide } from '@/lib/types/cms'
 import type { CMSAdapter } from './adapter'
 import type { Locale } from '@/i18n/routing'
+import { enrichToursWithSnapshot, type BokunSnapshotMap } from '@/lib/bokun/snapshot'
 
 // Static imports per locale. Next.js / Webpack tree-shake the ones that are
 // unused on a given page, so bundle cost is paid only when needed.
@@ -19,6 +20,12 @@ import * as faqsFr from './data/faqs.fr'
 import * as guidesEn from './data/guides.en'
 import * as guidesEs from './data/guides.es'
 import * as guidesFr from './data/guides.fr'
+// Build-time Bokun snapshot. Refreshed by scripts/fetch-bokun-snapshot.ts;
+// committed as {} by default so the bundle always has something to import.
+// Webpack inlines the file at build time, no fs access needed at runtime —
+// which lets the merged Tour[] ship to client components (e.g. Nav.tsx)
+// without dragging node:fs into the browser bundle.
+import bokunSnapshot from './data/bokun-snapshot.json'
 
 const DATA = {
   en: { tours: toursEn, reviews: reviewsEn, config: configEn, faqs: faqsEn, guides: guidesEn },
@@ -42,11 +49,12 @@ const DEFAULT_LOCALE: Locale = 'en'
  */
 export class LocalAdapter implements CMSAdapter {
   async getTours(locale: Locale = DEFAULT_LOCALE): Promise<Tour[]> {
-    return DATA[locale].tours.tours
+    return enrichToursWithSnapshot(DATA[locale].tours.tours, bokunSnapshot as BokunSnapshotMap)
   }
 
   async getTour(slug: string, locale: Locale = DEFAULT_LOCALE): Promise<Tour | null> {
-    return DATA[locale].tours.tours.find(t => t.slug === slug) ?? null
+    const enriched = enrichToursWithSnapshot(DATA[locale].tours.tours, bokunSnapshot as BokunSnapshotMap)
+    return enriched.find(t => t.slug === slug) ?? null
   }
 
   async getReviews(filterTour?: string, locale: Locale = DEFAULT_LOCALE): Promise<Review[]> {

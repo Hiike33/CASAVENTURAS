@@ -170,7 +170,9 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
         )}
 
         <p className="text-[9.5px] text-center text-[#aaa] font-light">
-          Free cancellation up to 24h · Instant confirmation
+          {tour.bokunSnapshot?.cancellationHours != null
+            ? `Free cancellation up to ${tour.bokunSnapshot.cancellationHours}h · Instant confirmation`
+            : 'Free cancellation up to 24h · Instant confirmation'}
         </p>
       </div>
     </aside>

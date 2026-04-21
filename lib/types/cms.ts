@@ -51,6 +51,13 @@ export type Tour = {
   faqs?: FAQ[]
   /** Bókun numeric experience ID — wired from env var at build time */
   bokunProductId?: number
+  /**
+   * Authoritative Bókun snapshot merged in at build time by
+   * lib/bokun/snapshot.ts. When present, downstream UI should prefer
+   * these values (price, cancellationHours, pricingCategories, startTimes)
+   * over the locally cached narrative fields. See decisions.md D-020.
+   */
+  bokunSnapshot?: import('@/lib/bokun/snapshot').BokunTourSnapshot
 }
 
 export type Review = {
