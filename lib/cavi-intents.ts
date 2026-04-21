@@ -4,6 +4,7 @@ import { siteConfig as siteConfigEn } from './cms/data/site-config.en.ts'
 import { siteConfig as siteConfigEs } from './cms/data/site-config.es.ts'
 import { faqById as faqByIdEn } from './cms/data/faqs.en.ts'
 import { faqById as faqByIdEs } from './cms/data/faqs.es.ts'
+import { faqById as faqByIdFr } from './cms/data/faqs.fr.ts'
 
 // Deterministic multilingual intent matcher for Cavi. No LLM.
 //
@@ -13,10 +14,9 @@ import { faqById as faqByIdEs } from './cms/data/faqs.es.ts'
 // right intent list. Intents reference stable FAQ ids, so when faqs.es.ts
 // translates "cat-seasickness", Cavi's answer in ES updates automatically.
 //
-// FR currently falls back to EN content (faqs.fr.ts re-exports EN) until
-// Phase 8 produces proper French translations. The keyword detection still
-// works in French so visitors get routed correctly; they just see EN
-// answers for now. That is a better UX than silent fallback.
+// FR now reads its own translated FAQ answers from faqs.fr.ts (Phase 8
+// shipped the native content). Keyword detection is also FR-native so
+// visitors are routed and answered entirely in French.
 
 export type Locale = 'en' | 'es' | 'fr'
 
@@ -78,7 +78,7 @@ export function detectLocale(message: string, fallback: Locale = 'en'): Locale {
 
 const TOURS: Record<Locale, typeof toursEn> = { en: toursEn, es: toursEs, fr: toursEn }
 const SITE: Record<Locale, typeof siteConfigEn> = { en: siteConfigEn, es: siteConfigEs, fr: siteConfigEn }
-const FAQS: Record<Locale, typeof faqByIdEn> = { en: faqByIdEn, es: faqByIdEs, fr: faqByIdEn }
+const FAQS: Record<Locale, typeof faqByIdEn> = { en: faqByIdEn, es: faqByIdEs, fr: faqByIdFr }
 
 // ─── EN intents (unchanged baseline) ────────────────────────────────
 
@@ -191,8 +191,7 @@ const ES_INTENTS: Intent[] = [
 ]
 
 // ─── FR intents (French keyword variants) ───────────────────────────
-// FR answers temporarily read from EN data (faqs.fr.ts re-exports EN)
-// until Phase 8 produces proper French translations.
+// FR answers now read from faqs.fr.ts (Phase 8 native translation).
 
 const FR_INTENTS: Intent[] = [
   {

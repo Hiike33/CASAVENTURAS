@@ -168,6 +168,13 @@ test('ES matched intent returns Spanish FAQ answer', () => {
   assert.ok(faqByIdEs['cat-seasickness'])
 })
 
+test('FR matched intent returns French FAQ answer (not EN fallback)', () => {
+  const r = matchIntent('mal de mer sur le bateau ?', 'fr')
+  // FR answer contains French-specific phrasing not present in EN
+  assert.match(r.text, /Dramamine|gingembre|mal des transports|équipage/i)
+  assert.doesNotMatch(r.text, /seasick|ginger candy|motion sickness/i)
+})
+
 // ─── Guided navigation tree (6-category arbre) ───────────────────────
 // CAVI ships without a free-text input (D-AUDIT 2026-04-21). All intents
 // must be reachable via the 6-category menu, otherwise the bot becomes
