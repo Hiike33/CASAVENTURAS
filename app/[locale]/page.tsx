@@ -149,8 +149,8 @@ export default async function Home({ params }: Props) {
         <div className="flex flex-col">
           {tours.map((tour, i) => (
             <div key={tour.slug}>
-              <div className="border-t border-[#e5e5e5] px-6 md:px-12 lg:px-16 xl:px-24 py-5 md:py-6 flex items-baseline gap-5 md:gap-8">
-                <span className="text-[11px] md:text-[12px] font-medium tracking-[0.28em] text-[#248D6C] tabular-nums">
+              <div className="border-t border-[#e5e5e5] px-6 md:px-12 lg:px-16 xl:px-24 py-5 md:py-7 flex items-baseline gap-6 md:gap-8">
+                <span className="font-serif italic font-light text-[22px] md:text-[28px] text-[#248D6C] leading-none">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <span className="text-[10px] md:text-[11px] font-medium tracking-[0.22em] uppercase text-[#888]">
@@ -180,7 +180,7 @@ export default async function Home({ params }: Props) {
             href="https://www.youtube.com/watch?v=_qz8fcMaor8"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block text-[10px] font-semibold tracking-[0.22em] uppercase text-[#248D6C] border-b border-[#248D6C]/40 pb-1 hover:border-[#248D6C] transition-colors"
+            className="link-sweep cta-breathe inline-block text-[10px] font-semibold tracking-[0.22em] uppercase text-[#248D6C] pb-1"
           >
             {t.watchYoutube}
           </a>
@@ -207,7 +207,7 @@ export default async function Home({ params }: Props) {
             href={siteConfig.tripAdvisor.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[9.5px] font-medium tracking-[0.12em] uppercase text-[#248D6C] border-b border-[#248D6C]/40 pb-0.5 hover:border-[#248D6C] transition-colors"
+            className="link-sweep text-[9.5px] font-medium tracking-[0.12em] uppercase text-[#248D6C] pb-0.5"
           >
             {t.allReviews.replace('{count}', siteConfig.tripAdvisor.reviews.toLocaleString(locale === 'en' ? 'en-US' : locale))}
           </a>

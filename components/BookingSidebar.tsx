@@ -116,7 +116,7 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
     (availability.kind !== 'ok' || availability.soldOut || !selectedSlot)
 
   return (
-    <aside className="sticky top-[80px] border border-[#E5E5E5] bg-white">
+    <aside className="sticky top-[80px] glass-luxe rounded-sm overflow-hidden">
       <header className="bg-[#FAFAFA] border-b border-[#E5E5E5] px-6 py-5">
         <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C] mb-1.5">Starting from</p>
         <p className="text-[36px] font-light text-[#111] leading-none tracking-tight">${tour.price}</p>
@@ -169,7 +169,7 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
             type="button"
             disabled={disableSubmit}
             onClick={() => setInCheckout(true)}
-            className="block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] transition-colors mt-3 disabled:opacity-60"
+            className="cta-breathe block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] mt-3 disabled:opacity-60"
           >
             {availability.kind === 'ok' && availability.soldOut
               ? 'Sold out — pick another date'
@@ -179,7 +179,7 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
           </button>
         ) : bokunCheckoutUrl ? (
           <a
-            className="bokunButton block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] transition-colors mt-3 aria-[disabled=true]:opacity-60"
+            className="cta-breathe bokunButton block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] mt-3 aria-[disabled=true]:opacity-60"
             href={bokunCheckoutUrl}
             data-src={bokunCheckoutUrl}
             aria-disabled={availability.kind === 'ok' && availability.soldOut ? 'true' : undefined}
@@ -190,7 +190,7 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
           </a>
         ) : (
           <a
-            className="block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] transition-colors mt-3"
+            className="cta-breathe block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] mt-3"
             href={`mailto:micasaventuras@gmail.com?subject=Booking%20request%20${encodeURIComponent(tour.name)}`}
           >
             Book by email — ${total}

@@ -228,7 +228,7 @@ export default function HomeBookingForm() {
           type="button"
           disabled={disableSubmit}
           onClick={() => setInCheckout(true)}
-          className="block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] transition-colors disabled:opacity-60"
+          className="cta-breathe block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] disabled:opacity-60"
         >
           {availability.kind === 'ok' && availability.soldOut
             ? t('soldOut')
@@ -238,7 +238,7 @@ export default function HomeBookingForm() {
         </button>
       ) : bokunCheckoutUrl ? (
         <a
-          className="bokunButton block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] transition-colors aria-[disabled=true]:opacity-60"
+          className="bokunButton cta-breathe block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] aria-[disabled=true]:opacity-60"
           href={bokunCheckoutUrl}
           data-src={bokunCheckoutUrl}
           aria-disabled={availability.kind === 'ok' && availability.soldOut ? 'true' : undefined}
@@ -249,7 +249,7 @@ export default function HomeBookingForm() {
         </a>
       ) : (
         <a
-          className="block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] transition-colors"
+          className="cta-breathe block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54]"
           href={mailtoFallback}
         >
           {t('requestByEmail')}

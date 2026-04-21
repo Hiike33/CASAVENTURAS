@@ -33,7 +33,7 @@ export default function TourCard({ tour, featured = false }: { tour: Tour; featu
           fill
           priority={featured}
           sizes="100vw"
-          className="object-cover group-hover:scale-[1.04] transition-transform duration-[900ms] ease-out"
+          className="img-luxe object-cover group-hover:scale-[1.04] transition-transform duration-[900ms] ease-out"
         />
       )}
 
@@ -81,7 +81,7 @@ export default function TourCard({ tour, featured = false }: { tour: Tour; featu
               {tour.priceNote}
             </div>
           </div>
-          <span className="inline-flex items-center text-[10px] md:text-[11px] font-semibold tracking-[0.22em] uppercase text-white border-b border-white/60 pb-1.5 group-hover:border-white group-hover:text-white transition-colors">
+          <span className="link-sweep cta-breathe inline-flex items-center text-[10px] md:text-[11px] font-semibold tracking-[0.22em] uppercase text-white pb-1.5">
             Explore&nbsp;→
           </span>
         </div>

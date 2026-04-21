@@ -85,6 +85,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body>
+        <div className="scroll-progress-bar" aria-hidden />
         <NextIntlClientProvider>
           {children}
         </NextIntlClientProvider>
