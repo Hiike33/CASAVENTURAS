@@ -184,7 +184,7 @@ export default async function SalsaPage({ params }: Props) {
             {t.heroIntro}
           </p>
           <div className="flex items-center gap-7 flex-wrap">
-            <a href="#book" className="bg-white text-black text-[10.5px] font-semibold tracking-[0.15em] uppercase px-8 py-3.5 hover:bg-[#f0f0f0] transition-colors">
+            <a href="#book" className="bg-[#248D6C] text-white text-[10.5px] font-semibold tracking-[0.15em] uppercase px-8 py-3.5 hover:bg-[#1C6E54] transition-colors">
               {t.bookThis}
             </a>
             <Link href="/#tours" className="text-white/70 text-[10.5px] font-medium tracking-[0.14em] uppercase border-b border-white/20 pb-1 hover:text-white hover:border-white/60 transition-colors">
