@@ -41,35 +41,18 @@
         "pricePerCategoryUnit": [
           {
             "categoryId": 725662,
-            "amount": 80,
+            "amount": 75,
             "currency": "USD"
           },
           {
             "categoryId": 801219,
-            "amount": 80,
-            "currency": "USD"
-          }
-        ]
-      },
-      {
-        "activityRateId": 2189714,
-        "rateTitle": "RATE AFTERNOON",
-        "pricedPerPerson": true,
-        "pricePerCategoryUnit": [
-          {
-            "categoryId": 725662,
-            "amount": 90,
-            "currency": "USD"
-          },
-          {
-            "categoryId": 801219,
-            "amount": 90,
+            "amount": 75,
             "currency": "USD"
           }
         ]
       }
     ],
-    "fetchedAt": "2026-04-21T01:25:23.252Z"
+    "fetchedAt": "2026-04-22T19:29:09.455Z"
   },
   "catamaran": {
     "productId": 1134501,
@@ -114,7 +97,7 @@
         }
       }
     ],
-    "fetchedAt": "2026-04-21T01:25:22.147Z"
+    "fetchedAt": "2026-04-22T19:29:09.019Z"
   },
   "salsa": {
     "productId": 680641,
@@ -148,6 +131,6 @@
         ]
       }
     ],
-    "fetchedAt": "2026-04-21T01:25:25.022Z"
+    "fetchedAt": "2026-04-22T19:29:08.834Z"
   }
 }

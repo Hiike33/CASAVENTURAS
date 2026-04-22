@@ -154,12 +154,17 @@ async function fetchOne(slug: string, productId: number): Promise<BokunTourSnaps
   if (!actRes.ok) throw new Error(`[${slug}] activity fetch ${actRes.status}`)
   const act = (await actRes.json()) as BokunActivity
 
-  // Availability → observed start times + live pricesByRate (next 60 days)
+  // Availability → observed start times + live pricesByRate (next 60 days).
+  // If NEXT_PUBLIC_BOKUN_CHANNEL_UUID is set, append it so Bokun applies the
+  // channel-specific retail pricing (channel "Direct" markup) instead of
+  // returning the raw vendor net rates. Same UUID the widget uses.
   const today = new Date()
   const plus60 = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000)
   const ymd = (d: Date) => d.toISOString().slice(0, 10)
+  const channelUuid = process.env.NEXT_PUBLIC_BOKUN_CHANNEL_UUID
+  const channelParam = channelUuid ? `&bookingChannelUUID=${channelUuid}` : ''
   const availRes = await bokunFetch(
-    `/activity.json/${productId}/availabilities?start=${ymd(today)}&end=${ymd(plus60)}`,
+    `/activity.json/${productId}/availabilities?start=${ymd(today)}&end=${ymd(plus60)}${channelParam}`,
   )
   if (!availRes.ok) throw new Error(`[${slug}] availabilities fetch ${availRes.status}`)
   const availArr = (await availRes.json()) as BokunAvailabilityItem[]
@@ -226,6 +231,13 @@ async function main() {
     err('[bokun-snapshot] BOKUN_ACCESS_KEY/SECRET not set , keeping existing snapshot untouched.')
     process.exit(0)
   }
+
+  const channelUuid = process.env.NEXT_PUBLIC_BOKUN_CHANNEL_UUID
+  out(
+    channelUuid
+      ? `[bokun-snapshot] channel-scoped fetch , bookingChannelUUID=${channelUuid}`
+      : `[bokun-snapshot] WARNING , NEXT_PUBLIC_BOKUN_CHANNEL_UUID not set, fetching vendor net rates`,
+  )
 
   // Resolve product IDs from env. Missing env = tour is skipped (dev setup).
   const jobs = TOUR_ENV_KEYS.flatMap<{ slug: string; productId: number }>(({ slug, env }) => {

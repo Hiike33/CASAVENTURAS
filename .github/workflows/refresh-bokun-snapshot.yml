@@ -1,0 +1,61 @@
+name: Refresh Bokun Snapshot
+
+# Auto-refresh the build-time snapshot of Bokun channel-scoped prices and
+# availability (lib/cms/data/bokun-snapshot.json). Runs on a cron schedule
+# AND can be triggered manually from the Actions tab when you know Bokun
+# admin just changed and want to propagate immediately.
+#
+# If the snapshot diff is non-empty, the workflow auto-commits the updated
+# JSON to main , which cascades into deploy-cloudflare.yml redeploying with
+# the fresh values. If the Bokun API is unreachable or credentials are
+# missing, the script exits 0 silently and nothing is committed.
+
+on:
+  schedule:
+    # Every 6 hours at minute 0 (UTC). Prod prices are at most 6h stale.
+    - cron: '0 */6 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: refresh-bokun-snapshot
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      BOKUN_ACCESS_KEY: ${{ secrets.BOKUN_ACCESS_KEY }}
+      BOKUN_SECRET_KEY: ${{ secrets.BOKUN_SECRET_KEY }}
+      NEXT_PUBLIC_BOKUN_CHANNEL_UUID: db3d303f-f72c-4ef5-983b-821ad33b7ded
+      NEXT_PUBLIC_BOKUN_PRODUCT_EL_YUNQUE: '448405'
+      NEXT_PUBLIC_BOKUN_PRODUCT_CATAMARAN: '1134501'
+      NEXT_PUBLIC_BOKUN_PRODUCT_SALSA: '680641'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Fetch Bokun snapshot (channel-scoped)
+        run: npm run bokun:snapshot
+
+      - name: Auto-commit if snapshot changed
+        run: |
+          if [ -z "$(git status --porcelain lib/cms/data/bokun-snapshot.json)" ]; then
+            echo "No snapshot changes, nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/cms/data/bokun-snapshot.json
+          git commit -m "[CHORE/bokun] auto-refresh snapshot (cron)"
+          git push
