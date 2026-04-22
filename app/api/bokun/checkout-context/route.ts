@@ -206,7 +206,19 @@ export async function GET(req: NextRequest): Promise<NextResponse<Ok | Err>> {
       },
     }
 
-    return NextResponse.json({ ok: true, context })
+    // Temporary debug dump — surface raw activity fields related to pickup /
+    // custom to diagnose why customPickupAllowed stays false after Bokun
+    // admin toggle. Revert this block once root cause is identified.
+    const actRaw = act as unknown as Record<string, unknown>
+    const debug = {
+      allKeys: Object.keys(actRaw),
+      pickupOrCustom: Object.fromEntries(
+        Object.entries(actRaw).filter(([k]) =>
+          /pickup|custom|allow|location/i.test(k)
+        ),
+      ),
+    }
+    return NextResponse.json({ ok: true, context, _debug: debug })
   } catch (err) {
     if (err instanceof BokunConfigError) {
       return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
