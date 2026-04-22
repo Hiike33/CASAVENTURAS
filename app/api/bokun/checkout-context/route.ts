@@ -133,9 +133,11 @@ export async function GET(req: NextRequest): Promise<NextResponse<Ok | Err>> {
   }
 
   try {
+    const channelUuid = process.env.NEXT_PUBLIC_BOKUN_CHANNEL_UUID
+    const channelQuery = channelUuid ? `?bookingChannelUUID=${channelUuid}` : ''
     const [actRes, pickupRes] = await Promise.all([
-      bokunFetch(`/activity.json/${productId}`),
-      bokunFetch(`/activity.json/${productId}/pickup-places`),
+      bokunFetch(`/activity.json/${productId}${channelQuery}`),
+      bokunFetch(`/activity.json/${productId}/pickup-places${channelQuery}`),
     ])
 
     if (!actRes.ok) {
