@@ -266,11 +266,14 @@ function CheckoutPanelInner({
   const showMeetingPoint =
     ctx?.meetingType === 'MEET_ON_LOCATION' && Boolean(meetingPoint)
   const showPickup = Boolean(ctx?.pickupService) && (ctx?.pickupPlaces.length ?? 0) > 0
-  // In dev-mock we always expose the custom-pickup toggle so the UX can be
-  // rehearsed before the vendor flips `customPickupAllowed` in Bokun.
-  // In live mode we strictly honour Bokun's flag.
+  // Tours with a pickup service always offer "custom address" as a fallback
+  // so a traveller whose hotel isn't in the list can still book — even when
+  // Bokun doesn't flip customPickupAllowed (empirically unreliable: audit
+  // 2026-04-22 showed the admin toggle doesn't propagate to the REST API).
+  // We prefer the explicit Bokun flag when it IS true, else fall back on
+  // pickupService=true as a proxy.
   const showCustomPickupToggle =
-    ctx?.customPickupAllowed === true || CLIENT_CHECKOUT_MODE === 'dev-mock'
+    ctx?.customPickupAllowed === true || ctx?.pickupService === true
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
