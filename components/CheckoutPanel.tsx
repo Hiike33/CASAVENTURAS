@@ -131,14 +131,28 @@ function CheckoutPanelInner({
   const needsRoomNumber =
     !form.customPickup && selectedPickup?.askForRoomNumber === true
 
+  // Bokun snapshot exposes per-category retail prices
+  // (ratePrices[0].pricePerCategoryUnit), channel-scoped and cron-refreshed.
+  // We read directly from there so each pricing category (Adult, Child,
+  // Senior, …) follows Bokun exactly, with the same freshness as tour.price.
+  const priceByCategory = useMemo(() => {
+    const unit = tour.bokunSnapshot?.ratePrices?.[0]?.pricePerCategoryUnit ?? []
+    const map = new Map<number, number>()
+    for (const u of unit) map.set(u.categoryId, u.amount)
+    return map
+  }, [tour.bokunSnapshot])
+
+  const rateFor = (categoryId: number): number =>
+    priceByCategory.get(categoryId) ?? tour.price
+
   const total = useMemo(() => {
     if (!ctx) return tour.price * Math.max(1, totalGuests)
     return ctx.pricingCategories.reduce((sum, c) => {
       const units = qty[c.id] ?? 0
-      const rate = c.ticketCategory === 'CHILD' ? tour.price * 0.5 : tour.price
-      return sum + units * rate
+      return sum + units * rateFor(c.id)
     }, 0)
-  }, [ctx, qty, tour.price, totalGuests])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ctx, qty, tour.price, totalGuests, priceByCategory])
 
   const meetingPoint = ctx?.startPoints?.[0]
   const showMeetingPoint =
@@ -290,9 +304,7 @@ function CheckoutPanelInner({
                   key={c.id}
                   category={c}
                   quantity={qty[c.id] ?? 0}
-                  unitPrice={
-                    c.ticketCategory === 'CHILD' ? tour.price * 0.5 : tour.price
-                  }
+                  unitPrice={rateFor(c.id)}
                   onChange={v => setQty(q => ({ ...q, [c.id]: Math.max(0, v) }))}
                   last={idx === ctx.pricingCategories.length - 1}
                 />
