@@ -192,20 +192,25 @@ export default function ChatWidget() {
           </div>
         )}
 
-        {/* Top-level category menu */}
+        {/* Top-level category menu — horizontal wrap (D-019 Phase 3 UX
+            rework). Categories are short labels so inline pills work
+            better than a vertical column. Drill-down questions below
+            stay flex-col because they're full sentences. */}
         {!loading && viewState === 'menu' && (
-          <div className="self-start flex flex-col gap-1.5 mt-1">
-            <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#888] mb-1">{ui.pickTopic}</p>
-            {CATEGORIES[locale].map(cat => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => pickCategory(cat)}
-                className="text-left text-[11.5px] font-light text-[#1C6E54] border border-[#248D6C]/30 bg-[#E6F3EE] px-3 py-2 max-w-[85%] hover:bg-[#248D6C]/15 hover:border-[#248D6C] transition-colors"
-              >
-                {cat.label}
-              </button>
-            ))}
+          <div className="self-start w-full mt-1">
+            <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#888] mb-2">{ui.pickTopic}</p>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES[locale].map(cat => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => pickCategory(cat)}
+                  className="text-left text-[11.5px] font-light text-[#1C6E54] border border-[#248D6C]/30 bg-[#E6F3EE] px-3 py-2 hover:bg-[#248D6C]/15 hover:border-[#248D6C] transition-colors"
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
