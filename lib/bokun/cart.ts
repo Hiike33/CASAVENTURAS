@@ -69,7 +69,7 @@ export function generateCartSessionId(): string {
     return globalThis.crypto.randomUUID()
   }
   // Extremely unlikely fallback — only hit on very old Node.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  // eslint-disable-next-line
   const nodeCrypto = require('node:crypto') as typeof import('node:crypto')
   return nodeCrypto.randomUUID()
 }
