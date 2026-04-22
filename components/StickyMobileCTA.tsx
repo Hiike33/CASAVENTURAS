@@ -31,7 +31,7 @@ export default function StickyMobileCTA({ label, href }: Props) {
     >
       <Link
         href={href}
-        className="block w-full bg-[#248D6C] text-white text-center text-[11px] font-semibold tracking-[0.14em] uppercase px-6 py-3.5 hover:bg-[#1C6E54] transition-colors"
+        className="cta-smoke cta-breathe block w-full text-white text-center text-[11px] font-semibold tracking-[0.14em] uppercase px-6 py-3.5"
       >
         {label ?? t('bookNow')}
       </Link>

@@ -141,6 +141,27 @@ p {
   filter: saturate(1.05) contrast(1.02);
 }
 
+/* Smoked glass CTA — keeps the #248D6C brand green but lets the scene
+   behind leak through in blurred form (backdrop-filter only works when
+   the background is partially transparent, hence the 0.82 alpha).
+   Over hero video / tour photos : visible smoke effect picks up the
+   colors behind. Over white sections : reads as slightly translucent
+   green, no visible smoke (physics — nothing to blur). Same class
+   everywhere keeps the visual vocabulary consistent. */
+.cta-smoke {
+  background-color: rgba(36, 141, 108, 0.82);
+  backdrop-filter: blur(14px) saturate(170%);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  transition: background-color 320ms cubic-bezier(0.22, 1, 0.36, 1),
+              backdrop-filter 320ms cubic-bezier(0.22, 1, 0.36, 1),
+              letter-spacing 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cta-smoke:hover {
+  background-color: rgba(28, 110, 84, 0.9);
+  backdrop-filter: blur(18px) saturate(185%);
+  -webkit-backdrop-filter: blur(18px) saturate(185%);
+}
+
 /* Underline sweep — the link appears to have its underline drawn from
    left to right on hover. Belmond / Condé Nast pattern. */
 .link-sweep {

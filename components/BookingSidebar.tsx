@@ -169,7 +169,7 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
             type="button"
             disabled={disableSubmit}
             onClick={() => setInCheckout(true)}
-            className="cta-breathe block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] mt-3 disabled:opacity-60"
+            className="cta-breathe cta-smoke block w-full text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 mt-3 disabled:opacity-60"
           >
             {availability.kind === 'ok' && availability.soldOut
               ? 'Sold out — pick another date'
@@ -179,7 +179,7 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
           </button>
         ) : bokunCheckoutUrl ? (
           <a
-            className="cta-breathe bokunButton block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] mt-3 aria-[disabled=true]:opacity-60"
+            className="cta-breathe cta-smoke bokunButton block w-full text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 mt-3 aria-[disabled=true]:opacity-60"
             href={bokunCheckoutUrl}
             data-src={bokunCheckoutUrl}
             aria-disabled={availability.kind === 'ok' && availability.soldOut ? 'true' : undefined}
@@ -190,7 +190,7 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
           </a>
         ) : (
           <a
-            className="cta-breathe block w-full bg-[#248D6C] text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 hover:bg-[#1C6E54] mt-3"
+            className="cta-breathe cta-smoke block w-full text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 mt-3"
             href={`mailto:micasaventuras@gmail.com?subject=Booking%20request%20${encodeURIComponent(tour.name)}`}
           >
             Book by email — ${total}

@@ -77,7 +77,7 @@ export default function Nav() {
                     </span>
                   </Link>
                 ))}
-                <Link href="/#tours" className="cta-breathe block px-5 py-3 bg-[#248D6C] hover:bg-[#1C6E54] text-white text-[9.5px] font-semibold tracking-[0.14em] uppercase text-center" role="menuitem">
+                <Link href="/#tours" className="cta-breathe cta-smoke block px-5 py-3 text-white text-[9.5px] font-semibold tracking-[0.14em] uppercase text-center" role="menuitem">
                   {t('viewAll')} →
                 </Link>
               </div>
@@ -100,7 +100,7 @@ export default function Nav() {
           <LocaleSwitcher variant="desktop" />
           <Link
             href="/#booking"
-            className="cta-breathe inline-block text-[9.5px] font-semibold tracking-[0.14em] uppercase text-white bg-[#248D6C] px-[22px] py-[10px] hover:bg-[#1C6E54]"
+            className="cta-breathe cta-smoke inline-block text-[9.5px] font-semibold tracking-[0.14em] uppercase text-white px-[22px] py-[10px]"
           >
             {t('bookNow')}
           </Link>
@@ -173,7 +173,7 @@ export default function Nav() {
           <Link
             href="/#booking"
             onClick={() => setMobileOpen(false)}
-            className="cta-breathe block bg-[#248D6C] text-white text-[11px] font-semibold tracking-[0.16em] uppercase text-center py-4 hover:bg-[#1C6E54]"
+            className="cta-breathe cta-smoke block text-white text-[11px] font-semibold tracking-[0.16em] uppercase text-center py-4"
           >
             {t('bookNow')}
           </Link>

@@ -189,7 +189,7 @@ export default async function ElYunquePage({ params }: Props) {
             {t.heroIntro}
           </p>
           <div className="flex items-center gap-7 flex-wrap">
-            <a href="#book" className="bg-[#248D6C] text-white text-[10.5px] font-semibold tracking-[0.15em] uppercase px-8 py-3.5 hover:bg-[#1C6E54] transition-colors">
+            <a href="#book" className="cta-smoke cta-breathe text-white text-[10.5px] font-semibold tracking-[0.15em] uppercase px-8 py-3.5">
               {t.bookThis}
             </a>
             <Link href="/#tours" className="text-white/70 text-[10.5px] font-medium tracking-[0.14em] uppercase border-b border-white/20 pb-1 hover:text-white hover:border-white/60 transition-colors">
@@ -272,7 +272,7 @@ export default async function ElYunquePage({ params }: Props) {
               <p className="text-[12.5px] font-light text-[#354040] leading-relaxed mb-3">
                 {t.askCaviBody}
               </p>
-              <Link href="/#booking" className="inline-block bg-[#248D6C] text-white text-[10px] font-semibold tracking-[0.14em] uppercase px-5 py-2.5 hover:bg-[#1C6E54] transition-colors">
+              <Link href="/#booking" className="cta-smoke cta-breathe inline-block text-white text-[10px] font-semibold tracking-[0.14em] uppercase px-5 py-2.5">
                 {t.chatCavi}
               </Link>
             </div>
@@ -306,7 +306,7 @@ export default async function ElYunquePage({ params }: Props) {
             <p className="text-[10px] font-medium tracking-[0.22em] uppercase text-[#248D6C] mb-2">{t.otherEyebrow}</p>
             <h2 className="text-[#111] text-[28px] font-light tracking-tight">{t.otherHeading}</h2>
           </div>
-          <Link href="/#tours" className="bg-[#248D6C] text-white text-[10px] font-semibold tracking-[0.16em] uppercase px-6 py-3 hover:bg-[#1C6E54] transition-colors">
+          <Link href="/#tours" className="cta-smoke cta-breathe text-white text-[10px] font-semibold tracking-[0.16em] uppercase px-6 py-3">
             {t.viewAll}
           </Link>
         </div>

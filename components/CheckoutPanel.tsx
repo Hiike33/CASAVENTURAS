@@ -507,7 +507,7 @@ function CheckoutPanelInner({
         <button
           type="submit"
           disabled={step === 'submitting' || totalGuests === 0 || !stripe}
-          className="w-full bg-[#248D6C] text-white text-[10px] font-semibold tracking-[0.16em] uppercase py-4 hover:bg-[#1C6E54] transition-colors disabled:opacity-60"
+          className="cta-smoke cta-breathe w-full text-white text-[10px] font-semibold tracking-[0.16em] uppercase py-4 disabled:opacity-60"
         >
           {step === 'submitting' ? t('processing') : t('payAndConfirm', { amount: total })}
         </button>

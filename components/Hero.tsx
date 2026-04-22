@@ -51,7 +51,7 @@ export default function Hero() {
         <div className="flex items-center justify-center gap-6 flex-wrap">
           <a
             href="#tours"
-            className="inline-block text-[10.5px] font-semibold tracking-[0.16em] uppercase text-white bg-[#248D6C] px-8 py-3.5 hover:bg-[#1C6E54] transition-colors"
+            className="cta-smoke inline-block text-[10.5px] font-semibold tracking-[0.16em] uppercase text-white px-8 py-3.5"
           >
             Find your experience
           </a>

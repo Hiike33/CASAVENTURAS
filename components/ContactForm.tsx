@@ -105,7 +105,7 @@ export default function ContactForm() {
         <button
           type="submit"
           disabled={status === 'sending'}
-          className="cta-breathe bg-[#248D6C] text-white text-[10.5px] font-semibold tracking-[0.16em] uppercase px-9 py-3.5 hover:bg-[#1C6E54] mt-2 disabled:opacity-60"
+          className="cta-breathe cta-smoke text-white text-[10.5px] font-semibold tracking-[0.16em] uppercase px-9 py-3.5 mt-2 disabled:opacity-60"
         >
           {status === 'sending' ? t('sending') : status === 'sent' ? t('sent') : t('send')}
         </button>
