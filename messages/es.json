@@ -138,7 +138,22 @@
     "cardNotFound": "Campo de tarjeta no encontrado.",
     "paymentLibraryNotReady": "La biblioteca de pago no está lista. Reintenta en un momento.",
     "networkError": "Error de red.",
-    "closeCheckout": "Cerrar pago"
+    "closeCheckout": "Cerrar pago",
+    "subtotal": "Subtotal",
+    "promoLabel": "Código promocional (opcional)",
+    "promoPlaceholder": "ej. SUMMER10",
+    "promoChecking": "Verificando código…",
+    "promoApplied": "Código {code} aplicado · −${amount}",
+    "promoAppliedShort": "Promo {code}",
+    "promoMustValidateBeforePay": "Espera a que el código se verifique, o vacía el campo.",
+    "promoError": {
+      "invalid_code": "Este código no es válido.",
+      "expired": "Este código ha expirado.",
+      "min_not_met": "El total de la reserva es demasiado bajo para este código.",
+      "usage_limit": "Este código ha alcanzado su límite de uso.",
+      "product_not_eligible": "Este código no se aplica a esta experiencia.",
+      "network": "No se pudo verificar el código. Reintenta."
+    }
   },
   "ContactPage": {
     "eyebrow": "Ponte en contacto",

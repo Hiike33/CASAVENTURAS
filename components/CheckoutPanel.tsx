@@ -104,6 +104,33 @@ function CheckoutPanelInner({
   })
   const [qty, setQty] = useState<Record<number, number>>({})
 
+  // ─── Promo code state (Variante B — preview before pay) ────────────
+  // Policy : the UI always holds the UNVALIDATED user input (`promoInput`)
+  // + the VALIDATED view (`promoState`, `promoBreakdown`, `promoError`).
+  // Any upstream change (qty, date, startTimeId) resets the validated
+  // view without clearing the user's typing, so they see a spinner,
+  // never a jarring "code disappeared" moment.
+  const [promoInput, setPromoInput] = useState('')
+  const [promoState, setPromoState] = useState<
+    'idle' | 'checking' | 'valid' | 'invalid'
+  >('idle')
+  const [promoBreakdown, setPromoBreakdown] = useState<{
+    subtotal: number
+    discount: number
+    total: number
+    currency: string
+    code: string
+  } | null>(null)
+  const [promoError, setPromoError] = useState<
+    | 'invalid_code'
+    | 'expired'
+    | 'min_not_met'
+    | 'usage_limit'
+    | 'product_not_eligible'
+    | 'network'
+    | null
+  >(null)
+
   useEffect(() => {
     if (!tour.bokunProductId) return
     const ctrl = new AbortController()
@@ -154,6 +181,87 @@ function CheckoutPanelInner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctx, qty, tour.price, totalGuests, priceByCategory])
 
+  // ─── Promo preview: debounced validation ───────────────────────────
+  // Fires /api/bokun/promo/validate 500ms after the user stops typing.
+  // Re-fires whenever the priced inputs change (qty / date / startTimeId)
+  // so the displayed breakdown never diverges from the current basket.
+  const promoReqCounter = useRef(0)
+  useEffect(() => {
+    const code = promoInput.trim()
+    if (!code) {
+      setPromoState('idle')
+      setPromoBreakdown(null)
+      setPromoError(null)
+      return
+    }
+    if (!ctx || !startTimeId || !rateId || total <= 0) return
+
+    setPromoState('checking')
+    setPromoError(null)
+    const ticket = ++promoReqCounter.current
+    const timer = window.setTimeout(async () => {
+      try {
+        const passengersByCategory: Record<number, number> = {}
+        for (const c of ctx.pricingCategories) {
+          const q = qty[c.id] ?? 0
+          if (q > 0) passengersByCategory[c.id] = q
+        }
+        const res = await fetch('/api/bokun/promo/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId: ctx.productId,
+            startTimeId,
+            rateId,
+            date,
+            passengersByCategory,
+            subtotal: total,
+            currency: 'USD',
+            promoCode: code,
+          }),
+        })
+        const data = (await res.json()) as
+          | { ok: true; valid: true; code: string; subtotal: number; discount: number; total: number; currency: string }
+          | { ok: true; valid: false; reason: 'invalid_code' | 'expired' | 'min_not_met' | 'usage_limit' | 'product_not_eligible' }
+          | { ok: false; error: string }
+        // Discard stale responses (newer request already in flight).
+        if (ticket !== promoReqCounter.current) return
+        if (!data.ok) {
+          setPromoState('invalid')
+          setPromoError('network')
+          setPromoBreakdown(null)
+          return
+        }
+        if (!data.valid) {
+          setPromoState('invalid')
+          setPromoError(data.reason)
+          setPromoBreakdown(null)
+          return
+        }
+        setPromoState('valid')
+        setPromoError(null)
+        setPromoBreakdown({
+          subtotal: data.subtotal,
+          discount: data.discount,
+          total: data.total,
+          currency: data.currency,
+          code: data.code,
+        })
+      } catch {
+        if (ticket !== promoReqCounter.current) return
+        setPromoState('invalid')
+        setPromoError('network')
+        setPromoBreakdown(null)
+      }
+    }, 500)
+    return () => window.clearTimeout(timer)
+  }, [promoInput, ctx, startTimeId, rateId, date, total, qty])
+
+  // The amount the UI should display as "Total" — the preview breakdown
+  // when a code is validated, otherwise the raw computed total.
+  const effectiveTotal =
+    promoState === 'valid' && promoBreakdown ? promoBreakdown.total : total
+
   const meetingPoint = ctx?.startPoints?.[0]
   const showMeetingPoint =
     ctx?.meetingType === 'MEET_ON_LOCATION' && Boolean(meetingPoint)
@@ -174,6 +282,15 @@ function CheckoutPanelInner({
     const card = elements.getElement(CardElement)
     if (!card) {
       setErrorMsg(t('cardNotFound'))
+      return
+    }
+    // Guard: a non-empty promo code must be validated before the user
+    // can pay. This prevents the "silent pass-through" failure mode where
+    // an unvalidated code hits Bokun at submit time and either fails the
+    // whole booking or, worse, applies no discount without notice.
+    if (promoInput.trim() && promoState !== 'valid') {
+      setStep('error')
+      setErrorMsg(t('promoMustValidateBeforePay'))
       return
     }
 
@@ -229,6 +346,11 @@ function CheckoutPanelInner({
           specialRequests: form.requests || undefined,
           paymentToken: { token: token.id },
           currency: 'USD',
+          // Only include the code if it passed preview validation,
+          // otherwise the guard above returned earlier.
+          ...(promoState === 'valid' && promoBreakdown
+            ? { promoCode: promoBreakdown.code }
+            : {}),
         }),
       })
       const data = (await res.json()) as
@@ -239,9 +361,26 @@ function CheckoutPanelInner({
         setErrorMsg(data.error)
         return
       }
+      // Invariant check: the amount charged by Bokun should equal what
+      // the user agreed to in the preview. A mismatch > 1¢ is a signal
+      // (promo expired between preview and submit, upstream change,
+      // stale state) — surface via console and keep the authoritative
+      // Bokun total as the displayed value.
+      const bokunTotal = data.booking.totalPrice
+      if (
+        bokunTotal !== undefined &&
+        Math.abs(bokunTotal - effectiveTotal) > 0.01
+      ) {
+        // eslint-disable-next-line no-console
+        console.error('[checkout] preview/submit total mismatch', {
+          preview: effectiveTotal,
+          bokun: bokunTotal,
+          code: promoBreakdown?.code,
+        })
+      }
       setConfirmation({
         code: data.booking.confirmationCode,
-        total: data.booking.totalPrice ?? total,
+        total: bokunTotal ?? effectiveTotal,
       })
       setStep('success')
     } catch (err) {
@@ -482,6 +621,16 @@ function CheckoutPanelInner({
           />
         </Field>
 
+        <PromoCodeBlock
+          input={promoInput}
+          onChange={setPromoInput}
+          state={promoState}
+          error={promoError}
+          breakdown={promoBreakdown}
+          t={t}
+        />
+
+
         {ctx && (
           <WhatsIncludedPanel
             included={ctx.content.included}
@@ -507,13 +656,29 @@ function CheckoutPanelInner({
           </div>
         )}
 
-        <div className="bg-[#FAFAFA] border border-[#E5E5E5] px-4 py-3 flex items-baseline justify-between">
-          <span className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#717170]">
-            {t('total')}
-          </span>
-          <span className="text-[26px] font-light text-[#111] tracking-tight leading-none">
-            ${total}
-          </span>
+        <div className="bg-[#FAFAFA] border border-[#E5E5E5] px-4 py-3 space-y-1">
+          {promoState === 'valid' && promoBreakdown && (
+            <>
+              <div className="flex items-baseline justify-between text-[12px] font-light text-[#4F4F4E]">
+                <span>{t('subtotal')}</span>
+                <span>${promoBreakdown.subtotal}</span>
+              </div>
+              <div className="flex items-baseline justify-between text-[12px] font-light text-[#248D6C]">
+                <span>
+                  {t('promoAppliedShort', { code: promoBreakdown.code })}
+                </span>
+                <span>−${promoBreakdown.discount}</span>
+              </div>
+            </>
+          )}
+          <div className="flex items-baseline justify-between">
+            <span className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#717170]">
+              {t('total')}
+            </span>
+            <span className="text-[26px] font-light text-[#111] tracking-tight leading-none">
+              ${effectiveTotal}
+            </span>
+          </div>
         </div>
 
         <button
@@ -521,7 +686,9 @@ function CheckoutPanelInner({
           disabled={step === 'submitting' || totalGuests === 0 || !stripe}
           className="cta-smoke cta-breathe w-full text-white text-[10px] font-semibold tracking-[0.16em] uppercase py-4 disabled:opacity-60"
         >
-          {step === 'submitting' ? t('processing') : t('payAndConfirm', { amount: total })}
+          {step === 'submitting'
+            ? t('processing')
+            : t('payAndConfirm', { amount: effectiveTotal })}
         </button>
 
         <CancellationLine policy={ctx?.cancellationPolicy} t={t} />
@@ -1017,5 +1184,87 @@ function CheckIcon() {
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
       <path d="M2 7.5L5.5 11L12 3.5" stroke="#248D6C" strokeWidth="1.5" fill="none" />
     </svg>
+  )
+}
+
+// ─── Promo code block ──────────────────────────────────────────────────
+// Field + inline status badge + discount breakdown. All state is driven
+// by the parent's debounced useEffect — this component is purely visual.
+function PromoCodeBlock({
+  input,
+  onChange,
+  state,
+  error,
+  breakdown,
+  t,
+}: {
+  input: string
+  onChange: (v: string) => void
+  state: 'idle' | 'checking' | 'valid' | 'invalid'
+  error:
+    | 'invalid_code'
+    | 'expired'
+    | 'min_not_met'
+    | 'usage_limit'
+    | 'product_not_eligible'
+    | 'network'
+    | null
+  breakdown: {
+    subtotal: number
+    discount: number
+    total: number
+    currency: string
+    code: string
+  } | null
+  t: T
+}) {
+  const borderColor =
+    state === 'valid'
+      ? 'border-[#248D6C]'
+      : state === 'invalid'
+        ? 'border-red-300'
+        : 'border-[#E5E5E5] focus-within:border-[#248D6C]'
+  return (
+    <Field id="cp-promo" label={t('promoLabel')}>
+      <div className="relative">
+        <input
+          id="cp-promo"
+          type="text"
+          value={input}
+          onChange={e => onChange(e.target.value)}
+          placeholder={t('promoPlaceholder')}
+          autoComplete="off"
+          spellCheck={false}
+          className={`w-full border ${borderColor} text-[#111] text-[13px] font-light px-3.5 py-2.5 pr-10 outline-none transition-colors placeholder:text-[#aaa] uppercase tracking-wide`}
+        />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+          {state === 'checking' && (
+            <span
+              aria-label={t('promoChecking')}
+              className="inline-block w-3.5 h-3.5 border-2 border-[#E5E5E5] border-t-[#248D6C] rounded-full animate-spin"
+            />
+          )}
+          {state === 'valid' && <CheckIcon />}
+          {state === 'invalid' && (
+            <span aria-hidden className="text-red-500 text-[14px]">
+              ×
+            </span>
+          )}
+        </span>
+      </div>
+      {state === 'valid' && breakdown && (
+        <p className="text-[11px] font-light text-[#248D6C] mt-1.5">
+          {t('promoApplied', {
+            code: breakdown.code,
+            amount: breakdown.discount,
+          })}
+        </p>
+      )}
+      {state === 'invalid' && error && (
+        <p className="text-[11px] font-light text-red-600 mt-1.5">
+          {t(`promoError.${error}`)}
+        </p>
+      )}
+    </Field>
   )
 }

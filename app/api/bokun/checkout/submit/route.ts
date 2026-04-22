@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { bokunFetch, BokunConfigError } from '@/lib/bokun/client'
 import { resolveServerCheckoutMode } from '@/lib/bokun/checkout-mode'
+import { simulatePromoValidation } from '@/lib/bokun/promo-devmock'
 
 // POST /api/bokun/checkout/submit
 //
@@ -50,6 +51,14 @@ export type CheckoutSubmitRequest = {
   /** Stripe token obtained client-side via Stripe.js createToken(). */
   paymentToken: { token: string }
   currency?: string
+  /**
+   * Optional promo code. When present, it is forwarded to Bókun at the
+   * root of the CheckoutRequest — Bókun applies the discount and the
+   * returned booking.totalPrice reflects the discounted amount. In
+   * dev-mock, the same deterministic catalog as the preview endpoint
+   * is applied so submit total matches preview total exactly.
+   */
+  promoCode?: string
 }
 
 type OkResponse = {
@@ -106,12 +115,20 @@ export async function POST(req: NextRequest): Promise<NextResponse<OkResponse | 
   if (mode === 'dev-mock') {
     await new Promise(r => setTimeout(r, 700))
     const pax = payload.passengers.reduce<number>((n, p) => n + 1, 0)
+    const subtotal = pax * 100 // placeholder — real total comes from Bokun in live
+    // Apply the same dev-mock catalog as /api/bokun/promo/validate so the
+    // confirmation total matches what the UI showed in the preview.
+    let totalPrice = subtotal
+    if (payload.promoCode) {
+      const sim = simulatePromoValidation(payload.promoCode, subtotal)
+      if (sim.valid) totalPrice = Math.max(0, subtotal - sim.discount)
+    }
     return NextResponse.json({
       ok: true,
       mock: true,
       booking: {
         confirmationCode: randomCode(),
-        totalPrice: pax * 100, // placeholder — real total comes from Bokun in live
+        totalPrice,
         currency: payload.currency ?? 'USD',
         productTitle: `Product ${payload.productId}`,
       },
@@ -187,6 +204,7 @@ function buildBokunPayload(b: CheckoutSubmitRequest) {
   ]
     .filter(Boolean)
     .join(' · ')
+  const trimmedPromo = b.promoCode?.trim()
   return {
     currency: b.currency ?? 'USD',
     activityBookings: [
@@ -216,5 +234,8 @@ function buildBokunPayload(b: CheckoutSubmitRequest) {
     paymentToken: b.paymentToken,
     bookingQuestionAnswers: answers,
     customerComment: comment || undefined,
+    // Root-level promoCode per Bokun direct-booking spec. Bokun applies
+    // the discount upstream; booking.totalPrice reflects the net amount.
+    ...(trimmedPromo ? { promoCode: trimmedPromo } : {}),
   }
 }

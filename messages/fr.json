@@ -138,7 +138,22 @@
     "cardNotFound": "Champ de carte introuvable.",
     "paymentLibraryNotReady": "Le moteur de paiement n'est pas prêt. Réessayez dans un instant.",
     "networkError": "Erreur réseau.",
-    "closeCheckout": "Fermer le paiement"
+    "closeCheckout": "Fermer le paiement",
+    "subtotal": "Sous-total",
+    "promoLabel": "Code promo (facultatif)",
+    "promoPlaceholder": "ex. SUMMER10",
+    "promoChecking": "Vérification du code…",
+    "promoApplied": "Code {code} appliqué · −{amount}$",
+    "promoAppliedShort": "Promo {code}",
+    "promoMustValidateBeforePay": "Patientez le temps de vérifier le code promo, ou videz le champ.",
+    "promoError": {
+      "invalid_code": "Ce code n'est pas valide.",
+      "expired": "Ce code a expiré.",
+      "min_not_met": "Le total de la commande est trop bas pour ce code.",
+      "usage_limit": "Ce code a atteint sa limite d'utilisation.",
+      "product_not_eligible": "Ce code ne s'applique pas à cette expérience.",
+      "network": "Impossible de vérifier le code. Réessayez."
+    }
   },
   "ContactPage": {
     "eyebrow": "Prenez contact",

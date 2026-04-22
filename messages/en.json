@@ -138,7 +138,22 @@
     "cardNotFound": "Card input not found.",
     "paymentLibraryNotReady": "Payment library not ready. Please retry in a moment.",
     "networkError": "Network error.",
-    "closeCheckout": "Close checkout"
+    "closeCheckout": "Close checkout",
+    "subtotal": "Subtotal",
+    "promoLabel": "Promo code (optional)",
+    "promoPlaceholder": "e.g. SUMMER10",
+    "promoChecking": "Checking code…",
+    "promoApplied": "Code {code} applied · −${amount} off",
+    "promoAppliedShort": "Promo {code}",
+    "promoMustValidateBeforePay": "Please wait for the promo code to validate, or clear the field.",
+    "promoError": {
+      "invalid_code": "This code is not valid.",
+      "expired": "This code has expired.",
+      "min_not_met": "Order total too low for this code.",
+      "usage_limit": "This code has reached its usage limit.",
+      "product_not_eligible": "This code does not apply to this tour.",
+      "network": "Could not verify the code. Try again."
+    }
   },
   "ContactPage": {
     "eyebrow": "Get in touch",

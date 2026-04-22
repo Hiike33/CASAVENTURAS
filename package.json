@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --test lib/bokun/client.test.ts lib/bokun/snapshot.test.ts lib/bokun/calendar.test.ts lib/bokun/checkout-mode.test.ts lib/geo/nominatim.test.ts lib/cms/data/faqs.test.ts lib/cms/data/tours-vs-bokun.test.ts lib/csp-report.test.ts",
+    "test": "node --test lib/bokun/client.test.ts lib/bokun/snapshot.test.ts lib/bokun/calendar.test.ts lib/bokun/checkout-mode.test.ts lib/bokun/cart.test.ts lib/bokun/promo-devmock.test.ts lib/bokun/promo-request.test.ts lib/geo/nominatim.test.ts lib/cms/data/faqs.test.ts lib/cms/data/tours-vs-bokun.test.ts lib/csp-report.test.ts",
     "bokun:snapshot": "node --experimental-strip-types scripts/fetch-bokun-snapshot.ts",
     "build:cf": "opennextjs-cloudflare build",
     "preview:cf": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
@@ -34,5 +34,6 @@
     "tailwindcss": "^3.3.0",
     "typescript": "^5",
     "wrangler": "^4.83.0"
-  }
+  },
+  "packageManager": "pnpm@10.29.3+sha512.498e1fb4cca5aa06c1dcf2611e6fafc50972ffe7189998c409e90de74566444298ffe43e6cd2acdc775ba1aa7cc5e092a8b7054c811ba8c5770f84693d33d2dc"
 }
