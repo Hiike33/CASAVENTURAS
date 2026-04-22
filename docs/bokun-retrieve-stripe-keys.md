@@ -43,9 +43,9 @@ To get into it:
    pk_live_51ITpwpBf8w9DbxGlKqObExWn3FbK5...
    ```
 
-✅ **Compare it** to what we have wired today in the website:
+✅ **Compare the prefix** to what we have wired today in the website:
 ```
-pk_live_51ITpwpBf8w9DbxGlKqObExWn3FbK5GhdCfe5368qyZJfDzmJRzCjzR9YFejs6GkgRdOliZ5bM9F0pqAm6uz2qfUc00u3jFdced
+pk_live_51ITpwpBf8w9DbxGl... (truncated — full key stored in Cloudflare Workers env vars and local .env.local)
 ```
 
 If they match → nothing to do.
