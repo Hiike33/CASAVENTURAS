@@ -18,7 +18,10 @@ export const siteConfig: SiteConfig = {
   tripAdvisor: {
     rating: 5.0,
     reviews: 1458,
-    ranking: '#10 of 152 tours in San Juan',
+    rankings: [
+      '#10 of 152 Tours in San Juan',
+      '#1 of 99 Transportation Services in San Juan',
+    ],
     url: 'https://www.tripadvisor.com/Attraction_Review-g147320-d21156167-Reviews-Casa_Venturas-San_Juan_Puerto_Rico.html',
   },
   social: {
@@ -27,6 +30,6 @@ export const siteConfig: SiteConfig = {
   featured: [
     { name: 'KAYAK Travel Guides', url: 'https://www.kayak.com/San-Juan.12552.guide' },
     { name: 'Viator', note: 'Likely to sell out' },
-    { name: 'TripAdvisor', note: '#10 of 152 in San Juan · 5.0★ · 1,458 reviews' },
+    { name: 'TripAdvisor', note: '#10 of 152 Tours · #1 of 99 Transportation · 5.0★ · 1,458 reviews' },
   ],
 }

@@ -117,7 +117,13 @@ export type SiteConfig = {
   tripAdvisor: {
     rating: number
     reviews: number
-    ranking: string
+    /**
+     * TripAdvisor rankings, primary first. Casa Venturas is listed under
+     * two distinct TripAdvisor categories (Tours + Transportation).
+     * rankings[0] = primary badge (used in Hero, page stats, meta, JSON-LD).
+     * rankings[1..N] = secondary mentions (footer, about-us style copy).
+     */
+    rankings: [string, ...string[]]
     url: string
   }
   social: {

@@ -23,9 +23,9 @@ const TITLE = {
 } as const
 
 const DESCRIPTION = {
-  en: 'Small-group tours in Puerto Rico. El Yunque rainforest, private catamaran to Vieques, sunset salsa. #10 of 152 in San Juan, 5.0★, 1,458 reviews.',
-  es: 'Tours en grupos pequeños en Puerto Rico. Bosque El Yunque, catamarán privado a Vieques, salsa al atardecer. #10 de 152 en San Juan, 5.0★, 1,458 reseñas.',
-  fr: 'Tours en petits groupes à Porto Rico. Forêt d\'El Yunque, catamaran privé pour Vieques, salsa au coucher du soleil. #10 sur 152 à San Juan, 5.0★, 1 458 avis.',
+  en: 'Small-group tours in Puerto Rico. El Yunque rainforest, private catamaran to Vieques, sunset salsa. #10 of 152 Tours & #1 of 99 Transportation in San Juan, 5.0★, 1,458 reviews.',
+  es: 'Tours en grupos pequeños en Puerto Rico. Bosque El Yunque, catamarán privado a Vieques, salsa al atardecer. #10 de 152 Tours y #1 de 99 Transporte en San Juan, 5.0★, 1,458 reseñas.',
+  fr: 'Tours en petits groupes à Porto Rico. Forêt d\'El Yunque, catamaran privé pour Vieques, salsa au coucher du soleil. #10 sur 152 Tours & #1 sur 99 Transport à San Juan, 5.0★, 1 458 avis.',
 } as const
 
 const OG_LOCALE = { en: 'en_US', es: 'es_PR', fr: 'fr_FR' } as const
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     keywords: 'El Yunque tour San Juan, Puerto Rico adventure tour, private catamaran Vieques, salsa lesson San Juan, small group tour Puerto Rico',
     openGraph: {
       title,
-      description: '#10 of 152 tours in San Juan · 5.0★ · 1,458 reviews',
+      description: '#10 of 152 Tours · #1 of 99 Transportation in San Juan · 5.0★ · 1,458 reviews',
       url: 'https://casaventuras.com',
       siteName: 'Casa Venturas',
       locale: OG_LOCALE[loc],
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
       title,
-      description: '#10 of 152 tours in San Juan · 5.0★',
+      description: '#10 of 152 Tours · #1 of 99 Transportation in San Juan · 5.0★',
       images: ['/images/og/og-1200.jpg'],
     },
     alternates: {

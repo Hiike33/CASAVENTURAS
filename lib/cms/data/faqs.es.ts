@@ -40,7 +40,7 @@ export const generalFaqs: FAQ[] = [
   {
     id: 'gen-tripadvisor',
     question: '¿Casa Venturas está en TripAdvisor?',
-    answer: 'Sí. Casa Venturas tiene 5.0 estrellas con 1,458 reseñas y ocupa el #10 de 152 tours en San Juan según TripAdvisor. También aparecemos destacados en las guías de viaje de KAYAK.',
+    answer: 'Sí. Casa Venturas tiene 5.0 estrellas con 1,458 reseñas, ocupa el #10 de 152 Tours en San Juan y el #1 de 99 Servicios de Transporte en San Juan según TripAdvisor. También aparecemos destacados en las guías de viaje de KAYAK.',
   },
   {
     id: 'gen-how-to-book',

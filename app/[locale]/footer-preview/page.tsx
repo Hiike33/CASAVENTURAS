@@ -384,7 +384,7 @@ function FooterC() {
                   <p className="text-[9px] tracking-[0.08em] uppercase text-[#248D6C] mt-0.5">TripAdvisor</p>
                 </div>
                 <div className="text-left">
-                  <p className="text-[11px] text-[#111] font-medium leading-snug">{siteConfig.tripAdvisor.ranking}</p>
+                  <p className="text-[11px] text-[#111] font-medium leading-snug">{siteConfig.tripAdvisor.rankings[0]}</p>
                   <p className="text-[10px] text-[#717170] mt-0.5">{siteConfig.tripAdvisor.reviews.toLocaleString('en-US')} reviews →</p>
                 </div>
               </a>

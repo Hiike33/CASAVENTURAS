@@ -109,7 +109,7 @@ export default async function ContactPage({ params }: Props) {
                   <p className="text-[10px] font-medium tracking-[0.1em] uppercase text-[#248D6C] mt-1">TripAdvisor</p>
                 </div>
                 <div>
-                  <p className="text-[13px] text-[#111] font-medium mb-1">{siteConfig.tripAdvisor.ranking}</p>
+                  <p className="text-[13px] text-[#111] font-medium mb-1">{siteConfig.tripAdvisor.rankings[0]}</p>
                   <p className="text-[12px] font-light text-[#888]">
                     {t('reviewsSuffix', { count: siteConfig.tripAdvisor.reviews.toLocaleString(locale === 'en' ? 'en-US' : locale === 'es' ? 'es-PR' : 'fr-FR') })}{' '}
                     <a href={siteConfig.tripAdvisor.url} target="_blank" rel="noopener noreferrer" className="text-[#248D6C] hover:underline">

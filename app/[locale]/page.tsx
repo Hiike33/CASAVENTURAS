@@ -10,6 +10,7 @@ import YouTubeFacade from '@/components/YouTubeFacade'
 import HomeBookingForm from '@/components/HomeBookingForm'
 import { getCMS } from '@/lib/cms'
 import { routing, type Locale } from '@/i18n/routing'
+import { localizedAlternates } from '@/lib/seo/alternates'
 import { setRequestLocale } from 'next-intl/server'
 
 type Props = { params: Promise<{ locale: string }> }
@@ -88,7 +89,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cms = getCMS()
   const loc = (routing.locales as readonly string[]).includes(locale) ? (locale as Locale) : routing.defaultLocale
   const siteConfig = await cms.getSiteConfig(loc)
-  return { alternates: { canonical: loc === routing.defaultLocale ? siteConfig.url : `${siteConfig.url}/${loc}` } }
+  return { alternates: localizedAlternates('/', loc, siteConfig.url) }
 }
 
 export default async function Home({ params }: Props) {
@@ -123,7 +124,7 @@ export default async function Home({ params }: Props) {
         <div className="grid grid-cols-2 md:grid-cols-4 border-t border-[#e8e8e8] pt-6">
           {[
             { n: `${siteConfig.tripAdvisor.rating}★`, l: `${siteConfig.tripAdvisor.reviews.toLocaleString(locale === 'en' ? 'en-US' : locale)} ${t.reviewsLabel}` },
-            { n: siteConfig.tripAdvisor.ranking.split(' ')[0], l: t.statOf152 },
+            { n: siteConfig.tripAdvisor.rankings[0].split(' ')[0], l: t.statOf152 },
             { n: '≤ 13', l: t.statPerGroup },
             { n: '100%', l: t.statPickup },
           ].map((s, i) => (
