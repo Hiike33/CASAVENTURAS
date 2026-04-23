@@ -134,10 +134,11 @@ export default function HomeBookingForm() {
       <CheckoutPanel
         tour={selectedTour}
         date={slotDate}
-        startTimeId={Number((slot as unknown as { startTimeId?: number }).startTimeId ?? 0)}
-        rateId={Number((slot as unknown as { defaultRateId?: number }).defaultRateId ?? 0)}
+        startTimeId={Number(slot.startTimeId ?? 0)}
+        rateId={Number(slot.defaultRateId ?? 0)}
         startTimeLabel={label}
         onClose={() => setInCheckout(false)}
+        pricesByRate={slot.pricesByRate}
       />
     )
   }

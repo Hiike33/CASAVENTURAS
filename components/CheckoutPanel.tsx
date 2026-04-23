@@ -16,6 +16,10 @@ import type {
   StartPoint,
 } from '@/app/api/bokun/checkout-context/route'
 import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
+import {
+  resolveCheckoutPriceMap,
+  type RuntimeRatePrice,
+} from '@/lib/bokun/checkout-prices'
 import { htmlToList } from '@/lib/html/to-list'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 
@@ -57,6 +61,13 @@ export type CheckoutPanelProps = {
   devMock?: boolean
   /** Optional handler to close/dismiss the panel (e.g., drawer cancel). */
   onClose?: () => void
+  /**
+   * Live per-rate prices lifted from the parent's selected availability slot.
+   * When present, the checkout uses these instead of the build-time snapshot
+   * — keeps displayed prices in sync with what Bokun will charge at submit.
+   * Absent → UI falls back to tour.bokunSnapshot (≤ 6h stale, always safe).
+   */
+  pricesByRate?: RuntimeRatePrice[]
 }
 
 export default function CheckoutPanel(props: CheckoutPanelProps) {
@@ -75,6 +86,7 @@ function CheckoutPanelInner({
   startTimeLabel = 'Bus 2 · 08:00',
   devMock = CLIENT_CHECKOUT_MODE === 'dev-mock',
   onClose,
+  pricesByRate,
 }: CheckoutPanelProps) {
   const t = useTranslations('CheckoutPanel')
   const tCommon = useTranslations('Common')
@@ -158,16 +170,22 @@ function CheckoutPanelInner({
   const needsRoomNumber =
     !form.customPickup && selectedPickup?.askForRoomNumber === true
 
-  // Bokun snapshot exposes per-category retail prices
-  // (ratePrices[0].pricePerCategoryUnit), channel-scoped and cron-refreshed.
-  // We read directly from there so each pricing category (Adult, Child,
-  // Senior, …) follows Bokun exactly, with the same freshness as tour.price.
-  const priceByCategory = useMemo(() => {
-    const unit = tour.bokunSnapshot?.ratePrices?.[0]?.pricePerCategoryUnit ?? []
-    const map = new Map<number, number>()
-    for (const u of unit) map.set(u.categoryId, u.amount)
-    return map
-  }, [tour.bokunSnapshot])
+  // Prices shown next to each pricing category.
+  //   1. Live: `pricesByRate` from the slot currently selected in the parent
+  //      (BookingSidebar / HomeBookingForm) — fresh at page load, matches
+  //      exactly what Bokun will charge at submit.
+  //   2. Fallback: `tour.bokunSnapshot.ratePrices` (build-time, ≤ 6h stale).
+  // When the parent doesn't pass a slot (e.g., direct deep-link or preview
+  // route), the snapshot keeps the UI rendering without a network round-trip.
+  const priceByCategory = useMemo(
+    () =>
+      resolveCheckoutPriceMap({
+        runtime: pricesByRate,
+        snapshot: tour.bokunSnapshot?.ratePrices,
+        preferredRateId: rateId || undefined,
+      }),
+    [pricesByRate, tour.bokunSnapshot, rateId],
+  )
 
   const rateFor = (categoryId: number): number =>
     priceByCategory.get(categoryId) ?? tour.price

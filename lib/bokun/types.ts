@@ -19,6 +19,32 @@ export type BokunAvailability = {
   soldOut: boolean
   defaultPrice?: { amount: number; currency: string }
   pricesByCategory?: Record<string, { amount: number; currency: string }>
+  /**
+   * Bokun-issued default rate id for this slot. Used by the checkout to
+   * match pricesByRate entries. Always present on active slots — optional
+   * here for defensive typing.
+   */
+  defaultRateId?: number
+  /**
+   * The slot's start time id (the numeric handle the checkout route
+   * requires in POST /cart.json/{sid}/activity). Raw passthrough from
+   * Bokun; always present on active slots.
+   */
+  startTimeId?: number
+  /**
+   * Runtime per-rate prices. Same data shape the snapshot script
+   * consumes at build time — see scripts/fetch-bokun-snapshot.ts. The
+   * checkout UI reads this when available to show prices that reflect
+   * Bokun *now* rather than the ≤6h-stale snapshot.
+   */
+  pricesByRate?: Array<{
+    activityRateId: number
+    pricePerCategoryUnit?: Array<{
+      id: number
+      amount: { amount: number; currency: string }
+    }>
+    pricePerBooking?: { amount: number; currency: string }
+  }>
 }
 
 export type BokunErrorResponse = {
