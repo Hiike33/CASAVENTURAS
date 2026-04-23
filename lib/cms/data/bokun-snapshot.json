@@ -41,18 +41,18 @@
         "pricePerCategoryUnit": [
           {
             "categoryId": 725662,
-            "amount": 75,
+            "amount": 78,
             "currency": "USD"
           },
           {
             "categoryId": 801219,
-            "amount": 75,
+            "amount": 78,
             "currency": "USD"
           }
         ]
       }
     ],
-    "fetchedAt": "2026-04-22T19:29:09.455Z"
+    "fetchedAt": "2026-04-23T02:05:35.826Z"
   },
   "catamaran": {
     "productId": 1134501,
@@ -97,7 +97,7 @@
         }
       }
     ],
-    "fetchedAt": "2026-04-22T19:29:09.019Z"
+    "fetchedAt": "2026-04-23T02:05:35.412Z"
   },
   "salsa": {
     "productId": 680641,
@@ -131,6 +131,6 @@
         ]
       }
     ],
-    "fetchedAt": "2026-04-22T19:29:08.834Z"
+    "fetchedAt": "2026-04-23T02:05:35.273Z"
   }
 }
