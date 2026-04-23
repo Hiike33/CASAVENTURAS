@@ -263,11 +263,10 @@ function StickyScroll({ photos }: { photos: string[] }) {
           </h3>
           <p className="text-[14.5px] font-light text-[#4F4F4E] leading-[1.8] mb-6">
             Private charter sailing from Humacao to Punta Arena — one of the most secluded beaches of
-            Vieques. Open bar, lunch on deck, swim and snorkel in translucent water, return under
-            sunset.
+            Vieques. Swim and snorkel in translucent water, return under sunset.
           </p>
           <ul className="space-y-2 text-[13px] font-light text-[#354040]">
-            {['Up to 12 guests', 'Full day', 'Captain + crew', 'All-inclusive'].map(l => (
+            {['Up to 12 guests', 'Full day', 'Captain + crew'].map(l => (
               <li key={l} className="flex items-center gap-2">
                 <span className="w-1 h-1 bg-[#248D6C] rounded-full" /> {l}
               </li>

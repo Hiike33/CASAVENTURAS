@@ -50,7 +50,6 @@ const INTENT_PROBES: Array<[string, string]> = [
   ['what makes el yunque special vs others?', 'ey-why-us'],
   // Catamaran specific
   ['catamaran age minimum for toddler?', 'cat-age'],
-  ['can minors drink on the boat?', 'cat-alcohol'],
   ['will i be seasick?', 'cat-seasick'],
   ['is there a bathroom on board?', 'cat-bathroom'],
   ['where does the catamaran depart from?', 'cat-departure'],

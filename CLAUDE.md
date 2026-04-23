@@ -94,7 +94,7 @@ Catamaran Vieques:
 - Capacity: up to 12 guests
 - Destination: Punta Arena, Vieques
 - Marina: Plaza Mayor, Palmas del Mar, Humacao
-- Includes: open bar, lunch, snorkeling equipment, sunset return
+- Includes: snorkeling equipment, sunset return
 
 Salsa Rooftop:
 - Price: $65/person

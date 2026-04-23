@@ -92,7 +92,6 @@ const EN_INTENTS: Intent[] = [
     }),
   },
   { id: 'cat-age', match: m => hasAny(m, ['catamaran', 'boat', 'catamar', 'vieques']) && hasAny(m, ['age', 'baby', 'infant', 'toddler', 'child', 'kid']), faqId: 'cat-age-min' },
-  { id: 'cat-alcohol', match: m => hasAny(m, ['alcohol', 'drink', 'bar', 'rum', 'beer', 'wine', 'minor', 'underage', '21']) && hasAny(m, ['catamaran', 'boat', 'cata', 'vieques', 'open bar']), faqId: 'cat-alcohol-minors' },
   { id: 'cat-seasick', match: m => hasAny(m, ['seasick', 'sea sick', 'motion sick', 'nauseous', 'nausea', 'dramamine', 'ginger']), faqId: 'cat-seasickness' },
   { id: 'cat-bathroom', match: m => hasAny(m, ['bathroom', 'toilet', 'restroom', 'head', 'wc']), faqId: 'cat-bathroom' },
   { id: 'cat-departure', match: m => hasAny(m, ['marina', 'depart', 'humacao', 'palmas', 'where does the boat', 'where do we meet for the boat']), faqId: 'cat-departure' },
@@ -147,7 +146,6 @@ const ES_INTENTS: Intent[] = [
     }),
   },
   { id: 'cat-age', match: m => hasAny(m, ['catamarán', 'catamaran', 'barco', 'bote', 'vieques']) && hasAny(m, ['edad', 'bebé', 'bebe', 'niño', 'niña', 'infante', 'menor']), faqId: 'cat-age-min' },
-  { id: 'cat-alcohol', match: m => hasAny(m, ['alcohol', 'trago', 'ron', 'cerveza', 'vino', 'barra', 'menor', '21']) && hasAny(m, ['catamarán', 'catamaran', 'barco', 'vieques', 'barra abierta']), faqId: 'cat-alcohol-minors' },
   { id: 'cat-seasick', match: m => hasAny(m, ['mareo', 'mareos', 'marea', 'mareas', 'dramamine', 'jengibre', 'náuseas', 'nauseas']), faqId: 'cat-seasickness' },
   { id: 'cat-bathroom', match: m => hasAny(m, ['baño', 'bano', 'servicio', 'inodoro']), faqId: 'cat-bathroom' },
   { id: 'cat-departure', match: m => hasAny(m, ['marina', 'zarpa', 'sale', 'sale de', 'humacao', 'palmas']) && hasAny(m, ['catamarán', 'catamaran', 'barco', 'bote', 'donde']), faqId: 'cat-departure' },
@@ -203,7 +201,6 @@ const FR_INTENTS: Intent[] = [
     }),
   },
   { id: 'cat-age', match: m => hasAny(m, ['catamaran', 'bateau', 'vieques']) && hasAny(m, ['âge', 'age', 'bébé', 'bebe', 'enfant', 'nourrisson']), faqId: 'cat-age-min' },
-  { id: 'cat-alcohol', match: m => hasAny(m, ['alcool', 'boisson', 'rhum', 'bière', 'biere', 'vin', 'bar', 'mineur', '21 ans']) && hasAny(m, ['catamaran', 'bateau', 'vieques', 'bar ouvert']), faqId: 'cat-alcohol-minors' },
   { id: 'cat-seasick', match: m => hasAny(m, ['mal de mer', 'nausée', 'nausee', 'dramamine', 'gingembre']), faqId: 'cat-seasickness' },
   { id: 'cat-bathroom', match: m => hasAny(m, ['toilettes', 'toilette', 'wc', 'salle de bain']), faqId: 'cat-bathroom' },
   { id: 'cat-departure', match: m => hasAny(m, ['marina', 'part de', 'humacao', 'palmas']) && hasAny(m, ['catamaran', 'bateau', 'où']), faqId: 'cat-departure' },
@@ -280,7 +277,6 @@ export const CATEGORIES: Record<Locale, CaviCategory[]> = {
         'Where does the catamaran depart from?',
         'Minimum age on the catamaran?',
         'Is there a bathroom on the catamaran?',
-        'Can minors drink on the catamaran?',
         'What if the weather is bad on the catamaran?',
       ],
     },
@@ -355,7 +351,6 @@ export const CATEGORIES: Record<Locale, CaviCategory[]> = {
         '¿De dónde sale el catamarán?',
         '¿Edad mínima en el catamarán?',
         '¿Hay baño en el catamarán?',
-        '¿Los menores pueden beber en el catamarán?',
         '¿Mal tiempo en el catamarán?',
       ],
     },
@@ -430,7 +425,6 @@ export const CATEGORIES: Record<Locale, CaviCategory[]> = {
         'De quelle marina part le catamaran ?',
         'Âge minimum sur le catamaran ?',
         'Y a-t-il des toilettes sur le catamaran ?',
-        'Les mineurs peuvent boire sur le catamaran ?',
         'Mauvaise météo sur le catamaran ?',
       ],
     },
@@ -494,7 +488,6 @@ const INTENT_TO_CATEGORY: Record<string, string> = {
   'ey-kids-seniors': 'el-yunque',
   'ey-why-us': 'el-yunque',
   'cat-age': 'catamaran',
-  'cat-alcohol': 'catamaran',
   'cat-seasick': 'catamaran',
   'cat-bathroom': 'catamaran',
   'cat-departure': 'catamaran',
@@ -566,9 +559,9 @@ function makePriceOverview(locale: Locale): CaviReply {
 
 function makeFamilyOverview(locale: Locale): CaviReply {
   const text = {
-    en: 'Quick family fit by tour:\n\n• El Yunque: families welcome. Guided groups have included 5-year-olds and seniors. Cliff jumps (5 to 20 ft) are always optional.\n• Catamaran: kids of any walking age are welcome, infants under 2 not allowed for safety. Open bar is 21+, minors get unlimited soft drinks.\n• Salsa Rooftop: beginner-friendly at any age, Zoe rotates partners so kids and parents dance together.',
-    es: 'Resumen familiar por tour:\n\n• El Yunque: familias bienvenidas. Hemos guiado grupos con niños de 5 años y adultos mayores. Los saltos de acantilado (5 a 20 pies) son siempre opcionales.\n• Catamarán: los niños que ya caminan son bienvenidos, los bebés menores de 2 años no pueden subir por seguridad. La barra abierta es para mayores de 21, los menores tienen refrescos ilimitados.\n• Salsa en la azotea: apta para principiantes de cualquier edad, Zoe rota las parejas para que niños y papás bailen juntos.',
-    fr: "Compatibilité familiale rapide par tour :\n\n• El Yunque : familles bienvenues. On a guidé des groupes avec des enfants de 5 ans et des seniors. Les sauts de falaise (5 à 20 pieds) sont toujours optionnels.\n• Catamaran : les enfants qui marchent sont les bienvenus, les nourrissons de moins de 2 ans ne sont pas autorisés pour raisons de sécurité. Le bar ouvert est 21+, les mineurs ont des softs à volonté.\n• Salsa Rooftop : accessible à tout âge débutant, Zoe fait tourner les partenaires pour que parents et enfants dansent ensemble.",
+    en: 'Quick family fit by tour:\n\n• El Yunque: families welcome. Guided groups have included 5-year-olds and seniors. Cliff jumps (5 to 20 ft) are always optional.\n• Catamaran: kids of any walking age are welcome, infants under 2 not allowed for safety.\n• Salsa Rooftop: beginner-friendly at any age, Zoe rotates partners so kids and parents dance together.',
+    es: 'Resumen familiar por tour:\n\n• El Yunque: familias bienvenidas. Hemos guiado grupos con niños de 5 años y adultos mayores. Los saltos de acantilado (5 a 20 pies) son siempre opcionales.\n• Catamarán: los niños que ya caminan son bienvenidos, los bebés menores de 2 años no pueden subir por seguridad.\n• Salsa en la azotea: apta para principiantes de cualquier edad, Zoe rota las parejas para que niños y papás bailen juntos.',
+    fr: "Compatibilité familiale rapide par tour :\n\n• El Yunque : familles bienvenues. On a guidé des groupes avec des enfants de 5 ans et des seniors. Les sauts de falaise (5 à 20 pieds) sont toujours optionnels.\n• Catamaran : les enfants qui marchent sont les bienvenus, les nourrissons de moins de 2 ans ne sont pas autorisés pour raisons de sécurité.\n• Salsa Rooftop : accessible à tout âge débutant, Zoe fait tourner les partenaires pour que parents et enfants dansent ensemble.",
   }[locale]
   const ctas: CaviCta[] = [
     { type: 'email', label: locale === 'es' ? 'Escríbenos' : locale === 'fr' ? 'Écris-nous' : 'Email us' },
@@ -593,9 +586,9 @@ function makeDifficultyOverview(locale: Locale): CaviReply {
 
 function makeWhatToBringOverview(locale: Locale): CaviReply {
   const text = {
-    en: 'What to bring, by tour:\n\n• El Yunque: water shoes, dry bag, waterproof phone case, change of clothes, sunscreen.\n• Catamaran: swimwear, towel, reef-safe sunscreen, light layer for sunset return. Snorkel gear and lunch included.\n• Salsa Rooftop: comfortable shoes (sneakers fine), casual clothes, water. Arrive 10 minutes early.',
-    es: 'Qué llevar, por tour:\n\n• El Yunque: zapatos de agua, bolsa seca, funda impermeable para el teléfono, ropa de cambio, protector solar.\n• Catamarán: traje de baño, toalla, protector solar reef-safe, una capa ligera para el regreso al atardecer. El equipo de snorkel y el almuerzo están incluidos.\n• Salsa en la azotea: zapatos cómodos (tenis va bien), ropa casual, agua. Llega 10 minutos antes.',
-    fr: "Ce qu'il faut apporter, par tour :\n\n• El Yunque : chaussures d'eau, sac sec, housse étanche pour le téléphone, change, crème solaire.\n• Catamaran : maillot, serviette, crème solaire reef-safe, une couche légère pour le retour. Le matériel de snorkel et le déjeuner sont inclus.\n• Salsa Rooftop : chaussures confortables (baskets OK), tenue casual, eau. Arrive 10 minutes en avance.",
+    en: 'What to bring, by tour:\n\n• El Yunque: water shoes, dry bag, waterproof phone case, change of clothes, sunscreen.\n• Catamaran: swimwear, towel, reef-safe sunscreen, light layer for sunset return. Snorkel gear included.\n• Salsa Rooftop: comfortable shoes (sneakers fine), casual clothes, water. Arrive 10 minutes early.',
+    es: 'Qué llevar, por tour:\n\n• El Yunque: zapatos de agua, bolsa seca, funda impermeable para el teléfono, ropa de cambio, protector solar.\n• Catamarán: traje de baño, toalla, protector solar reef-safe, una capa ligera para el regreso al atardecer. El equipo de snorkel está incluido.\n• Salsa en la azotea: zapatos cómodos (tenis va bien), ropa casual, agua. Llega 10 minutos antes.',
+    fr: "Ce qu'il faut apporter, par tour :\n\n• El Yunque : chaussures d'eau, sac sec, housse étanche pour le téléphone, change, crème solaire.\n• Catamaran : maillot, serviette, crème solaire reef-safe, une couche légère pour le retour. Le matériel de snorkel est inclus.\n• Salsa Rooftop : chaussures confortables (baskets OK), tenue casual, eau. Arrive 10 minutes en avance.",
   }[locale]
   return { text }
 }

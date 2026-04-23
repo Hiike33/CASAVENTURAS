@@ -140,7 +140,7 @@ export const tourFaqs: Record<string, FAQ[]> = {
     {
       id: 'cat-inclusions',
       question: `¿Qué incluye el precio de $${priceOf('catamaran')} por persona?`,
-      answer: 'Chárter privado de día completo, navegación a la playa Punta Arena en Vieques, equipo de natación, snorkel y paddleboard, barra abierta (ron, cerveza, refrescos), almuerzo servido en cubierta, regreso al atardecer y tripulación profesional con capitán.',
+      answer: 'Chárter privado de día completo, navegación a la playa Punta Arena en Vieques, equipo de natación, snorkel y paddleboard, regreso al atardecer y tripulación profesional con capitán.',
     },
     {
       id: 'cat-weather',
@@ -161,11 +161,6 @@ export const tourFaqs: Record<string, FAQ[]> = {
       id: 'cat-age-min',
       question: '¿Cuál es la edad mínima para el catamarán?',
       answer: 'Los niños que ya caminan son bienvenidos. Por razones de seguridad y seguro, los bebés menores de 2 años no pueden subir a bordo. Proporcionamos chalecos salvavidas en tallas de niño.',
-    },
-    {
-      id: 'cat-alcohol-minors',
-      question: '¿La barra abierta está disponible para menores?',
-      answer: 'No. La barra abierta con ron, cerveza y vino es estrictamente para mayores de 21 años, según la ley de Puerto Rico. Los menores tienen refrescos, jugos y agua sin límite, todo incluido en el precio del tour.',
     },
   ],
   salsa: [

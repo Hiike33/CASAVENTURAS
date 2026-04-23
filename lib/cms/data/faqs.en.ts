@@ -141,7 +141,7 @@ export const tourFaqs: Record<string, FAQ[]> = {
     {
       id: 'cat-inclusions',
       question: `What is included in the $${priceOf('catamaran')} per person price?`,
-      answer: 'Full-day private charter, sailing to Punta Arena beach in Vieques, swimming, snorkeling, and paddleboarding equipment, open bar (rum, beer, soft drinks), lunch served on deck, sunset return sail, and professional crew with captain.',
+      answer: 'Full-day private charter, sailing to Punta Arena beach in Vieques, swimming, snorkeling, and paddleboarding equipment, sunset return sail, and professional crew with captain.',
     },
     {
       id: 'cat-weather',
@@ -162,11 +162,6 @@ export const tourFaqs: Record<string, FAQ[]> = {
       id: 'cat-age-min',
       question: 'What is the minimum age for the catamaran?',
       answer: 'Kids of any walking age are welcome. For safety and insurance reasons, infants under 2 are not allowed on board. Life jackets in kids\' sizes are provided.',
-    },
-    {
-      id: 'cat-alcohol-minors',
-      question: 'Is the open bar available to minors?',
-      answer: 'No. The open bar with rum, beer, and wine is strictly 21 and over, following Puerto Rico law. Minors get unlimited soft drinks, juices, and water, all included in the tour price.',
     },
   ],
   salsa: [
