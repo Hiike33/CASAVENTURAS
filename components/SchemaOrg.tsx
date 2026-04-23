@@ -1,5 +1,5 @@
 import { siteConfig } from '@/lib/cms/data/site-config.en'
-import type { Tour, FAQ, Guide } from '@/lib/types/cms'
+import type { Tour, FAQ, Guide, Article } from '@/lib/types/cms'
 import type { Locale } from '@/i18n/routing'
 
 // Maps i18n locale → schema.org BCP-47 language code. Puerto Rico uses es-PR
@@ -26,6 +26,8 @@ type Props = {
   website?: boolean
   /** Emit a generic WebPage node for legal/informational pages. */
   webPage?: { path: string; name: string; dateModified?: string }
+  /** Emit an Article node for /guides/[slug] TOFU editorial pages. */
+  article?: { article: Article; path: string }
 }
 
 const ORG_ID = `${siteConfig.url}/#organization`
@@ -185,13 +187,31 @@ function buildWebPage(wp: { path: string; name: string; dateModified?: string },
   }
 }
 
+function buildArticle(article: Article, path: string, locale: Locale) {
+  const url = `${siteConfig.url}${path}`
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    '@id': `${url}#article`,
+    headline: article.title,
+    description: article.metaDescription,
+    datePublished: article.lastUpdated,
+    dateModified: article.lastUpdated,
+    inLanguage: SCHEMA_LANG[locale],
+    author: { '@id': ORG_ID },
+    publisher: { '@id': ORG_ID },
+    mainEntityOfPage: url,
+    url,
+  }
+}
+
 function Script({ data }: { data: unknown }) {
   const json = JSON.stringify(data).replace(/</g, '\\u003c')
   const props = { type: 'application/ld+json' as const, dangerouslySetInnerHTML: { __html: json } }
   return <script {...props} />
 }
 
-export default function SchemaOrg({ locale = 'en', tour, guides, faqs, itemList, website, webPage }: Props) {
+export default function SchemaOrg({ locale = 'en', tour, guides, faqs, itemList, website, webPage, article }: Props) {
   return (
     <>
       <Script data={tour ? buildTouristTrip(tour, locale) : { '@context': 'https://schema.org', ...buildOrganization() }} />
@@ -200,6 +220,7 @@ export default function SchemaOrg({ locale = 'en', tour, guides, faqs, itemList,
       {faqs && faqs.length > 0 && <Script data={buildFaqPage(faqs, locale)} />}
       {guides && guides.length > 0 && <Script data={buildGuidesGraph(guides)} />}
       {itemList && itemList.length > 0 && <Script data={buildItemList(itemList)} />}
+      {article && <Script data={buildArticle(article.article, article.path, locale)} />}
     </>
   )
 }

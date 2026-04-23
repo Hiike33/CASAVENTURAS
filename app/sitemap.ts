@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { tours, siteConfig } from '@/lib/tours'
+import { articles } from '@/lib/cms/data/articles.en'
 import { routing } from '@/i18n/routing'
 
 // Multilingual sitemap. Each URL is emitted once per locale with an
@@ -23,6 +24,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/terms', changeFrequency: 'yearly', priority: 0.2 },
     { path: '/cookies', changeFrequency: 'yearly', priority: 0.2 },
     ...tours.map(t => ({ path: `/tours/${t.slug}`, changeFrequency: 'weekly' as const, priority: 0.9 })),
+    { path: '/guides', changeFrequency: 'monthly', priority: 0.6 },
+    ...articles.map(a => ({ path: `/guides/${a.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
   ]
 
   return routing.locales.flatMap(locale =>

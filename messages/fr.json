@@ -4,10 +4,19 @@
     "reviews": "Avis",
     "about": "À propos",
     "contact": "Contact",
+    "guides": "Guides",
     "bookNow": "Réserver",
     "viewAll": "Voir toutes les expériences",
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu"
+  },
+  "Guides": {
+    "eyebrow": "Guides",
+    "indexTitle": "Guides de voyage pour Porto Rico",
+    "indexDescription": "Guides pratiques et sans filler, écrits par un opérateur local de tours en petits groupes. Quand venir, quoi emporter, quelle île choisir.",
+    "indexIntro": "Articles courts et engagés, depuis le terrain. On sort à El Yunque et à Vieques chaque semaine — voici ce qu'on dit vraiment à nos invités.",
+    "readLabel": "Lire",
+    "relatedTourEyebrow": "Prêt·e à réserver ?"
   },
   "Footer": {
     "craftedBy": "Site par KWS Studio",

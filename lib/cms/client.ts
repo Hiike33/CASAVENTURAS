@@ -1,4 +1,4 @@
-import type { Tour, SiteConfig, LegalPage } from '@/lib/types/cms'
+import type { Tour, SiteConfig, LegalPage, Article } from '@/lib/types/cms'
 import type { Locale } from '@/i18n/routing'
 import { enrichToursWithSnapshot, type BokunSnapshotMap } from '@/lib/bokun/snapshot'
 
@@ -11,6 +11,9 @@ import { siteConfig as configFr } from './data/site-config.fr'
 import * as legalEn from './data/legal.en'
 import * as legalEs from './data/legal.es'
 import * as legalFr from './data/legal.fr'
+import { articles as articlesEn } from './data/articles.en'
+import { articles as articlesEs } from './data/articles.es'
+import { articles as articlesFr } from './data/articles.fr'
 import bokunSnapshot from './data/bokun-snapshot.json'
 
 // Synchronous client-safe accessors. Mirror of LocalAdapter but without the
@@ -51,4 +54,18 @@ const LEGAL: Record<Locale, { privacy: LegalPage; terms: LegalPage; cookies: Leg
 
 export function legalFor(locale: Locale, slug: LegalSlug): LegalPage {
   return (LEGAL[locale] ?? LEGAL.en)[slug]
+}
+
+const ARTICLES: Record<Locale, Article[]> = {
+  en: articlesEn,
+  es: articlesEs,
+  fr: articlesFr,
+}
+
+export function articlesFor(locale: Locale): Article[] {
+  return ARTICLES[locale] ?? ARTICLES.en
+}
+
+export function articleBySlug(locale: Locale, slug: string): Article | undefined {
+  return articlesFor(locale).find(a => a.slug === slug)
 }

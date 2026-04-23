@@ -28,6 +28,7 @@ export default function Nav() {
   const secondaryLinks = [
     { label: t('reviews'), href: '/#reviews' },
     { label: t('about'), href: '/#story' },
+    { label: t('guides'), href: '/guides' },
     { label: t('contact'), href: '/contact' },
   ] as const
 

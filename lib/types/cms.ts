@@ -67,6 +67,40 @@ export type Tour = {
   bokunSnapshot?: import('@/lib/bokun/snapshot').BokunTourSnapshot
 }
 
+/**
+ * TOFU/MOFU editorial content block — structured body for Article.
+ * Same rationale as LegalBlock (author-controlled, inline markup via html).
+ * callout variants render with distinctive background (info/warning).
+ */
+export type ArticleBlock =
+  | { kind: 'h2'; text: string }
+  | { kind: 'p'; html: string }
+  | { kind: 'ul'; items: string[] }
+  | { kind: 'callout'; variant: 'info' | 'warning'; html: string }
+
+/**
+ * Long-form editorial content (TOFU/MOFU guides that capture informational
+ * search intent). Not to be confused with `Guide` above which represents a
+ * tour guide person. Articles live at /guides/[slug] and ship JSON-LD
+ * `Article` schema for generative-engine-optimization.
+ */
+export type Article = {
+  /** URL slug — same across locales so hreflang alternates line up */
+  slug: string
+  /** yyyy-MM-dd, last revision (drives JSON-LD dateModified) */
+  lastUpdated: string
+  /** Display title (H1, meta title, JSON-LD headline) */
+  title: string
+  /** 150-160 char SEO description used in generateMetadata */
+  metaDescription: string
+  /** One-sentence summary shown on index card (40-100 chars) */
+  excerpt: string
+  /** Which tour this article drives toward (for related-tour CTA). Optional. */
+  relatedTourSlug?: 'el-yunque' | 'catamaran' | 'salsa'
+  /** Body blocks — first block is typically a `p` intro, followed by h2+p/ul groups */
+  body: ArticleBlock[]
+}
+
 export type Review = {
   text: string
   author: string
