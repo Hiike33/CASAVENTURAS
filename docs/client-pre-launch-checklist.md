@@ -141,6 +141,44 @@ All the remaining things we need from you before flipping the website's new inli
 
 ---
 
+## 4b. TripAdvisor + OTA cleanup (discovered via /audit-index-biz 2026-04-23)
+
+*Context: your SEO authority lives on the old Weebly `micasaventuras.com` right now — 1,458 reviews, ranked #10 of 152 Tours and #1 of 99 Transportation Services in San Juan. At DNS cutover these signals do not auto-transfer. The actions below lock in the transfer and remove outdated listings before the new site goes live.*
+
+### 🟠 Required before DNS flip
+
+A2. **Claim TripAdvisor Business listing**
+    - Owner URL: https://www.tripadvisor.com/Attraction_Review-g147320-d21156167-Reviews-Casa_Venturas-San_Juan_Puerto_Rico.html
+    - On TripAdvisor → "Claim your listing" → verify via email (`micasaventuras@gmail.com`)
+    - Once verified: **update the "Website" field** to `https://casaventuras.com`
+      (Even if DNS is not yet configured — TripAdvisor stores the value and it becomes active automatically at cutover.)
+    - Expected time: 30 min (verification email can take up to 24 h)
+
+A3. **Optimize the Catamaran product listing** (TripAdvisor product d34092341)
+    - URL: https://www.tripadvisor.com/AttractionProductReview-g147319-d34092341-Private_Luxury_Sailing_Catamaran_Day_to_Vieques-Puerto_Rico.html
+    - Long description, 1000+ words (mention: 40-ft Bali, Punta Arena, Humacao marina, up to 12 guests, sunset return, professional crew)
+    - 20+ HD photos (reuse `/public/images/tours/catamaran/*` from the website)
+    - Minimum 3 Q&A (minimum age, bathroom on board, seasickness)
+    - Tags: Full Day, Private, Luxury, Small Group, Sailing
+    - Expected time: 2 h
+
+A7. **Dereference the decommissioned Surf + Rum Distillery tours** (see decision D-022)
+    These tours are no longer operated. They still appear on:
+    - **Viator**: search "Casa Venturas" → Partner Support ticket to delist Surf + Rum
+    - **Groupon**: https://www.groupon.com/deals/viator-casa-venturas → verify no Surf/Rum residual
+    - **KAYAK Travel Guides**: confirm only El Yunque + Catamaran + Salsa are referenced
+    - **TripAdvisor Business** (once A2 claim is approved): delete the obsolete Surf/Rum product entries
+    - Expected time: 1 h active work (OTA-side turnaround typically 5–7 business days)
+
+### 🟡 Strongly recommended
+
+A-map. **Plan the 301 redirect map Weebly → new site** (see decision D-022)
+    - At DNS cutover, a redirect map from every Weebly URL to its Next.js equivalent will be activated
+    - Surf + Rum pages → HTTP 410 Gone (officially decommissioned, do not try to preserve their authority)
+    - Full mapping to be prepared in a follow-up doc `docs/weebly-migration-301.md` before DNS flip
+
+---
+
 ## 5. Summary — what to send us
 
 When all 🟠 items are checked, reply with:
