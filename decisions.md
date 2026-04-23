@@ -383,6 +383,34 @@ Changements :
 
 ---
 
+## 2026-04-23 — Catalogue produit
+
+### D-022 · [PRODUCT/catalog] Décommissionnement officiel des tours Surf + Rum Distillery (héritage Weebly)
+
+**Décidé** : les tours `Learn to Surf in San Juan` et `Local Puerto Rican Rum Distillery Tour (Ron Pepon)` présents historiquement sur `micasaventuras.com` (site Weebly) ne sont plus à l'offre. Le catalogue canonique est figé à 3 produits :
+1. El Yunque Vivid Day Tour ($89/pers)
+2. Private Catamaran to Vieques ($249/pers, $1650 en privatisation 12 pax)
+3. Sunset Salsa Rooftop ($65/pers)
+
+**Raison** : confirmation produit Stan 2026-04-23 suite à `/audit-index-biz`. L'audit a révélé une divergence entre le site Weebly encore indexé par Google (`micasaventuras.com`, propose Surf + Rum) et le nouveau site Next.js (`cv-next`, propose Catamaran à la place). Sans décision explicite, un client arrivant via la SERP actuelle trouve Surf + Rum et ne voit pas le Catamaran — risque de confusion client + signaux SEO incohérents.
+
+**Conséquence opérationnelle** :
+- cv-next ne contient déjà aucune référence à Surf/Rum : aucune action code requise
+- Le site Weebly `micasaventuras.com` contient encore les pages Surf + Rum : action hors-repo (Stan) — à retirer du Weebly ou laisser mourir lors de la bascule DNS
+- Au moment de la bascule DNS `casaventuras.com` → worker Cloudflare (DNS non branchés pour l'instant — cf. audit), prévoir des 301 permanents depuis les URLs Weebly Surf/Rum vers `/` ou `/tours` (éviter 404 pour préserver le link juice TripAdvisor/Viator/Groupon résiduel)
+- Déréférencer auprès des partenaires OTA (Viator, Groupon, TripAdvisor) tout listing Surf/Rum encore actif à leur nom
+
+**Alternative rejetée** : ré-intégrer Surf + Rum dans le catalogue Next.js. Raison refus : Stan confirme que ces tours ne sont plus opérés (partenaire/guide plus disponible ou pivot produit).
+
+**Impact** : aucun code à modifier dans cv-next (déjà aligné sur le nouveau catalogue). Cette décision sert de référence pour :
+- La bascule DNS/contenu Weebly → Cloudflare (action dormante tant que DNS off)
+- Les prochains audits SEO : ne pas flagger "catalogue incomplet" par l'absence de Surf/Rum
+- Tout contact OTA proposant encore Surf/Rum à déréférencer
+
+**Invalide si** : Stan réouvre l'un des 2 tours — ouvrir D-YYY qui cite D-022.
+
+---
+
 ## Règles pour ajouter une décision
 
 1. Format strict : `### D-XXX · [SCOPE] Titre court`
