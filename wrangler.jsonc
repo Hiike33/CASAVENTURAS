@@ -11,6 +11,15 @@
   "observability": {
     "enabled": true
   },
+  // Worker runtime vars — source of truth for server-side env values
+  // consumed by process.env at request time (e.g. resolveServerCheckoutMode
+  // in lib/bokun/checkout-mode.ts:39). wrangler deploy applies these,
+  // overwriting any same-name Plaintext entry set manually via the
+  // Cloudflare dashboard "Variables and Secrets" (Runtime) section —
+  // do NOT duplicate entries here in the dashboard to avoid drift.
+  //
+  // NEXT_PUBLIC_* vars belong in .env.production (inlined client-side at
+  // build); do NOT set them here.
   "vars": {
     "BOKUN_CHECKOUT_MODE": "live"
   }
