@@ -411,6 +411,90 @@ Changements :
 
 ---
 
+## 2026-04-24 — Déploiement production
+
+### D-023 · [DEPLOY/domain] Brancage `casaventuras.com` → Cloudflare Worker
+
+**Décidé** : le domaine `casaventuras.com` et son sous-domaine `www` sont branchés sur le worker Cloudflare `casaventuras` (compte Elie Belkheir, account ID `42f1ff5c412f53c54404943fa9d8cdd3`) via **Custom Domains** (pas Routes). Redirect `www → apex` en mode **Dynamic** (pas Static, pas Page Rules) avec préservation path + query string.
+
+**Raison** : coupler le nom de domaine final au back-end Next.js/OpenNext et arrêter de dépendre de l'URL `casaventuras.elie-belkheir.workers.dev`. Le choix apex canonique (vs www) reflète le hardcode déjà en place dans `app/[locale]/layout.tsx:42` (`metadataBase`), `lib/cms/data/site-config.en.ts:16` (`siteConfig.url`) et `lib/cms/data/legal.{fr,en,es}.ts:5` (`siteUrl`). Custom Domains plutôt que Routes car CF gère SSL + DNS automatiquement et le site est 100% sur le worker (pas de coexistence avec une autre origine).
+
+**Configuration active (vérifiée curl en prod 2026-04-24)** :
+- Worker `casaventuras` version `7ce9d9cd` · `.open-next/worker.js`
+- Custom Domain apex : `casaventuras.com` → HTTP/2 200
+- Custom Domain www : `www.casaventuras.com` → HTTP/2 301 lossless
+- Redirect Rule `www-to-apex` : expression `concat("https://casaventuras.com", http.request.uri.path)` · 301 · Preserve query string ON
+- SSL/TLS Full (strict), HSTS `max-age=31536000; includeSubDomains`
+- Edge anycast Miami (`cf-ray …-MIA`) — idéal pour trafic Puerto Rico
+
+**Alternative rejetée 1** : Cloudflare Pages project. Refus car le projet est passé à `@opennextjs/cloudflare@1.19.1` qui produit un Worker natif (`.open-next/worker.js`) — plus performant et plus flexible qu'un Pages project. `docs/cloudflare-deploy.md` parle encore de Pages (artefact historique) — à mettre à jour séparément.
+
+**Alternative rejetée 2** : Redirect Static vers `https://casaventuras.com/` (sans path). Refus car perte du path → backlinks externes (TripAdvisor/Viator/Groupon) perdraient leur destination, SEO signal dégradé. Dynamic + `concat(...)` est sans perte.
+
+**Impact** :
+- `micasaventuras.com` (Weebly) reste inchangé — bascule prévue séparément (D-022:399)
+- Env secrets worker (`RESEND_API_KEY`, `BOKUN_ACCESS_KEY`, `BOKUN_SECRET_KEY`, `BOKUN_BOOKING_CHANNEL_UUID`) non audités dans cette session — à vérifier avant de compter sur contact form / checkout
+- Google Search Console : property à créer + `/sitemap.xml` à soumettre (action externe Stan)
+- Le doc `docs/cloudflare-deploy.md` mélange vocabulaire Pages et Worker — à nettoyer
+
+**Invalide si** : migration vers un autre provider, retour sur un Pages project, ou changement de registrar.
+
+---
+
+### D-024 · [DEPLOY/migration] Bascule SEO `micasaventuras.com` (Weebly) → `casaventuras.com` (Next.js) via 308 redirects page-par-page
+
+**Décidé** (2026-04-23, suite à `/audit-index-biz` + `/audit-web`) :
+
+1. **Extinction Weebly, reprise DNS par Cloudflare** : `micasaventuras.com` pointera vers le même Worker que `casaventuras.com` (à brancher côté CF dashboard — cf. « Actions opérateur » ci-dessous). Le site Weebly n'a plus à tourner → abonnement résiliable.
+2. **Redirects 308 page-par-page** câblés dans `next.config.js` via `async redirects()` avec `has: [{ type: 'host', value: '(www\\.)?micasaventuras\\.com' }]` pour filtrer l'hôte d'origine. Mapping :
+   - `/index.html` et `/` → `https://casaventuras.com/`
+   - `/el-yunque-rainforest-adventure[.html]?` → `/tours/el-yunque`
+   - `/private-catamaran-to-vieques[.html]?` → `/tours/catamaran`
+   - `/sunset-salsa-initiation-on-rooftop[.html]?` → `/tours/salsa`
+   - `/learn-to-surf-in-san-juan[.html]?` → `/` (D-022, scénario A)
+   - `/ron-pepon-distillery[.html]?` et `/local-puerto-rican-rum-distillery-tour-ron-pepon[.html]?` → `/` (D-022, scénario A)
+   - Catch-all `/:path*` → `/` (dernier dans l'array, ordre critique)
+
+**Raison** :
+- `/audit-index-biz` a révélé que `site:casaventuras.com` retourne 0 résultat Google : le nouveau site n'est pas encore indexé. Pendant ce temps, `micasaventuras.com/sunset-salsa-initiation-on-rooftop.html` est #1 Google pour "sunset salsa lesson San Juan rooftop". Sans pont 308, la coupure du legacy = perte sèche de ce rank et des 1,458 reviews pointant vers le legacy domain.
+- Google traite 308 et 301 comme équivalents pour le transfert d'autorité (https://developers.google.com/search/docs/crawling-indexing/301-redirects). Next.js émet 308 avec `permanent: true` pour préserver la méthode HTTP (non-mutation POST→GET).
+- Les redirects déclarés dans `next.config.js` s'exécutent **avant** `middleware.ts` (confirmé docs Next 15), donc la latence est minimale et aucune entête CSP n'est inutilement appliquée à une réponse 308.
+
+**Scenario retenu pour tours orphelins (Surf + Rum)** : A (→ homepage). Validé Stan 2026-04-23. Rationale : volume de trafic sur ces URLs supposé faible, effort rédactionnel d'une page "tours we used to offer" non justifié ; la home avec les 3 tours actuels suffit à retenir le visiteur curieux. Alternative (B → `/contact`) écartée pour éviter de transformer chaque clic en lead qualifié.
+
+**Vérif locale** (dev server + curl `Host: micasaventuras.com`, 2026-04-23) :
+- 8 URLs spécifiques → 308 vers la destination attendue (mapping respecté)
+- Catch-all path inconnu → 308 vers `/`
+- Variant `www.micasaventuras.com` → 308 (regex `(www\.)?` OK)
+- Host malicieux `micasaventuras.com.evil.com` et `foomicasaventuras.com` → 404, pas de 308 (regex ancrée, pas d'open redirect)
+- `localhost` natif (Host par défaut) → 200 sur `/` et `/tours/el-yunque` (pas d'impact sur le domaine primary)
+
+**Actions opérateur restantes (hors code)** :
+1. Cloudflare dashboard → Worker `casaventuras` → **Custom Domains** : ajouter `micasaventuras.com` et `www.micasaventuras.com` (déclenche SSL cert LetsEncrypt auto).
+2. Registrar de `micasaventuras.com` → changer les nameservers (ou ajouter records A/CNAME si déjà sur CF DNS) pour router vers CF.
+3. Weebly → résilier l'abonnement (après vérif que le 308 répond bien en prod sur les 2 domaines).
+4. Google Search Console → ajouter `micasaventuras.com` comme property, déclarer le changement d'adresse (Settings → Change of address) vers `casaventuras.com`, soumettre les 2 sitemaps.
+5. Garder les 308 en place **minimum 12 mois** (recommandation Google).
+
+**Alternative rejetée 1** : Canonical cross-domain (`<link rel="canonical">` sur chaque page Weebly). Refus car nécessite de garder Weebly vivant + injection HTML custom (Pro plan), et les signaux canonical sont "conseils" plutôt que directives pour Google — 301/308 est plus fort et univoque.
+
+**Alternative rejetée 2** : Redirects gérés dans `middleware.ts`. Refus car le middleware tourne pour chaque requête du site (même celles sur casaventuras.com), ajoute du coût CPU au Worker, et perd la nature déclarative de `next.config.redirects()`. Règle : *config pour les redirects statiques, middleware pour le dynamique*.
+
+**Alternative rejetée 3** : Redirect générique `/:path*` sans mapping page-par-page. Refus car perte de l'équité SEO URL-par-URL — `/sunset-salsa-initiation-on-rooftop.html` doit remonter sur `/tours/salsa` spécifiquement pour que Google transfère le rank #1 existant, pas sur la home.
+
+**Impact** :
+- `casaventuras.com` reste strictement inchangé côté UX (clause `has.host` exclut).
+- Pas de variable de config ajoutée (mapping inline dans `next.config.js` car volume faible et changement rare).
+- OpenNext Cloudflare 1.19 compile les redirects dans le Worker routing — vérifié build OK, bundle size inchangé (First Load JS 102 kB shared).
+- D-022:399 (« bascule prévue séparément ») est levé par cette décision.
+
+**Invalide si** :
+- Apparition de nouveaux paths legacy non mappés (backlinks oubliés) → étendre `legacyPathMap`.
+- Stan ré-active un tour décommissionné (Surf ou Rum) → migrer la règle de `/` vers la vraie page, mettre à jour D-022 + D-024.
+- Google annonce un changement de politique sur 308 (peu probable).
+
+---
+
 ## Règles pour ajouter une décision
 
 1. Format strict : `### D-XXX · [SCOPE] Titre court`
