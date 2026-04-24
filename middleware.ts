@@ -1,6 +1,7 @@
 import createMiddleware from 'next-intl/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n/routing'
+import { CSP_VALUE } from './lib/security/csp'
 
 // Composes two responsibilities:
 //   1. next-intl handles locale detection and routing (rewrites /es/tours/...
@@ -8,56 +9,8 @@ import { routing } from './i18n/routing'
 //      redirects when the URL is missing a locale prefix).
 //   2. We overlay the security headers on whatever response it produced.
 //
-// Trade-offs documented inline:
-// - 'unsafe-inline' in script-src is required because Next.js App Router
-//   emits inline runtime scripts and JSON-LD <script> tags on every page.
-// - img-src allows all https: because tour photos pull from OTA feeds
-//   (TripAdvisor, Viator photo URLs). Safe since we never execute images.
-// - frame-ancestors 'none' blocks click-jacking globally.
-
-const CSP_DIRECTIVES: Record<string, readonly string[]> = {
-  'default-src': ["'self'"],
-  'script-src': [
-    "'self'",
-    "'unsafe-inline'",
-    'https://js.stripe.com',
-    'https://widgets.bokun.io',
-    'https://static.bokun.io',
-  ],
-  'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-  'img-src': ["'self'", 'data:', 'blob:', 'https:'],
-  'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com'],
-  'connect-src': [
-    "'self'",
-    'https://api.stripe.com',
-    'https://m.stripe.com',
-    'https://m.stripe.network',
-    'https://api.bokun.is',
-    'https://nominatim.openstreetmap.org',
-  ],
-  'frame-src': [
-    'https://js.stripe.com',
-    'https://hooks.stripe.com',
-    'https://widgets.bokun.io',
-    'https://www.youtube-nocookie.com',
-    'https://www.youtube.com',
-  ],
-  'media-src': ["'self'", 'blob:', 'data:'],
-  'object-src': ["'none'"],
-  'base-uri': ["'self'"],
-  'form-action': ["'self'"],
-  'frame-ancestors': ["'none'"],
-  'upgrade-insecure-requests': [],
-  // Violation reporting — `report-uri` is legacy, `report-to` is modern.
-  // We emit both so older browsers keep sending reports while newer ones
-  // prefer the Reporting API endpoint declared via Reporting-Endpoints.
-  'report-uri': ['/api/csp-report'],
-  'report-to': ['csp-endpoint'],
-}
-
-const CSP_VALUE = Object.entries(CSP_DIRECTIVES)
-  .map(([k, v]) => (v.length ? `${k} ${v.join(' ')}` : k))
-  .join('; ')
+// The CSP itself lives in lib/security/csp.ts so it can be unit-tested
+// without the Next.js runtime (see lib/security/csp.test.ts).
 
 const intlMiddleware = createMiddleware(routing)
 
