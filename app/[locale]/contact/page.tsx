@@ -37,9 +37,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'website',
       images: [
         {
-          url: '/images/og/og-1200.jpg',
+          url: '/images/og/og-1200x630.jpg',
           width: 1200,
-          height: 1600,
+          height: 630,
           alt: 'Casa Venturas, Puerto Rico experiences',
         },
       ],

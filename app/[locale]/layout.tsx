@@ -50,13 +50,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: 'Casa Venturas',
       locale: OG_LOCALE[loc],
       type: 'website',
-      images: [{ url: '/images/og/og-1200.jpg', width: 1200, height: 1600, alt: title }],
+      // 1200×630 (1.91:1) is the standard landscape ratio expected by
+      // Facebook/Twitter/LinkedIn/iMessage. Portrait OG images (what we had
+      // before, 1200×1600) get cropped hard in most previews.
+      images: [{ url: '/images/og/og-1200x630.jpg', width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description: '#10 of 152 Tours · #1 of 99 Transportation in San Juan · 5.0★',
-      images: ['/images/og/og-1200.jpg'],
+      images: ['/images/og/og-1200x630.jpg'],
     },
     alternates: {
       canonical: loc === 'en' ? '/' : `/${loc}`,
