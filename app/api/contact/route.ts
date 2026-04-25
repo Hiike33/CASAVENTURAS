@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isHoneypotTriggered } from '@/lib/security/honeypot'
 
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json()
+
+    // Silent success when the honeypot field is filled — denies bots the
+    // 4xx/5xx signal they would use to retry or learn. Logged so we can
+    // size the spam volume from CF Worker observability.
+    if (isHoneypotTriggered(payload)) {
+      console.warn('[contact] honeypot triggered — silent drop')
+      return NextResponse.json({ ok: true }, { status: 202 })
+    }
 
     if (process.env.RESEND_API_KEY) {
       const res = await fetch('https://api.resend.com/emails', {

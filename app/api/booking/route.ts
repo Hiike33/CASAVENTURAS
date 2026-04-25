@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isHoneypotTriggered } from '@/lib/security/honeypot'
 
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json()
+
+    // Silent success when the honeypot field is filled. No frontend form
+    // currently posts here (booking happens via the Bokun custom checkout
+    // path), but the endpoint is publicly reachable so we apply the same
+    // protection by default — defense in depth.
+    if (isHoneypotTriggered(payload)) {
+      console.warn('[booking] honeypot triggered — silent drop')
+      return NextResponse.json({ ok: true }, { status: 202 })
+    }
 
     const webhookUrl = process.env.N8N_BOOKING_WEBHOOK
     if (webhookUrl) {

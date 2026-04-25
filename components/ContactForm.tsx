@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { toursFor, siteConfigFor } from '@/lib/cms/client'
+import { HONEYPOT_FIELD } from '@/lib/security/honeypot'
 import type { Locale } from '@/i18n/routing'
 
 export default function ContactForm() {
@@ -16,6 +17,8 @@ export default function ContactForm() {
     email: '',
     tour: '',
     message: '',
+    // Honeypot — must stay empty for real submissions. See lib/security/honeypot.ts.
+    [HONEYPOT_FIELD]: '',
   })
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -39,6 +42,34 @@ export default function ContactForm() {
       <h2 className="text-[#111] text-[32px] font-light tracking-tight mb-6">{t('headline')}</h2>
 
       <form onSubmit={onSubmit} className="space-y-3.5">
+        {/*
+          Honeypot — visually hidden but kept in the DOM so naive bots that
+          read every input fill it. Real users never see/tab into it.
+          Position off-screen rather than display:none because some bots
+          actively skip display:none fields as a (weak) heuristic.
+        */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: '-10000px',
+            top: 'auto',
+            width: '1px',
+            height: '1px',
+            overflow: 'hidden',
+          }}
+        >
+          <label htmlFor="cv-website">Website</label>
+          <input
+            id="cv-website"
+            type="text"
+            name={HONEYPOT_FIELD}
+            tabIndex={-1}
+            autoComplete="off"
+            value={form[HONEYPOT_FIELD]}
+            onChange={e => setForm({ ...form, [HONEYPOT_FIELD]: e.target.value })}
+          />
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-[9px] font-medium tracking-[0.14em] uppercase text-[#888] mb-1.5">{t('firstName')}</label>
