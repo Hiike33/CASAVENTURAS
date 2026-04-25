@@ -20,6 +20,7 @@ import {
   resolveCheckoutPriceMap,
   type RuntimeRatePrice,
 } from '@/lib/bokun/checkout-prices'
+import { formatCheckoutErrorMessage } from '@/lib/bokun/checkout-payload'
 import { htmlToList } from '@/lib/html/to-list'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 
@@ -383,10 +384,10 @@ function CheckoutPanelInner({
       })
       const data = (await res.json()) as
         | { ok: true; booking: { confirmationCode: string; totalPrice?: number } }
-        | { ok: false; error: string }
+        | { ok: false; error: string; detail?: unknown }
       if (!data.ok) {
         setStep('error')
-        setErrorMsg(data.error)
+        setErrorMsg(formatCheckoutErrorMessage(data.error, data.detail))
         return
       }
       // Invariant check: the amount charged by Bokun should equal what

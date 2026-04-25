@@ -6,6 +6,7 @@ import {
   coerceMainContactDetails,
   extractMainContactQuestions,
   extractStripeUti,
+  formatCheckoutErrorMessage,
   type CheckoutSubmitRequest,
   type MainContactQuestion,
 } from './checkout-payload.ts'
@@ -589,6 +590,75 @@ test('coerce: returns a NEW payload (no mutation)', () => {
   const before = JSON.stringify(initial)
   coerceMainContactDetails(initial, TITLE_QUESTIONS)
   assert.equal(JSON.stringify(initial), before, 'input must not be mutated')
+})
+
+// ─── formatCheckoutErrorMessage (UI error surfacing) ───────────────────────
+
+test('formatError: null/undefined detail → base unchanged', () => {
+  assert.equal(
+    formatCheckoutErrorMessage('Bokun upstream error', null),
+    'Bokun upstream error',
+  )
+  assert.equal(
+    formatCheckoutErrorMessage('Bokun upstream error', undefined),
+    'Bokun upstream error',
+  )
+})
+
+test('formatError: detail string → appended', () => {
+  assert.equal(
+    formatCheckoutErrorMessage('Bokun upstream error', 'Card declined'),
+    'Bokun upstream error — Card declined',
+  )
+})
+
+test('formatError: detail.message → appended', () => {
+  assert.equal(
+    formatCheckoutErrorMessage('Bokun upstream error', { message: 'Invalid token id: tok_x' }),
+    'Bokun upstream error — Invalid token id: tok_x',
+  )
+})
+
+test('formatError: strips "Error occurred:" prefix + Java FQN', () => {
+  // Real shape returned by Bokun (verified live against api.bokun.is)
+  const detail = {
+    message: 'Error occurred: msclients.payments.PaymentException - Invalid token id: tok_x',
+  }
+  assert.equal(
+    formatCheckoutErrorMessage('Bokun upstream error', detail),
+    'Bokun upstream error — Invalid token id: tok_x',
+  )
+})
+
+test('formatError: handles InvalidAnswersException pattern', () => {
+  const detail = {
+    message:
+      'Error occurred: is.bokun.dtos.questions.validation.InvalidAnswersException - Invalid or missing answers',
+  }
+  assert.equal(
+    formatCheckoutErrorMessage('Bokun upstream error', detail),
+    'Bokun upstream error — Invalid or missing answers',
+  )
+})
+
+test('formatError: detail.error fallback (alt server shape)', () => {
+  assert.equal(
+    formatCheckoutErrorMessage('Server error', { error: 'rate limited' }),
+    'Server error — rate limited',
+  )
+})
+
+test('formatError: empty/non-string detail fields → base unchanged', () => {
+  assert.equal(formatCheckoutErrorMessage('base', { message: '' }), 'base')
+  assert.equal(formatCheckoutErrorMessage('base', { message: '   ' }), 'base')
+  assert.equal(formatCheckoutErrorMessage('base', { message: 42 }), 'base')
+  assert.equal(formatCheckoutErrorMessage('base', { foo: 'bar' }), 'base')
+})
+
+test('formatError: arrays and primitives are ignored (defensive)', () => {
+  assert.equal(formatCheckoutErrorMessage('base', []), 'base')
+  assert.equal(formatCheckoutErrorMessage('base', 42), 'base')
+  assert.equal(formatCheckoutErrorMessage('base', true), 'base')
 })
 
 // ─── Determinism ───────────────────────────────────────────────────────────

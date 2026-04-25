@@ -289,6 +289,47 @@ export function coerceMainContactDetails(
   }
 }
 
+/**
+ * Formats an end-user error message from a non-OK /api/bokun/checkout/submit
+ * response. Surfaces `detail.message` (the actual Bokun/Stripe reason)
+ * appended to the base error string so users see WHY the booking failed
+ * instead of the generic "Bokun upstream error".
+ *
+ * Strips the noisy Java prefix Bokun returns:
+ *   "Error occurred: foo.bar.SomethingException - real reason"
+ *   → "real reason"
+ *
+ * Returns `base` unchanged when detail is empty/unparsable.
+ */
+export function formatCheckoutErrorMessage(
+  base: string,
+  detail: unknown,
+): string {
+  const raw = readDetailMessage(detail)
+  if (!raw) return base
+  return `${base} — ${stripJavaNoise(raw)}`
+}
+
+function readDetailMessage(detail: unknown): string | null {
+  if (!detail) return null
+  if (typeof detail === 'string') return detail.trim() || null
+  if (Array.isArray(detail)) return null
+  if (typeof detail !== 'object') return null
+  const d = detail as { message?: unknown; error?: unknown }
+  if (typeof d.message === 'string' && d.message.trim()) return d.message
+  if (typeof d.error === 'string' && d.error.trim()) return d.error
+  return null
+}
+
+function stripJavaNoise(msg: string): string {
+  let m = msg.trim()
+  // "Error occurred: " prefix
+  m = m.replace(/^Error occurred:\s*/i, '')
+  // Java FQN before " - " (e.g. "msclients.payments.PaymentException - ")
+  m = m.replace(/^[a-z][\w$]*(?:\.[\w$]+)*\.[A-Z]\w*(?:Exception|Error)\s+-\s+/, '')
+  return m.trim()
+}
+
 export function extractStripeUti(raw: unknown): string | null {
   if (!raw || typeof raw !== 'object') return null
   const r = raw as { options?: unknown }
