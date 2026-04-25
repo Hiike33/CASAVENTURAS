@@ -191,13 +191,20 @@ function CheckoutPanelInner({
     priceByCategory.get(categoryId) ?? tour.price
 
   const total = useMemo(() => {
+    // Per-booking tours (private charters like the catamaran): one flat fee
+    // for the entire booking. Pricing categories exist only for manifest
+    // headcount (Adults/Children) — they MUST NOT be multiplied. Bokun
+    // sends `pricePerCategoryUnit: []` for these rates; without this guard
+    // the priceByCategory map is empty, rateFor() falls back to tour.price,
+    // and the total becomes tour.price × guests (over-billing the customer).
+    if (tour.pricedPerPerson === false) return tour.price
     if (!ctx) return tour.price * Math.max(1, totalGuests)
     return ctx.pricingCategories.reduce((sum, c) => {
       const units = qty[c.id] ?? 0
       return sum + units * rateFor(c.id)
     }, 0)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ctx, qty, tour.price, totalGuests, priceByCategory])
+  }, [ctx, qty, tour.price, tour.pricedPerPerson, totalGuests, priceByCategory])
 
   // ─── Promo preview: debounced validation ───────────────────────────
   // Fires /api/bokun/promo/validate 500ms after the user stops typing.
@@ -465,6 +472,7 @@ function CheckoutPanelInner({
                   category={c}
                   quantity={qty[c.id] ?? 0}
                   unitPrice={rateFor(c.id)}
+                  showUnitPrice={tour.pricedPerPerson !== false}
                   onChange={v => setQty(q => ({ ...q, [c.id]: Math.max(0, v) }))}
                   last={idx === ctx.pricingCategories.length - 1}
                 />
@@ -920,12 +928,16 @@ function PricingCategoryRow({
   category,
   quantity,
   unitPrice,
+  showUnitPrice,
   onChange,
   last,
 }: {
   category: PricingCategory
   quantity: number
   unitPrice: number
+  // Hidden for per-booking tours where the categories are manifest-only
+  // and the displayed unit would mislead (each row would echo tour.price).
+  showUnitPrice: boolean
   onChange: (v: number) => void
   last: boolean
 }) {
@@ -944,7 +956,9 @@ function PricingCategoryRow({
         )}
       </div>
       <div className="flex items-center gap-4">
-        <span className="text-[12px] font-light text-[#4F4F4E]">${unitPrice}</span>
+        {showUnitPrice && (
+          <span className="text-[12px] font-light text-[#4F4F4E]">${unitPrice}</span>
+        )}
         <QtyStepper value={quantity} onChange={onChange} />
       </div>
     </div>
