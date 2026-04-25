@@ -124,11 +124,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cms = getCMS()
   const [tour, siteConfig] = await Promise.all([cms.getTour('catamaran', locale), cms.getSiteConfig(locale)])
   if (!tour) return {}
+  // Bare title — layout template '%s · Casa Venturas' adds the brand suffix.
   const title = locale === 'es'
-    ? 'Catamarán privado a Vieques | Casa Venturas'
+    ? 'Catamarán privado a Vieques'
     : locale === 'fr'
-      ? 'Catamaran privé pour Vieques | Casa Venturas'
-      : 'Private Catamaran to Vieques | Casa Venturas'
+      ? 'Catamaran privé pour Vieques'
+      : 'Private Catamaran to Vieques'
   return {
     title,
     description: tour.description,

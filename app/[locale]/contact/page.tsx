@@ -24,14 +24,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
   const siteConfig = siteConfigFor(locale)
   const t = await getTranslations({ locale, namespace: 'ContactPage' })
-  const title = `${t('eyebrow')} · Casa Venturas`
-  const description = `${t('eyebrow')} Casa Venturas. ${siteConfig.email} · ${siteConfig.phone}. ${siteConfig.location}. ${siteConfig.hours}.`
+  // Bare title — layout template '%s · Casa Venturas' adds the brand suffix
+  // automatically. The OG title gets the brand inline (separate from template).
+  const title = t('eyebrow')
+  const ogTitle = `${title} · Casa Venturas`
+  const description = `${title} Casa Venturas. ${siteConfig.email} · ${siteConfig.phone}. ${siteConfig.location}. ${siteConfig.hours}.`
   return {
     title,
     description,
     alternates: localizedAlternates('/contact', locale, siteConfig.url),
     openGraph: {
-      title,
+      title: ogTitle,
       description: t('intro'),
       url: `${siteConfig.url}/contact`,
       type: 'website',

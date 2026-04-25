@@ -118,11 +118,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cms = getCMS()
   const [tour, siteConfig] = await Promise.all([cms.getTour('salsa', locale), cms.getSiteConfig(locale)])
   if (!tour) return {}
+  // Bare title — layout template '%s · Casa Venturas' adds the brand suffix.
   const title = locale === 'es'
-    ? 'Clase de salsa en azotea San Juan | Casa Venturas'
+    ? 'Clase de salsa en azotea San Juan'
     : locale === 'fr'
-      ? 'Cours de salsa sur rooftop à San Juan | Casa Venturas'
-      : 'Sunset Salsa Lesson San Juan Rooftop | Casa Venturas'
+      ? 'Cours de salsa sur rooftop à San Juan'
+      : 'Sunset Salsa Lesson San Juan Rooftop'
   return {
     title,
     description: tour.description,

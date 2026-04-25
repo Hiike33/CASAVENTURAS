@@ -116,11 +116,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cms = getCMS()
   const [tour, siteConfig] = await Promise.all([cms.getTour('el-yunque', locale), cms.getSiteConfig(locale)])
   if (!tour) return {}
+  // Bare title — the layout template '%s · Casa Venturas' (set in
+  // app/[locale]/layout.tsx) appends the brand suffix automatically.
+  // Including it here would yield "X | Casa Venturas · Casa Venturas".
   const title = locale === 'es'
-    ? 'Tour de El Yunque desde San Juan | Casa Venturas'
+    ? 'Tour de El Yunque desde San Juan'
     : locale === 'fr'
-      ? "Tour d'El Yunque depuis San Juan | Casa Venturas"
-      : 'El Yunque Rainforest Tour San Juan | Casa Venturas'
+      ? "Tour d'El Yunque depuis San Juan"
+      : 'El Yunque Rainforest Tour San Juan'
   return {
     title,
     description: tour.description,
