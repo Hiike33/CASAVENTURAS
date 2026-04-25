@@ -107,10 +107,17 @@ function buildTouristTrip(tour: Tour, locale: Locale) {
   }
 }
 
-function buildFaqPage(faqs: FAQ[], locale: Locale) {
+function buildFaqPage(faqs: FAQ[], locale: Locale, tour?: Tour) {
+  // @id makes the FAQPage node referenceable from other schema graphs
+  // (e.g., a TouristTrip's mainEntityOfPage). On tour pages the @id is
+  // anchored to the tour ; on the home page it lives at site root.
+  const id = tour
+    ? `${siteConfig.url}/tours/${tour.slug}#faq`
+    : `${siteConfig.url}/#faq`
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    '@id': id,
     inLanguage: SCHEMA_LANG[locale],
     mainEntity: faqs.map(f => ({
       '@type': 'Question',
@@ -137,6 +144,7 @@ function buildItemList(tours: Tour[]) {
   return {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
+    '@id': `${siteConfig.url}/#experiences`,
     name: 'Casa Venturas experiences',
     itemListElement: tours.map((t, i) => ({
       '@type': 'ListItem',
@@ -217,7 +225,7 @@ export default function SchemaOrg({ locale = 'en', tour, guides, faqs, itemList,
       <Script data={tour ? buildTouristTrip(tour, locale) : { '@context': 'https://schema.org', ...buildOrganization() }} />
       {website && <Script data={buildWebSite(locale)} />}
       {webPage && <Script data={buildWebPage(webPage, locale)} />}
-      {faqs && faqs.length > 0 && <Script data={buildFaqPage(faqs, locale)} />}
+      {faqs && faqs.length > 0 && <Script data={buildFaqPage(faqs, locale, tour)} />}
       {guides && guides.length > 0 && <Script data={buildGuidesGraph(guides)} />}
       {itemList && itemList.length > 0 && <Script data={buildItemList(itemList)} />}
       {article && <Script data={buildArticle(article.article, article.path, locale)} />}
