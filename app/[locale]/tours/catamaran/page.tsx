@@ -24,6 +24,7 @@ const COPY = {
     bookThis: 'Book this tour',
     allExperiences: '← All experiences',
     perPerson: 'Per person',
+    perBooking: 'Per booking',
     durationLabel: 'Duration',
     guestsMax: 'Guests max',
     private: 'Private',
@@ -54,6 +55,7 @@ const COPY = {
     bookThis: 'Reserva este tour',
     allExperiences: '← Todas las experiencias',
     perPerson: 'Por persona',
+    perBooking: 'Por reserva',
     durationLabel: 'Duración',
     guestsMax: 'Máx. de personas',
     private: 'Privado',
@@ -84,6 +86,7 @@ const COPY = {
     bookThis: 'Réserver ce tour',
     allExperiences: '← Toutes les expériences',
     perPerson: 'Par personne',
+    perBooking: 'Par réservation',
     durationLabel: 'Durée',
     guestsMax: 'Invités max',
     private: 'Privé',
@@ -199,7 +202,7 @@ export default async function CatamaranPage({ params }: Props) {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#e8e8e8]">
         {[
-          { n: `$${tour.price}`, l: t.perPerson },
+          { n: `$${tour.price}`, l: tour.pricedPerPerson === false ? t.perBooking : t.perPerson },
           { n: tour.duration, l: t.durationLabel },
           { n: tour.groupSize, l: t.guestsMax },
           { n: t.private, l: t.justYourGroup },
