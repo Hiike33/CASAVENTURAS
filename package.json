@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --test lib/bokun/client.test.ts lib/bokun/snapshot.test.ts lib/bokun/calendar.test.ts lib/bokun/checkout-mode.test.ts lib/bokun/cart.test.ts lib/bokun/checkout-prices.test.ts lib/bokun/promo-devmock.test.ts lib/bokun/promo-request.test.ts lib/cavi-intents.test.ts lib/geo/nominatim.test.ts lib/cms/data/articles.test.ts lib/cms/data/faqs.test.ts lib/cms/data/i18n-content.test.ts lib/cms/data/tours-vs-bokun.test.ts lib/csp-report.test.ts lib/security/csp.test.ts",
+    "test": "node --test lib/bokun/client.test.ts lib/bokun/snapshot.test.ts lib/bokun/calendar.test.ts lib/bokun/checkout-mode.test.ts lib/bokun/cart.test.ts lib/bokun/checkout-prices.test.ts lib/bokun/checkout-payload.test.ts lib/bokun/promo-devmock.test.ts lib/bokun/promo-request.test.ts lib/cavi-intents.test.ts lib/geo/nominatim.test.ts lib/cms/data/articles.test.ts lib/cms/data/faqs.test.ts lib/cms/data/i18n-content.test.ts lib/cms/data/tours-vs-bokun.test.ts lib/csp-report.test.ts lib/security/csp.test.ts",
     "bokun:snapshot": "node --experimental-strip-types scripts/fetch-bokun-snapshot.ts",
     "build:cf": "opennextjs-cloudflare build",
     "preview:cf": "opennextjs-cloudflare build && opennextjs-cloudflare preview",

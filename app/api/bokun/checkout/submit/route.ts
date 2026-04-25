@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { bokunFetch, BokunConfigError } from '@/lib/bokun/client'
 import { resolveServerCheckoutMode } from '@/lib/bokun/checkout-mode'
 import { simulatePromoValidation } from '@/lib/bokun/promo-devmock'
+import {
+  buildBokunOptionsRequest,
+  buildBokunPayload,
+  coerceMainContactDetails,
+  extractMainContactQuestions,
+  extractStripeUti,
+  type CheckoutSubmitRequest,
+  type PassengerSubmit,
+} from '@/lib/bokun/checkout-payload'
 
 // POST /api/bokun/checkout/submit
 //
@@ -19,47 +28,7 @@ import { simulatePromoValidation } from '@/lib/bokun/promo-devmock'
 //               UX without creating real bookings in the client's account.
 //   live      — real Bókun submit. Booking is created, card is charged.
 
-export type PassengerSubmit = {
-  pricingCategoryId: number
-  firstName?: string
-  lastName?: string
-}
-
-export type CheckoutSubmitRequest = {
-  productId: number
-  startTimeId: number
-  rateId: number
-  /** yyyy-MM-dd */
-  date: string
-  passengers: PassengerSubmit[]
-  /** Either a listed Bókun pickup place id OR a custom free-text address. */
-  pickupPlaceId?: number
-  roomNumber?: string
-  customPickupAddress?: string
-  customPickupLat?: number
-  customPickupLon?: number
-  mainContactDetails: {
-    title?: string
-    firstName: string
-    lastName: string
-    email: string
-    phone?: string
-  }
-  /** Map of Bókun bookingQuestion id → answer. */
-  answers?: Record<number | string, string>
-  specialRequests?: string
-  /** Stripe token obtained client-side via Stripe.js createToken(). */
-  paymentToken: { token: string }
-  currency?: string
-  /**
-   * Optional promo code. When present, it is forwarded to Bókun at the
-   * root of the CheckoutRequest — Bókun applies the discount and the
-   * returned booking.totalPrice reflects the discounted amount. In
-   * dev-mock, the same deterministic catalog as the preview endpoint
-   * is applied so submit total matches preview total exactly.
-   */
-  promoCode?: string
-}
+export type { PassengerSubmit, CheckoutSubmitRequest }
 
 type OkResponse = {
   ok: true
@@ -114,7 +83,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<OkResponse | 
 
   if (mode === 'dev-mock') {
     await new Promise(r => setTimeout(r, 700))
-    const pax = payload.passengers.reduce<number>((n, p) => n + 1, 0)
+    const pax = payload.passengers.length
     const subtotal = pax * 100 // placeholder — real total comes from Bokun in live
     // Apply the same dev-mock catalog as /api/bokun/promo/validate so the
     // confirmation total matches what the UI showed in the preview.
@@ -135,15 +104,66 @@ export async function POST(req: NextRequest): Promise<NextResponse<OkResponse | 
     })
   }
 
-  // mode === 'live'
-  const bokunRequest = buildBokunPayload(payload)
+  // mode === 'live' — Bokun direct booking is a two-step flow:
+  //   1. POST /checkout.json/options/booking-request → returns the
+  //      payment options + the `uti` (unique transaction id) that
+  //      authenticates the upcoming submit.
+  //   2. POST /checkout.json/submit with the uti + Stripe payment token.
+  // Skipping step 1 makes Bokun reject step 2 with
+  // `logic.InvalidDataException - You must provide the uti …`.
   try {
+    const optsBody = buildBokunOptionsRequest(payload)
+    const optsRes = await bokunFetch('/checkout.json/options/booking-request', {
+      method: 'POST',
+      body: JSON.stringify(optsBody),
+    })
+    const optsData = (await optsRes.json().catch(() => null)) as unknown
+    if (!optsRes.ok) {
+      console.error('[bokun/checkout/submit] options failed', {
+        status: optsRes.status,
+        detail: optsData,
+      })
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'Bokun checkout options error',
+          status: optsRes.status,
+          detail: optsData,
+        },
+        { status: 502 },
+      )
+    }
+    const uti = extractStripeUti(optsData)
+    if (!uti) {
+      console.error('[bokun/checkout/submit] no Stripe uti in options', optsData)
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'No Stripe payment provider configured for this activity',
+        },
+        { status: 502 },
+      )
+    }
+
+    // Coerce mainContactDetails against Bokun's question spec — covers the
+    // case where the UI ships an inclusivity-default like `title='MX'` that
+    // is not in the activity's accepted enum (e.g. El Yunque accepts only
+    // MR/MRS/MISS). Without this, /submit returns InvalidAnswersException.
+    const questions = extractMainContactQuestions(optsData)
+    const bokunRequest = coerceMainContactDetails(
+      buildBokunPayload(payload, uti),
+      questions,
+    )
     const res = await bokunFetch('/checkout.json/submit', {
       method: 'POST',
       body: JSON.stringify(bokunRequest),
     })
     const data = (await res.json().catch(() => null)) as unknown
     if (!res.ok) {
+      console.error('[bokun/checkout/submit] submit failed', {
+        status: res.status,
+        detail: data,
+      })
       return NextResponse.json(
         { ok: false, error: 'Bokun upstream error', status: res.status, detail: data },
         { status: 502 },
@@ -180,62 +200,5 @@ export async function POST(req: NextRequest): Promise<NextResponse<OkResponse | 
       { ok: false, error: `Failed to submit to Bokun: ${msg}` },
       { status: 500 },
     )
-  }
-}
-
-/**
- * Maps our UI-friendly body to Bókun's CheckoutRequest schema. We keep
- * shape stable and only pass values the vendor configured (pickup, room,
- * custom address, answers). Bokun rejects fields it doesn't know.
- */
-function buildBokunPayload(b: CheckoutSubmitRequest) {
-  const answers = Object.entries(b.answers ?? {}).map(([id, answer]) => ({
-    bookingQuestionId: Number(id),
-    answer,
-  }))
-  const coord =
-    b.customPickupLat !== undefined && b.customPickupLon !== undefined
-      ? ` (${b.customPickupLat.toFixed(5)}, ${b.customPickupLon.toFixed(5)})`
-      : ''
-  const comment = [
-    b.specialRequests,
-    b.customPickupAddress && `Custom pickup: ${b.customPickupAddress}${coord}`,
-    b.roomNumber && `Room: ${b.roomNumber}`,
-  ]
-    .filter(Boolean)
-    .join(' · ')
-  const trimmedPromo = b.promoCode?.trim()
-  return {
-    currency: b.currency ?? 'USD',
-    activityBookings: [
-      {
-        activityId: b.productId,
-        startTimeId: b.startTimeId,
-        date: b.date,
-        rateId: b.rateId,
-        passengers: b.passengers.map(p => ({
-          pricingCategoryId: p.pricingCategoryId,
-          passengerDetails: [
-            ...(p.firstName ? [{ field: 'FIRST_NAME', value: p.firstName }] : []),
-            ...(p.lastName ? [{ field: 'LAST_NAME', value: p.lastName }] : []),
-          ],
-        })),
-        ...(b.pickupPlaceId ? { pickup: true, pickupPlaceId: b.pickupPlaceId } : {}),
-      },
-    ],
-    customer: {
-      title: b.mainContactDetails.title,
-      firstName: b.mainContactDetails.firstName,
-      lastName: b.mainContactDetails.lastName,
-      email: b.mainContactDetails.email,
-      phoneNumber: b.mainContactDetails.phone,
-    },
-    paymentMethod: 'CARD',
-    paymentToken: b.paymentToken,
-    bookingQuestionAnswers: answers,
-    customerComment: comment || undefined,
-    // Root-level promoCode per Bokun direct-booking spec. Bokun applies
-    // the discount upstream; booking.totalPrice reflects the net amount.
-    ...(trimmedPromo ? { promoCode: trimmedPromo } : {}),
   }
 }
