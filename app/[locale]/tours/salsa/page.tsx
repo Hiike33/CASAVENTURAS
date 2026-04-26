@@ -16,6 +16,10 @@ import { getCMS } from '@/lib/cms'
 import { localizedAlternates } from '@/lib/seo/alternates'
 import { routing, type Locale } from '@/i18n/routing'
 
+// ISR — see app/[locale]/page.tsx for rationale. Aligns with the 60 s
+// TTL on getLiveStartingPrice so price displays stay fresh.
+export const revalidate = 60
+
 type Props = { params: Promise<{ locale: string }> }
 
 const COPY = {

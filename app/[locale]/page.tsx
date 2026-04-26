@@ -13,6 +13,12 @@ import { routing, type Locale } from '@/i18n/routing'
 import { localizedAlternates } from '@/lib/seo/alternates'
 import { setRequestLocale } from 'next-intl/server'
 
+// ISR — page is regenerated at most once every 60 s. The first request
+// after expiry triggers a background re-render against fresh Bokun data
+// (live "starting from" price via getLiveStartingPrice); all subsequent
+// visitors during that window are served the cached HTML.
+export const revalidate = 60
+
 type Props = { params: Promise<{ locale: string }> }
 
 // Copy dictionaries for section headers, intros, and static labels that

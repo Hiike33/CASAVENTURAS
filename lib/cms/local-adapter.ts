@@ -2,6 +2,7 @@ import type { Tour, Review, SiteConfig, FAQ, Guide } from '@/lib/types/cms'
 import type { CMSAdapter } from './adapter'
 import type { Locale } from '@/i18n/routing'
 import { enrichToursWithSnapshot, type BokunSnapshotMap } from '@/lib/bokun/snapshot'
+import { getLiveStartingPrice } from '@/lib/bokun/live-prices-cached'
 
 // Static imports per locale. Next.js / Webpack tree-shake the ones that are
 // unused on a given page, so bundle cost is paid only when needed.
@@ -49,12 +50,22 @@ const DEFAULT_LOCALE: Locale = 'en'
  */
 export class LocalAdapter implements CMSAdapter {
   async getTours(locale: Locale = DEFAULT_LOCALE): Promise<Tour[]> {
-    return enrichToursWithSnapshot(DATA[locale].tours.tours, bokunSnapshot as BokunSnapshotMap)
+    const enriched = enrichToursWithSnapshot(
+      DATA[locale].tours.tours,
+      bokunSnapshot as BokunSnapshotMap,
+    )
+    return enrichWithLivePrices(enriched)
   }
 
   async getTour(slug: string, locale: Locale = DEFAULT_LOCALE): Promise<Tour | null> {
-    const enriched = enrichToursWithSnapshot(DATA[locale].tours.tours, bokunSnapshot as BokunSnapshotMap)
-    return enriched.find(t => t.slug === slug) ?? null
+    const enriched = enrichToursWithSnapshot(
+      DATA[locale].tours.tours,
+      bokunSnapshot as BokunSnapshotMap,
+    )
+    const match = enriched.find(t => t.slug === slug)
+    if (!match) return null
+    const [withLive] = await enrichWithLivePrices([match])
+    return withLive ?? match
   }
 
   async getReviews(filterTour?: string, locale: Locale = DEFAULT_LOCALE): Promise<Review[]> {
@@ -79,4 +90,32 @@ export class LocalAdapter implements CMSAdapter {
     if (!tourSlug) return all
     return all.filter(g => g.tours?.includes(tourSlug) ?? false)
   }
+}
+
+/**
+ * Final layer of price enrichment: replace `tour.price` (snapshot value,
+ * up to 6h stale) with the live "starting from" price fetched from Bokun
+ * (cached 60s via getLiveStartingPrice).
+ *
+ * Falls back silently to the snapshot value when:
+ *   • bokunProductId is missing (dev fixture or non-Bokun tour)
+ *   • Bokun fetch fails or times out
+ *   • Bokun returns no bookable slots in the next 30 days
+ *   • Build-time CI without Bokun creds (BokunConfigError thrown)
+ *
+ * The try/catch ensures a Bokun outage never crashes the page render —
+ * the user sees the snapshot price (≤6h old), no error UI surfaces.
+ */
+async function enrichWithLivePrices(tours: Tour[]): Promise<Tour[]> {
+  return Promise.all(
+    tours.map(async t => {
+      if (!t.bokunProductId) return t
+      try {
+        const live = await getLiveStartingPrice(t.bokunProductId)
+        return live !== null ? { ...t, price: live } : t
+      } catch {
+        return t
+      }
+    }),
+  )
 }
