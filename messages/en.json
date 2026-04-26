@@ -209,5 +209,12 @@
       "relatedPrivacy": "Privacy Policy →",
       "relatedTerms": "Terms of Service →"
     }
+  },
+  "CookieBanner": {
+    "title": "Cookies & analytics",
+    "body": "We use Google Analytics to understand how visitors find Casa Venturas and improve the site. Analytics cookies are set only if you accept.",
+    "learnMore": "Learn more",
+    "accept": "Accept",
+    "decline": "Decline"
   }
 }

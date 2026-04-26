@@ -34,6 +34,7 @@ jobs:
       NEXT_PUBLIC_BOKUN_PRODUCT_SALSA: '680641'
       NEXT_PUBLIC_BOKUN_CHECKOUT_MODE: live
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_live_51ITpwpBf8w9DbxGlKqObExWn3FbK5GhdCfe5368qyZJfDzmJRzCjzR9YFejs6GkgRdOliZ5bM9F0pqAm6uz2qfUc00u3jFdced
+      NEXT_PUBLIC_GA_MEASUREMENT_ID: G-02DN83KF2B
       NEXT_PUBLIC_SITE_URL: https://casaventuras.elie-belkheir.workers.dev
     steps:
       - name: Checkout

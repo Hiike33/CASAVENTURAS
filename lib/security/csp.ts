@@ -18,6 +18,11 @@ export const CSP_DIRECTIVES: Record<string, readonly string[]> = {
     'https://widgets.bokun.io',
     'https://static.bokun.io',
     'https://static.cloudflareinsights.com',
+    // Google Analytics 4 — gtag.js loader + analytics.js. Loaded by
+    // components/GoogleAnalytics.tsx with Consent Mode v2 default-denied
+    // so cookies are only set after explicit user consent (CookieConsentBanner).
+    'https://www.googletagmanager.com',
+    'https://www.google-analytics.com',
   ],
   'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
   'img-src': ["'self'", 'data:', 'blob:', 'https:'],
@@ -30,6 +35,11 @@ export const CSP_DIRECTIVES: Record<string, readonly string[]> = {
     'https://api.bokun.is',
     'https://nominatim.openstreetmap.org',
     'https://cloudflareinsights.com',
+    // Google Analytics — measurement hit endpoints.
+    //   • google-analytics.com : legacy /collect + gtag config fetch
+    //   • analytics.google.com : GA4 Measurement Protocol endpoint
+    'https://www.google-analytics.com',
+    'https://analytics.google.com',
   ],
   'frame-src': [
     'https://js.stripe.com',

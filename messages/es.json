@@ -209,5 +209,12 @@
       "relatedPrivacy": "Política de privacidad →",
       "relatedTerms": "Términos del servicio →"
     }
+  },
+  "CookieBanner": {
+    "title": "Cookies y analíticas",
+    "body": "Usamos Google Analytics para entender cómo los visitantes encuentran Casa Venturas y mejorar el sitio. Las cookies analíticas solo se activan si las aceptas.",
+    "learnMore": "Más información",
+    "accept": "Aceptar",
+    "decline": "Rechazar"
   }
 }

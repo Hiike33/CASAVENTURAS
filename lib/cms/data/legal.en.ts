@@ -272,9 +272,9 @@ export const terms: LegalPage = {
 }
 
 export const cookies: LegalPage = {
-  lastUpdated: '2026-04-20',
+  lastUpdated: '2026-04-26',
   metaDescription:
-    'How Casa Venturas uses cookies and similar technologies. We do not use analytics or advertising trackers, only strictly necessary cookies and the Bókun booking widget.',
+    'How Casa Venturas uses cookies and similar technologies. Strictly necessary cookies for security, optional Google Analytics cookies after explicit consent, and Bókun booking widget cookies set on interaction.',
   introHtml: `This Cookie Policy explains how Casa Venturas and its third-party service providers use cookies and similar technologies when you visit ${siteUrl}. It complements our <a href="/privacy" class="text-[#248D6C] hover:underline">Privacy Policy</a>.`,
   sections: [
     {
@@ -288,7 +288,14 @@ export const cookies: LegalPage = {
       n: '2',
       title: 'Cookies we set directly',
       blocks: [
-        { kind: 'p', html: '<strong>None for marketing or analytics.</strong> We do not run Google Analytics, Google Ads, Meta Pixel, or any cross-site tracking technology on this website. The only first-party storage we use is browser <em>localStorage</em> to remember your in-session chat with Cavi (our AI guide) so you don\'t lose context when you scroll, cleared automatically when you close the tab.' },
+        {
+          kind: 'ul',
+          items: [
+            '<strong>Analytics — only after consent</strong>: when you click <em>Accept</em> on the cookie banner, we enable Google Analytics 4 (measurement ID <code class="bg-[#F5F5F5] px-1.5 py-0.5 text-[12px]">G-02DN83KF2B</code>) which sets cookies named <code class="bg-[#F5F5F5] px-1.5 py-0.5 text-[12px]">_ga</code> and <code class="bg-[#F5F5F5] px-1.5 py-0.5 text-[12px]">_ga_*</code> in your browser to count visits and understand how people find the site. IPs are anonymized. Retention: 14 months. If you click <em>Decline</em> or never interact with the banner, no GA cookies are set and only aggregate cookieless pings (no identifier) are sent. You can change your mind at any time by clearing your browser storage for this site to re-trigger the banner.',
+            '<strong>Consent state</strong>: a single <em>localStorage</em> entry <code class="bg-[#F5F5F5] px-1.5 py-0.5 text-[12px]">cv-analytics-consent</code> remembers your decision so the banner does not reappear on every page. Not a cookie, not sent to any server.',
+            '<strong>Cavi chat (in-session)</strong>: browser <em>localStorage</em> is used to keep your conversation with Cavi (our AI guide) during a single tab session, cleared automatically when you close the tab.',
+          ],
+        },
       ],
     },
     {
@@ -312,11 +319,11 @@ export const cookies: LegalPage = {
         {
           kind: 'ul',
           items: [
-            'No Google Analytics, no Google Tag Manager, no Google Ads.',
+            'No Google Ads, no remarketing audiences, no DoubleClick.',
             'No Meta Pixel, no Facebook tracking.',
             'No advertising networks, no retargeting cookies.',
             'No session recording (Hotjar, FullStory, etc.).',
-            'No cross-site tracking of any kind.',
+            'No cross-site tracking, no fingerprinting.',
           ],
         },
       ],
@@ -340,7 +347,7 @@ export const cookies: LegalPage = {
       n: '7',
       title: 'EU / EEA / UK residents',
       blocks: [
-        { kind: 'p', html: 'For visitors from the European Economic Area, the United Kingdom, or Switzerland: only <em>strictly necessary</em> cookies (Cloudflare security) are set without consent. Third-party Bókun cookies are set only when you actively interact with a booking widget, treated as consent by action under the ePrivacy Directive. You may withdraw consent at any time via your browser settings.' },
+        { kind: 'p', html: 'For visitors from the European Economic Area, the United Kingdom, or Switzerland: only <em>strictly necessary</em> cookies (Cloudflare security) are set without consent. Google Analytics is loaded with Google\'s <strong>Consent Mode v2</strong> set to <em>denied</em> by default — no analytics cookies are written until you click <em>Accept</em> on the cookie banner. Third-party Bókun cookies are set only when you actively interact with a booking widget, treated as consent by action under the ePrivacy Directive. You may withdraw consent at any time by clearing your browser storage for this site, or via your browser settings.' },
       ],
     },
     {
@@ -363,7 +370,7 @@ export const cookies: LegalPage = {
       n: '9',
       title: 'Changes to this policy',
       blocks: [
-        { kind: 'p', html: 'We may update this policy from time to time, typically when we add or remove a service that sets cookies. The "Last updated" date at the top reflects the most recent revision. For material changes that introduce new cookie categories (for example if we ever enable analytics), we will post a notice and, where required, ask for your consent before activation.' },
+        { kind: 'p', html: 'We may update this policy from time to time, typically when we add or remove a service that sets cookies. The "Last updated" date at the top reflects the most recent revision. The 2026-04-26 revision introduced Google Analytics 4 with Google Consent Mode v2 default-denied and the cookie banner you see on first visit. For material changes that add new cookie categories, we will post a notice and, where required, ask for your consent before activation.' },
       ],
     },
     {

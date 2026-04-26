@@ -5,6 +5,8 @@ import { setRequestLocale } from 'next-intl/server'
 import { routing } from '@/i18n/routing'
 import './globals.css'
 import BokunScript from '@/components/BokunScript'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
+import CookieConsentBanner from '@/components/CookieConsentBanner'
 
 // Locale-aware root layout. Every UI route is wrapped here, so <html lang>,
 // metadata, OpenGraph locale, and the messages dictionary all flow from the
@@ -91,8 +93,10 @@ export default async function LocaleLayout({
         <div className="scroll-progress-bar" aria-hidden />
         <NextIntlClientProvider>
           {children}
+          <CookieConsentBanner />
         </NextIntlClientProvider>
         <BokunScript />
+        <GoogleAnalytics />
       </body>
     </html>
   )

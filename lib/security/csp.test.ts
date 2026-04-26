@@ -23,6 +23,36 @@ describe('CSP_DIRECTIVES — script-src', () => {
       'script-src must allow https://static.cloudflareinsights.com for CF Web Analytics beacon',
     )
   })
+
+  it('authorizes Google Analytics 4 (gtag.js loader + analytics.js)', () => {
+    // Without these, gtag.js fails to load → 0 GA hits and a console
+    // error per page. Consent Mode v2 (default analytics_storage=denied)
+    // still requires the script to load to send cookieless pings.
+    assert.ok(
+      CSP_DIRECTIVES['script-src']?.includes('https://www.googletagmanager.com'),
+      'script-src must allow https://www.googletagmanager.com for gtag.js',
+    )
+    assert.ok(
+      CSP_DIRECTIVES['script-src']?.includes('https://www.google-analytics.com'),
+      'script-src must allow https://www.google-analytics.com for analytics.js',
+    )
+  })
+})
+
+describe('CSP_DIRECTIVES — connect-src', () => {
+  it('authorizes Google Analytics event hits', () => {
+    // gtag sends measurement hits to www.google-analytics.com (legacy
+    // /collect) and analytics.google.com (GA4 measurement). Without
+    // them, hits are blocked → empty reports despite the script loading.
+    assert.ok(
+      CSP_DIRECTIVES['connect-src']?.includes('https://www.google-analytics.com'),
+      'connect-src must allow https://www.google-analytics.com for hit collection',
+    )
+    assert.ok(
+      CSP_DIRECTIVES['connect-src']?.includes('https://analytics.google.com'),
+      'connect-src must allow https://analytics.google.com for GA4 measurement endpoint',
+    )
+  })
 })
 
 describe('CSP_DIRECTIVES — locked-down directives (security invariants)', () => {

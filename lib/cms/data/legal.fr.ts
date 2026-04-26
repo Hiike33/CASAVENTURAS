@@ -287,9 +287,9 @@ export const terms: LegalPage = {
 }
 
 export const cookies: LegalPage = {
-  lastUpdated: '2026-04-20',
+  lastUpdated: '2026-04-26',
   metaDescription:
-    "Comment Casa Venturas utilise les cookies et technologies similaires. Aucun traceur d'analyse ou publicitaire, uniquement des cookies strictement nécessaires et le widget de réservation Bókun.",
+    "Comment Casa Venturas utilise les cookies et technologies similaires. Cookies strictement nécessaires pour la sécurité, cookies Google Analytics optionnels après consentement explicite, et cookies du widget Bókun activés à l'interaction.",
   introHtml: `Cette politique cookies explique comment Casa Venturas et ses prestataires tiers utilisent les cookies et technologies similaires lorsque vous visitez ${siteUrl}. Elle complète notre <a href="/privacy" class="text-[#248D6C] hover:underline">politique de confidentialité</a>.`,
   sections: [
     {
@@ -303,7 +303,14 @@ export const cookies: LegalPage = {
       n: '2',
       title: 'Cookies que nous déposons directement',
       blocks: [
-        { kind: 'p', html: "<strong>Aucun pour le marketing ou l'analyse.</strong> Nous n'utilisons ni Google Analytics, ni Google Ads, ni Meta Pixel, ni aucune technologie de suivi inter-sites sur ce site. Le seul stockage propriétaire que nous utilisons est le <em>localStorage</em> du navigateur pour mémoriser votre conversation en cours avec Cavi (notre guide AI) afin que vous ne perdiez pas le contexte en scrollant, supprimé automatiquement quand vous fermez l'onglet." },
+        {
+          kind: 'ul',
+          items: [
+            "<strong>Analyse, uniquement après consentement</strong> : lorsque vous cliquez sur <em>Accepter</em> dans la bannière cookies, nous activons Google Analytics 4 (ID de mesure <code class=\"bg-[#F5F5F5] px-1.5 py-0.5 text-[12px]\">G-02DN83KF2B</code>) qui dépose des cookies nommés <code class=\"bg-[#F5F5F5] px-1.5 py-0.5 text-[12px]\">_ga</code> et <code class=\"bg-[#F5F5F5] px-1.5 py-0.5 text-[12px]\">_ga_*</code> dans votre navigateur pour compter les visites et comprendre comment les visiteurs trouvent le site. Les IP sont anonymisées. Conservation : 14 mois. Si vous cliquez sur <em>Refuser</em> ou n'interagissez pas avec la bannière, aucun cookie GA n'est déposé et seuls des pings cookieless agrégés (sans identifiant) sont envoyés. Vous pouvez changer d'avis à tout moment en effaçant le stockage du navigateur pour ce site afin de réafficher la bannière.",
+            "<strong>État du consentement</strong> : une seule entrée <em>localStorage</em> <code class=\"bg-[#F5F5F5] px-1.5 py-0.5 text-[12px]\">cv-analytics-consent</code> mémorise votre décision pour que la bannière ne réapparaisse pas à chaque page. Ce n'est pas un cookie et il n'est envoyé à aucun serveur.",
+            "<strong>Chat avec Cavi (en session)</strong> : le <em>localStorage</em> du navigateur conserve votre conversation avec Cavi (notre guide AI) le temps d'un onglet, supprimé automatiquement à la fermeture.",
+          ],
+        },
       ],
     },
     {
@@ -327,11 +334,11 @@ export const cookies: LegalPage = {
         {
           kind: 'ul',
           items: [
-            "Pas de Google Analytics, pas de Google Tag Manager, pas de Google Ads.",
+            "Pas de Google Ads, pas d'audiences de remarketing, pas de DoubleClick.",
             "Pas de Meta Pixel, pas de suivi Facebook.",
             "Pas de réseaux publicitaires, pas de cookies de reciblage.",
             "Pas d'enregistrement de session (Hotjar, FullStory, etc.).",
-            "Aucun suivi inter-sites de quelque nature que ce soit.",
+            "Aucun suivi inter-sites, aucun fingerprinting.",
           ],
         },
       ],
@@ -355,7 +362,7 @@ export const cookies: LegalPage = {
       n: '7',
       title: 'Résidents UE / EEE / Royaume-Uni',
       blocks: [
-        { kind: 'p', html: "Pour les visiteurs de l'Espace économique européen, du Royaume-Uni ou de Suisse : seuls les cookies <em>strictement nécessaires</em> (sécurité Cloudflare) sont déposés sans consentement. Les cookies tiers Bókun ne sont déposés que lorsque vous interagissez activement avec un widget de réservation, ce qui est considéré comme un consentement par action au sens de la directive ePrivacy. Vous pouvez retirer votre consentement à tout moment via les paramètres du navigateur." },
+        { kind: 'p', html: "Pour les visiteurs de l'Espace économique européen, du Royaume-Uni ou de Suisse : seuls les cookies <em>strictement nécessaires</em> (sécurité Cloudflare) sont déposés sans consentement. Google Analytics est chargé avec le <strong>Consent Mode v2</strong> de Google en état <em>refusé</em> par défaut. Aucun cookie analytique n'est écrit tant que vous n'avez pas cliqué sur <em>Accepter</em> dans la bannière. Les cookies tiers Bókun ne sont déposés que lorsque vous interagissez activement avec un widget de réservation, ce qui est considéré comme un consentement par action au sens de la directive ePrivacy. Vous pouvez retirer votre consentement à tout moment en effaçant le stockage du navigateur pour ce site ou via les paramètres du navigateur." },
       ],
     },
     {
@@ -378,7 +385,7 @@ export const cookies: LegalPage = {
       n: '9',
       title: 'Modifications de cette politique',
       blocks: [
-        { kind: 'p', html: "Nous pouvons mettre à jour cette politique de temps en temps, généralement quand nous ajoutons ou retirons un service qui dépose des cookies. La date « Dernière mise à jour » en haut de la page reflète la révision la plus récente. Pour les modifications substantielles qui introduisent de nouvelles catégories de cookies (par exemple si nous activons un jour un outil d'analyse), nous publierons un avis et, le cas échéant, demanderons votre consentement avant activation." },
+        { kind: 'p', html: "Nous pouvons mettre à jour cette politique de temps en temps, généralement quand nous ajoutons ou retirons un service qui dépose des cookies. La date « Dernière mise à jour » en haut de la page reflète la révision la plus récente. La révision du 2026-04-26 a introduit Google Analytics 4 avec le Consent Mode v2 de Google en état refusé par défaut, ainsi que la bannière cookies que vous voyez à la première visite. Pour les modifications substantielles ajoutant de nouvelles catégories de cookies, nous publierons un avis et, le cas échéant, demanderons votre consentement avant activation." },
       ],
     },
     {
