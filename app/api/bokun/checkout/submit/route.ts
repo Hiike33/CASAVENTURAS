@@ -5,6 +5,7 @@ import { simulatePromoValidation } from '@/lib/bokun/promo-devmock'
 import {
   buildBokunOptionsRequest,
   buildBokunPayload,
+  buildSubmitLogContext,
   coerceMainContactDetails,
   extractMainContactQuestions,
   extractStripeUti,
@@ -112,14 +113,21 @@ export async function POST(req: NextRequest): Promise<NextResponse<OkResponse | 
   // Skipping step 1 makes Bokun reject step 2 with
   // `logic.InvalidDataException - You must provide the uti …`.
   try {
+    const t0 = Date.now()
     const optsBody = buildBokunOptionsRequest(payload)
     const optsRes = await bokunFetch('/checkout.json/options/booking-request', {
       method: 'POST',
       body: JSON.stringify(optsBody),
     })
     const optsData = (await optsRes.json().catch(() => null)) as unknown
+    const optionsMs = Date.now() - t0
     if (!optsRes.ok) {
       console.error('[bokun/checkout/submit] options failed', {
+        productId: payload.productId,
+        startTimeId: payload.startTimeId,
+        date: payload.date,
+        paxCount: payload.passengers.length,
+        optionsMs,
         status: optsRes.status,
         detail: optsData,
       })
@@ -135,7 +143,11 @@ export async function POST(req: NextRequest): Promise<NextResponse<OkResponse | 
     }
     const uti = extractStripeUti(optsData)
     if (!uti) {
-      console.error('[bokun/checkout/submit] no Stripe uti in options', optsData)
+      console.error('[bokun/checkout/submit] no Stripe uti in options', {
+        productId: payload.productId,
+        optionsMs,
+        optsData,
+      })
       return NextResponse.json(
         {
           ok: false,
@@ -154,16 +166,23 @@ export async function POST(req: NextRequest): Promise<NextResponse<OkResponse | 
       buildBokunPayload(payload, uti),
       questions,
     )
+    const t2 = Date.now()
     const res = await bokunFetch('/checkout.json/submit', {
       method: 'POST',
       body: JSON.stringify(bokunRequest),
     })
     const data = (await res.json().catch(() => null)) as unknown
+    const submitMs = Date.now() - t2
     if (!res.ok) {
-      console.error('[bokun/checkout/submit] submit failed', {
-        status: res.status,
-        detail: data,
-      })
+      console.error(
+        '[bokun/checkout/submit] submit failed',
+        buildSubmitLogContext(
+          payload,
+          bokunRequest,
+          { status: res.status, detail: data },
+          { optionsMs, submitMs },
+        ),
+      )
       return NextResponse.json(
         { ok: false, error: 'Bokun upstream error', status: res.status, detail: data },
         { status: 502 },
@@ -194,7 +213,13 @@ export async function POST(req: NextRequest): Promise<NextResponse<OkResponse | 
     if (e instanceof BokunConfigError) {
       return NextResponse.json({ ok: false, error: e.message }, { status: 500 })
     }
-    console.error('[bokun/checkout/submit] failed', e)
+    console.error('[bokun/checkout/submit] failed', {
+      productId: payload.productId,
+      startTimeId: payload.startTimeId,
+      date: payload.date,
+      error: e instanceof Error ? e.message : String(e),
+      stack: e instanceof Error ? e.stack : undefined,
+    })
     const msg = e instanceof Error ? e.message : 'unknown'
     return NextResponse.json(
       { ok: false, error: `Failed to submit to Bokun: ${msg}` },

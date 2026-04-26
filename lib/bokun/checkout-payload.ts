@@ -330,6 +330,52 @@ function stripJavaNoise(msg: string): string {
   return m.trim()
 }
 
+// Structured context for /api/bokun/checkout/submit failure logs. Lets
+// us disambiguate causes of "Invalid or missing answers" — HYP-A
+// (free-text required missing on mainContact), HYP-B (activity answer
+// dropped before submit), HYP-C (uti TTL expired between options/submit) —
+// without leaking PII. Excluded by design: mainContactDetails values
+// (email, name, phone), paymentToken.token, full mainContact answers —
+// only the questionIds shipped are logged.
+export type SubmitLogContext = {
+  productId: number
+  startTimeId: number
+  rateId: number
+  date: string
+  paxCount: number
+  answersKeys: string[]
+  mainContactQuestionIds: string[]
+  hasUti: boolean
+  optionsMs: number
+  submitMs: number
+  upstreamStatus: number
+  detail: unknown
+}
+
+export function buildSubmitLogContext(
+  payload: CheckoutSubmitRequest,
+  bokunRequest: BokunCheckoutRequest,
+  upstream: { status: number; detail: unknown },
+  timing: { optionsMs: number; submitMs: number },
+): SubmitLogContext {
+  return {
+    productId: payload.productId,
+    startTimeId: payload.startTimeId,
+    rateId: payload.rateId,
+    date: payload.date,
+    paxCount: payload.passengers.length,
+    answersKeys: Object.keys(payload.answers ?? {}),
+    mainContactQuestionIds: bokunRequest.directBooking.mainContactDetails.map(
+      a => a.questionId,
+    ),
+    hasUti: typeof bokunRequest.uti === 'string' && bokunRequest.uti.length > 0,
+    optionsMs: timing.optionsMs,
+    submitMs: timing.submitMs,
+    upstreamStatus: upstream.status,
+    detail: upstream.detail,
+  }
+}
+
 export function extractStripeUti(raw: unknown): string | null {
   if (!raw || typeof raw !== 'object') return null
   const r = raw as { options?: unknown }

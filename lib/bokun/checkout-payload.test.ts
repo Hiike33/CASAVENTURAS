@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   buildBokunOptionsRequest,
   buildBokunPayload,
+  buildSubmitLogContext,
   coerceMainContactDetails,
   extractMainContactQuestions,
   extractStripeUti,
@@ -676,5 +677,132 @@ test('pure function: same input → identical output', () => {
   assert.deepEqual(
     buildBokunOptionsRequest(input),
     buildBokunOptionsRequest(input),
+  )
+})
+
+// ─── buildSubmitLogContext — Fix 5 (debug observability) ───────────────────
+
+test('buildSubmitLogContext: extracts identification fields from payload', () => {
+  const payload = fixture()
+  const bokun = buildBokunPayload(payload, 'uti-test-123')
+  const ctx = buildSubmitLogContext(
+    payload,
+    bokun,
+    { status: 400, detail: { message: 'x' } },
+    { optionsMs: 250, submitMs: 800 },
+  )
+  assert.equal(ctx.productId, 448405)
+  assert.equal(ctx.startTimeId, 1850341)
+  assert.equal(ctx.rateId, 918982)
+  assert.equal(ctx.date, '2026-04-28')
+  assert.equal(ctx.paxCount, 2)
+})
+
+test('buildSubmitLogContext: lists mainContact questionIds (not values, no PII)', () => {
+  const payload = fixture({
+    mainContactDetails: {
+      firstName: 'Alice',
+      lastName: 'Smith',
+      email: 'alice@private.example',
+      phone: '+15555550101',
+    },
+  })
+  const bokun = buildBokunPayload(payload, 'uti')
+  const ctx = buildSubmitLogContext(
+    payload,
+    bokun,
+    { status: 400, detail: null },
+    { optionsMs: 0, submitMs: 0 },
+  )
+  assert.deepEqual(
+    [...ctx.mainContactQuestionIds].sort(),
+    ['email', 'firstName', 'lastName', 'phoneNumber'],
+  )
+  // PII anti-leak: no contact value should ever land in the log object
+  const serialized = JSON.stringify(ctx)
+  assert.ok(!serialized.includes('alice@private.example'), 'no email value')
+  assert.ok(!serialized.includes('Alice'), 'no first name value')
+  assert.ok(!serialized.includes('Smith'), 'no last name value')
+  assert.ok(!serialized.includes('+15555550101'), 'no phone value')
+})
+
+test('buildSubmitLogContext: answersKeys empty when answers undefined', () => {
+  const payload = fixture()
+  const bokun = buildBokunPayload(payload, 'uti')
+  const ctx = buildSubmitLogContext(
+    payload,
+    bokun,
+    { status: 400, detail: null },
+    { optionsMs: 0, submitMs: 0 },
+  )
+  assert.deepEqual(ctx.answersKeys, [])
+})
+
+test('buildSubmitLogContext: answersKeys lists ids only (not values)', () => {
+  const payload = fixture({
+    answers: { '12345': 'reponse confidentielle A', '67890': 'autre B' },
+  })
+  const bokun = buildBokunPayload(payload, 'uti')
+  const ctx = buildSubmitLogContext(
+    payload,
+    bokun,
+    { status: 400, detail: null },
+    { optionsMs: 0, submitMs: 0 },
+  )
+  assert.deepEqual([...ctx.answersKeys].sort(), ['12345', '67890'])
+  const serialized = JSON.stringify(ctx)
+  assert.ok(!serialized.includes('reponse confidentielle A'), 'no answer value')
+  assert.ok(!serialized.includes('autre B'), 'no answer value')
+})
+
+test('buildSubmitLogContext: hasUti reflects bokunRequest.uti presence', () => {
+  const payload = fixture()
+  const withUti = buildBokunPayload(payload, 'uti-xyz')
+  const noUti = buildBokunPayload(payload)
+  const ctxWith = buildSubmitLogContext(
+    payload,
+    withUti,
+    { status: 400, detail: null },
+    { optionsMs: 0, submitMs: 0 },
+  )
+  const ctxWithout = buildSubmitLogContext(
+    payload,
+    noUti,
+    { status: 400, detail: null },
+    { optionsMs: 0, submitMs: 0 },
+  )
+  assert.equal(ctxWith.hasUti, true)
+  assert.equal(ctxWithout.hasUti, false)
+})
+
+test('buildSubmitLogContext: timing + upstream forwarded verbatim', () => {
+  const payload = fixture()
+  const bokun = buildBokunPayload(payload, 'uti')
+  const detail = { message: 'Invalid answers', path: '/mainContactDetails/3' }
+  const ctx = buildSubmitLogContext(
+    payload,
+    bokun,
+    { status: 400, detail },
+    { optionsMs: 1234, submitMs: 5678 },
+  )
+  assert.equal(ctx.optionsMs, 1234)
+  assert.equal(ctx.submitMs, 5678)
+  assert.equal(ctx.upstreamStatus, 400)
+  assert.deepEqual(ctx.detail, detail)
+})
+
+test('buildSubmitLogContext: paymentToken never appears in log', () => {
+  const payload = fixture({ paymentToken: { token: 'tok_secret_xyz_42' } })
+  const bokun = buildBokunPayload(payload, 'uti')
+  const ctx = buildSubmitLogContext(
+    payload,
+    bokun,
+    { status: 400, detail: null },
+    { optionsMs: 0, submitMs: 0 },
+  )
+  const serialized = JSON.stringify(ctx)
+  assert.ok(
+    !serialized.includes('tok_secret_xyz_42'),
+    'payment token must never be logged',
   )
 })
