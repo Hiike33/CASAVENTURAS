@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { readConsent, writeConsent, type ConsentState } from '@/lib/analytics/consent'
 
@@ -69,12 +70,12 @@ export default function CookieConsentBanner() {
       </p>
       <p className="text-[12.5px] font-light leading-[1.6] text-[#4F4F4E] mb-4">
         {t('body')}{' '}
-        <a
+        <Link
           href="/cookies"
           className="text-[#248D6C] underline-offset-2 hover:underline"
         >
           {t('learnMore')}
-        </a>
+        </Link>
       </p>
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
         <button
