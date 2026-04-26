@@ -8,6 +8,7 @@ import {
   extractMainContactQuestions,
   extractStripeUti,
   formatCheckoutErrorMessage,
+  normalizePhoneE164,
   type CheckoutSubmitRequest,
   type MainContactQuestion,
 } from './checkout-payload.ts'
@@ -170,20 +171,73 @@ test('activityBooking: carries activityId/startTimeId/rateId/date', () => {
   assert.equal(ab.date, '2026-04-28')
 })
 
-test('activityBooking: passengers carry ONLY pricingCategoryId (no passengerDetails)', () => {
+test('activityBooking: every passenger ships passengerDetails with firstName + lastName (Bokun requires)', () => {
+  // Verified live 2026-04-26: Bokun rejects /submit with
+  // `MISSING /activityBookings/0/passengers/N/passengerDetails/{0,1}`
+  // when this array is absent. The 18 errors on a 9-pax Catamaran
+  // booking are what this test guards against.
   const out = buildBokunPayload(fixture())
   const ab = out.directBooking.activityBookings[0]
   assert.equal(ab.passengers.length, 2)
   for (const p of ab.passengers) {
     assert.equal(typeof p.pricingCategoryId, 'number')
-    // Anti-regression: legacy code shipped passengerDetails:[{field,value}]
-    // which is not a field of ActivityBookingRequest in the spec.
-    assert.equal(
-      (p as Record<string, unknown>).passengerDetails,
-      undefined,
-      'no passengerDetails on Passenger (legacy bug)',
-    )
+    assert.ok(Array.isArray(p.passengerDetails), 'passengerDetails must be present')
+    const ids = p.passengerDetails.map(a => a.questionId)
+    assert.ok(ids.includes('firstName'), 'firstName questionId required')
+    assert.ok(ids.includes('lastName'), 'lastName questionId required')
   }
+})
+
+test('activityBooking: passenger names fall back to mainContact when not supplied per-pax', () => {
+  // The current UI does not collect a name per passenger — only the
+  // lead booker. We reuse the main contact name for all pax slots.
+  const out = buildBokunPayload(
+    fixture({
+      mainContactDetails: {
+        firstName: 'Lead',
+        lastName: 'Booker',
+        email: 'lead@example.com',
+      },
+      passengers: [
+        { pricingCategoryId: 725662 },
+        { pricingCategoryId: 725662 },
+        { pricingCategoryId: 725662 },
+      ],
+    }),
+  )
+  const ab = out.directBooking.activityBookings[0]
+  assert.equal(ab.passengers.length, 3)
+  for (const p of ab.passengers) {
+    const fn = p.passengerDetails.find(a => a.questionId === 'firstName')
+    const ln = p.passengerDetails.find(a => a.questionId === 'lastName')
+    assert.deepEqual(fn?.values, ['Lead'])
+    assert.deepEqual(ln?.values, ['Booker'])
+  }
+})
+
+test('activityBooking: per-passenger firstName/lastName override main contact when provided', () => {
+  // Future-proofing: when the UI evolves to collect per-pax names,
+  // those values must take precedence over the main contact fallback.
+  const out = buildBokunPayload(
+    fixture({
+      mainContactDetails: {
+        firstName: 'Lead',
+        lastName: 'Booker',
+        email: 'lead@example.com',
+      },
+      passengers: [
+        { pricingCategoryId: 725662, firstName: 'Alice', lastName: 'Smith' },
+        { pricingCategoryId: 725662 },
+      ],
+    }),
+  )
+  const ab = out.directBooking.activityBookings[0]
+  const p0 = ab.passengers[0].passengerDetails
+  const p1 = ab.passengers[1].passengerDetails
+  assert.deepEqual(p0.find(a => a.questionId === 'firstName')?.values, ['Alice'])
+  assert.deepEqual(p0.find(a => a.questionId === 'lastName')?.values, ['Smith'])
+  assert.deepEqual(p1.find(a => a.questionId === 'firstName')?.values, ['Lead'])
+  assert.deepEqual(p1.find(a => a.questionId === 'lastName')?.values, ['Booker'])
 })
 
 // ─── pickup variants ───────────────────────────────────────────────────────
@@ -789,6 +843,53 @@ test('buildSubmitLogContext: timing + upstream forwarded verbatim', () => {
   assert.equal(ctx.submitMs, 5678)
   assert.equal(ctx.upstreamStatus, 400)
   assert.deepEqual(ctx.detail, detail)
+})
+
+// ─── normalizePhoneE164 — Bokun phone format requirement ──────────────────
+
+test('normalizePhoneE164: strips spaces, parens, dashes', () => {
+  // The bug we hit live (2026-04-26): Bokun rejects "+1 929 372 4529"
+  // with `INVALID /mainContactDetails/4 phoneNumber - Not a valid phone number`.
+  assert.equal(normalizePhoneE164('+1 929 372 4529'), '+19293724529')
+  assert.equal(normalizePhoneE164('(929) 372-4529'), '+19293724529')
+  assert.equal(normalizePhoneE164('+1-929-372-4529'), '+19293724529')
+})
+
+test('normalizePhoneE164: preserves already-clean E.164', () => {
+  assert.equal(normalizePhoneE164('+19293724529'), '+19293724529')
+  assert.equal(normalizePhoneE164('+33612345678'), '+33612345678')
+})
+
+test('normalizePhoneE164: bare 10-digit US/PR gets +1 prefix', () => {
+  assert.equal(normalizePhoneE164('9293724529'), '+19293724529')
+})
+
+test('normalizePhoneE164: leading 00 (international) becomes +', () => {
+  assert.equal(normalizePhoneE164('0033612345678'), '+33612345678')
+})
+
+test('normalizePhoneE164: empty string returns empty string', () => {
+  assert.equal(normalizePhoneE164(''), '')
+  assert.equal(normalizePhoneE164('   '), '')
+})
+
+test('mainContactDetails: phone is normalised to E.164 when shipped', () => {
+  // Integration: end-to-end that the formatted UI input becomes
+  // what Bokun expects in the payload.
+  const out = buildBokunPayload(
+    fixture({
+      mainContactDetails: {
+        firstName: 'Test',
+        lastName: 'User',
+        email: 'test@example.com',
+        phone: '+1 929 372 4529',
+      },
+    }),
+  )
+  const phone = out.directBooking.mainContactDetails.find(
+    a => a.questionId === 'phoneNumber',
+  )
+  assert.deepEqual(phone?.values, ['+19293724529'])
 })
 
 test('buildSubmitLogContext: paymentToken never appears in log', () => {

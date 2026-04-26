@@ -64,7 +64,10 @@ export type BokunActivityBookingRequest = {
   startTimeId: number
   rateId: number
   date: string
-  passengers: { pricingCategoryId: number }[]
+  passengers: {
+    pricingCategoryId: number
+    passengerDetails: AnswerDto[]
+  }[]
   pickup?: boolean
   pickupPlaceId?: number
   pickupAnswers?: AnswerDto[]
@@ -91,20 +94,59 @@ export type BokunCheckoutRequest = {
   directBooking: BokunDirectBooking
 }
 
+/**
+ * Normalises a phone string to E.164 (no spaces, single leading `+`).
+ * Bokun rejects "+1 929 555 1234" with `InvalidAnswersException - Not a
+ * valid phone number` (verified live, 2026-04-26 logs). E.164 = `+`
+ * followed by digits only, country code first.
+ */
+export function normalizePhoneE164(raw: string): string {
+  const cleaned = raw.replace(/[^\d+]/g, '')
+  if (!cleaned) return ''
+  if (cleaned.startsWith('+')) return '+' + cleaned.slice(1).replace(/\+/g, '')
+  if (cleaned.startsWith('00')) return '+' + cleaned.slice(2)
+  if (cleaned.length === 10) return '+1' + cleaned
+  if (cleaned.length === 11 && cleaned.startsWith('1')) return '+' + cleaned
+  return '+' + cleaned
+}
+
 function buildMainContactDetails(
   c: CheckoutSubmitRequest['mainContactDetails'],
 ): AnswerDto[] {
   // Always send firstName/lastName/email (required in input). Send
-  // title and phoneNumber only when populated — Bokun rejects empty
-  // values with InvalidAnswersException, but absent answers fall back
-  // to whatever the activity declares as required (cleaner errors).
+  // title and phoneNumber only when populated. Phone is normalised to
+  // E.164 because Bokun rejects formatted strings with spaces/parens.
   const out: AnswerDto[] = []
   if (c.title) out.push({ questionId: 'title', values: [c.title] })
   out.push({ questionId: 'firstName', values: [c.firstName] })
   out.push({ questionId: 'lastName', values: [c.lastName] })
   out.push({ questionId: 'email', values: [c.email] })
-  if (c.phone) out.push({ questionId: 'phoneNumber', values: [c.phone] })
+  if (c.phone) {
+    const normalized = normalizePhoneE164(c.phone)
+    if (normalized) out.push({ questionId: 'phoneNumber', values: [normalized] })
+  }
   return out
+}
+
+/**
+ * Builds passengerDetails for a single passenger. Bokun /submit rejects
+ * with `MISSING /activityBookings/N/passengers/M/passengerDetails/{0,1}`
+ * when this is absent (verified live, 2026-04-26 logs — 9-pax Catamaran).
+ *
+ * MVP fallback: lead booker (main contact) name is used for every passenger
+ * the UI did not collect a per-pax name for. Acceptable trade-off until
+ * the form gets per-passenger name fields.
+ */
+function buildPassengerDetails(
+  p: PassengerSubmit,
+  contact: CheckoutSubmitRequest['mainContactDetails'],
+): AnswerDto[] {
+  const firstName = p.firstName?.trim() || contact.firstName
+  const lastName = p.lastName?.trim() || contact.lastName
+  return [
+    { questionId: 'firstName', values: [firstName] },
+    { questionId: 'lastName', values: [lastName] },
+  ]
 }
 
 function buildPickupAnswers(b: CheckoutSubmitRequest): AnswerDto[] {
@@ -146,6 +188,7 @@ function buildActivityBooking(
 ): BokunActivityBookingRequest {
   const passengers = b.passengers.map(p => ({
     pricingCategoryId: p.pricingCategoryId,
+    passengerDetails: buildPassengerDetails(p, b.mainContactDetails),
   }))
   const pickupAnswers = buildPickupAnswers(b)
   const activityAnswers = buildActivityAnswers(b.answers)
