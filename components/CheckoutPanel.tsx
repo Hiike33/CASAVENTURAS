@@ -22,7 +22,10 @@ import {
 } from '@/lib/bokun/checkout-prices'
 import { formatCheckoutErrorMessage } from '@/lib/bokun/checkout-payload'
 import { track } from '@/lib/analytics/events'
-import { htmlToList } from '@/lib/html/to-list'
+import PromoCodeBlock from '@/components/checkout/PromoCodeBlock'
+import WhatsIncludedPanel from '@/components/checkout/WhatsIncludedPanel'
+import PickupCombobox from '@/components/checkout/PickupCombobox'
+import { ChevronIcon, PinIcon, CheckIcon } from '@/components/checkout/icons'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 
 type T = ReturnType<typeof useTranslations<'CheckoutPanel'>>
@@ -829,117 +832,7 @@ function CustomPickupToggle({
   )
 }
 
-function WhatsIncludedPanel({
-  included,
-  excluded,
-  attention,
-  requirements,
-  t,
-}: {
-  included?: string
-  excluded?: string
-  attention?: string
-  requirements?: string
-  t: T
-}) {
-  const [open, setOpen] = useState(false)
-  const includedList = htmlToList(included)
-  const excludedList = htmlToList(excluded)
-  const attentionList = htmlToList(attention)
-  const requirementsList = htmlToList(requirements)
-  const hasAny =
-    includedList.length || excludedList.length || attentionList.length || requirementsList.length
-  if (!hasAny) return null
-  return (
-    <div className="border border-[#E5E5E5]">
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-[#FAFAFA] transition-colors"
-      >
-        <span className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C]">
-          {t('included')}
-        </span>
-        <span
-          className={`text-[#717170] transition-transform ${open ? 'rotate-180' : ''}`}
-        >
-          <ChevronIcon />
-        </span>
-      </button>
-      {open && (
-        <div className="px-4 pb-4 pt-1 space-y-4">
-          {includedList.length > 0 && (
-            <IncludeExcludeList title={t('includedTitle')} items={includedList} positive />
-          )}
-          {excludedList.length > 0 && (
-            <IncludeExcludeList title={t('notIncluded')} items={excludedList} positive={false} />
-          )}
-          {attentionList.length > 0 && (
-            <div>
-              <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#717170] mb-2">
-                {t('pleaseNote')}
-              </p>
-              <ul className="space-y-1.5">
-                {attentionList.map((item, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-2 text-[12px] font-light text-[#4F4F4E] leading-[1.5]"
-                  >
-                    <span className="inline-block w-1 h-1 bg-[#717170] mt-[7px] flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {requirementsList.length > 0 && (
-            <div>
-              <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#717170] mb-2">
-                {t('requirements')}
-              </p>
-              <p className="text-[12px] font-light text-[#4F4F4E] leading-[1.6]">
-                {requirementsList.join(' ')}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function IncludeExcludeList({
-  title,
-  items,
-  positive,
-}: {
-  title: string
-  items: string[]
-  positive: boolean
-}) {
-  return (
-    <div>
-      <p className="text-[9px] font-medium tracking-[0.14em] uppercase text-[#717170] mb-2">
-        {title}
-      </p>
-      <ul className="space-y-1.5">
-        {items.map((item, i) => (
-          <li
-            key={i}
-            className="flex items-start gap-2 text-[12px] font-light text-[#4F4F4E] leading-[1.5]"
-          >
-            {positive ? (
-              <span className="text-[#248D6C] mt-[-1px] font-medium">✓</span>
-            ) : (
-              <span className="text-[#717170] mt-[-1px]">×</span>
-            )}
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
+// WhatsIncludedPanel + IncludeExcludeList moved to components/checkout/WhatsIncludedPanel.tsx
 
 function PricingCategoryRow({
   category,
@@ -1017,103 +910,7 @@ function QtyStepper({
   )
 }
 
-function PickupCombobox({
-  places,
-  value,
-  onSelect,
-  onChange,
-  t,
-}: {
-  places: PickupPlace[]
-  value: string
-  onSelect: (p: PickupPlace) => void
-  onChange: (v: string) => void
-  t: T
-}) {
-  const [open, setOpen] = useState(false)
-  const wrapRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (!open) return
-    const onDocClick = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onDocClick)
-    return () => document.removeEventListener('mousedown', onDocClick)
-  }, [open])
-  const q = value.trim().toLowerCase()
-  const filtered = useMemo(
-    () =>
-      q === ''
-        ? places.slice(0, 12)
-        : places.filter(p => p.title.toLowerCase().includes(q)).slice(0, 12),
-    [q, places],
-  )
-  return (
-    <div ref={wrapRef} className="relative">
-      <label
-        htmlFor="cp-pickup"
-        className="block text-[9px] font-normal tracking-[0.14em] uppercase text-[#888] mb-1.5"
-      >
-        {t('hotelPickup')} <span className="text-[#248D6C]">*</span>
-      </label>
-      <div className="relative">
-        <input
-          id="cp-pickup"
-          type="text"
-          required
-          value={value}
-          onFocus={() => setOpen(true)}
-          onChange={e => {
-            onChange(e.target.value)
-            setOpen(true)
-          }}
-          placeholder={t('searchHotel')}
-          autoComplete="off"
-          className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 pr-9 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
-        />
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#717170]">
-          <ChevronIcon />
-        </span>
-      </div>
-      {open && filtered.length > 0 && (
-        <ul
-          role="listbox"
-          className="absolute z-10 left-0 right-0 mt-1 bg-white border border-[#E5E5E5] max-h-[260px] overflow-y-auto"
-        >
-          {filtered.map(p => (
-            <li key={p.id} role="option" aria-selected={false}>
-              <button
-                type="button"
-                onClick={() => {
-                  onSelect(p)
-                  setOpen(false)
-                }}
-                className="w-full text-left text-[13px] font-light text-[#4F4F4E] px-3.5 py-2.5 hover:bg-[#E6F3EE] hover:text-[#111] transition-colors border-b border-[#F0F0F0] last:border-b-0"
-              >
-                {p.title}
-                {p.askForRoomNumber && (
-                  <span className="ml-2 text-[9px] tracking-[0.12em] uppercase text-[#717170]">
-                    {t('roomRequired')}
-                  </span>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      {open && filtered.length === 0 && q !== '' && (
-        <p className="absolute z-10 left-0 right-0 mt-1 bg-white border border-[#E5E5E5] px-3.5 py-3 text-[12px] font-light text-[#717170]">
-          {t('noHotelMatch', { query: value })}
-        </p>
-      )}
-      <p className="text-[10px] font-light text-[#717170] mt-1.5">
-        {t('pickupLocations', { count: places.length })}
-      </p>
-    </div>
-  )
-}
+// PickupCombobox moved to components/checkout/PickupCombobox.tsx
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -1164,27 +961,7 @@ function CancellationLine({
   return <p className="text-[9.5px] text-center text-[#aaa] font-light">{text}</p>
 }
 
-function ChevronIcon() {
-  return (
-    <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden>
-      <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.2" fill="none" />
-    </svg>
-  )
-}
-
-function PinIcon() {
-  return (
-    <svg width="12" height="14" viewBox="0 0 12 14" fill="none" aria-hidden>
-      <path
-        d="M6 1C3.24 1 1 3.24 1 6c0 3.75 5 7 5 7s5-3.25 5-7c0-2.76-2.24-5-5-5z"
-        stroke="#248D6C"
-        strokeWidth="1.2"
-        fill="none"
-      />
-      <circle cx="6" cy="6" r="1.5" fill="#248D6C" />
-    </svg>
-  )
-}
+// ChevronIcon, PinIcon, CheckIcon moved to components/checkout/icons.tsx
 
 function DevMockBanner({ t }: { t: T }) {
   return (
@@ -1231,92 +1008,4 @@ function SuccessState({
   )
 }
 
-function CheckIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-      <path d="M2 7.5L5.5 11L12 3.5" stroke="#248D6C" strokeWidth="1.5" fill="none" />
-    </svg>
-  )
-}
-
-// ─── Promo code block ──────────────────────────────────────────────────
-// Field + inline status badge + discount breakdown. All state is driven
-// by the parent's debounced useEffect — this component is purely visual.
-function PromoCodeBlock({
-  input,
-  onChange,
-  state,
-  error,
-  breakdown,
-  t,
-}: {
-  input: string
-  onChange: (v: string) => void
-  state: 'idle' | 'checking' | 'valid' | 'invalid'
-  error:
-    | 'invalid_code'
-    | 'expired'
-    | 'min_not_met'
-    | 'usage_limit'
-    | 'product_not_eligible'
-    | 'network'
-    | null
-  breakdown: {
-    subtotal: number
-    discount: number
-    total: number
-    currency: string
-    code: string
-  } | null
-  t: T
-}) {
-  const borderColor =
-    state === 'valid'
-      ? 'border-[#248D6C]'
-      : state === 'invalid'
-        ? 'border-red-300'
-        : 'border-[#E5E5E5] focus-within:border-[#248D6C]'
-  return (
-    <Field id="cp-promo" label={t('promoLabel')}>
-      <div className="relative">
-        <input
-          id="cp-promo"
-          type="text"
-          value={input}
-          onChange={e => onChange(e.target.value)}
-          placeholder={t('promoPlaceholder')}
-          autoComplete="off"
-          spellCheck={false}
-          className={`w-full border ${borderColor} text-[#111] text-[13px] font-light px-3.5 py-2.5 pr-10 outline-none transition-colors placeholder:text-[#aaa] uppercase tracking-wide`}
-        />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-          {state === 'checking' && (
-            <span
-              aria-label={t('promoChecking')}
-              className="inline-block w-3.5 h-3.5 border-2 border-[#E5E5E5] border-t-[#248D6C] rounded-full animate-spin"
-            />
-          )}
-          {state === 'valid' && <CheckIcon />}
-          {state === 'invalid' && (
-            <span aria-hidden className="text-red-500 text-[14px]">
-              ×
-            </span>
-          )}
-        </span>
-      </div>
-      {state === 'valid' && breakdown && (
-        <p className="text-[11px] font-light text-[#248D6C] mt-1.5">
-          {t('promoApplied', {
-            code: breakdown.code,
-            amount: breakdown.discount,
-          })}
-        </p>
-      )}
-      {state === 'invalid' && error && (
-        <p className="text-[11px] font-light text-red-600 mt-1.5">
-          {t(`promoError.${error}`)}
-        </p>
-      )}
-    </Field>
-  )
-}
+// PromoCodeBlock moved to components/checkout/PromoCodeBlock.tsx
