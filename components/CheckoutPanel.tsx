@@ -19,10 +19,8 @@ import { formatCheckoutErrorMessage } from '@/lib/bokun/checkout-payload'
 import { track } from '@/lib/analytics/events'
 import PromoCodeBlock from '@/components/checkout/PromoCodeBlock'
 import WhatsIncludedPanel from '@/components/checkout/WhatsIncludedPanel'
-import PickupCombobox from '@/components/checkout/PickupCombobox'
 import StripeCard from '@/components/checkout/StripeCard'
 import MeetingPointBlock from '@/components/checkout/MeetingPointBlock'
-import CustomPickupToggle from '@/components/checkout/CustomPickupToggle'
 import PricingCategoryRow from '@/components/checkout/PricingCategoryRow'
 import Section from '@/components/checkout/Section'
 import Field from '@/components/checkout/Field'
@@ -31,7 +29,7 @@ import DevMockBanner from '@/components/checkout/DevMockBanner'
 import SuccessState from '@/components/checkout/SuccessState'
 import CheckoutHeader from '@/components/checkout/CheckoutHeader'
 import CheckoutTotalsBlock from '@/components/checkout/CheckoutTotalsBlock'
-import AddressAutocomplete from '@/components/AddressAutocomplete'
+import CheckoutPickupBlock from '@/components/checkout/CheckoutPickupBlock'
 import { useCheckoutContext } from '@/lib/checkout/use-checkout-context'
 import { useCheckoutTotal } from '@/lib/checkout/use-checkout-total'
 import { usePromoValidation } from '@/lib/checkout/use-promo-validation'
@@ -39,6 +37,7 @@ import {
   validateSubmitPreflight,
   buildSubmitBody,
   checkPriceMismatch,
+  type CheckoutFormState,
 } from '@/lib/checkout/submit-helpers'
 
 // Inline checkout panel wired to Bókun + Stripe.
@@ -115,19 +114,19 @@ function CheckoutPanelInner({
     total: number
   } | null>(null)
   const { ctx, qty, setQty } = useCheckoutContext(tour.bokunProductId)
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<CheckoutFormState>({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    pickupId: null as number | null,
+    pickupId: null,
     pickupTitle: '',
     roomNumber: '',
     customPickup: false,
     customPickupAddress: '',
-    customPickupLat: undefined as number | undefined,
-    customPickupLon: undefined as number | undefined,
-    answers: {} as Record<number, string>,
+    customPickupLat: undefined,
+    customPickupLon: undefined,
+    answers: {},
     requests: '',
   })
 
@@ -370,82 +369,14 @@ function CheckoutPanelInner({
           </div>
 
           {showPickup && ctx && (
-            <>
-              {!form.customPickup && (
-                <PickupCombobox
-                  places={ctx.pickupPlaces}
-                  value={form.pickupTitle}
-                  onSelect={p =>
-                    setForm(f => ({
-                      ...f,
-                      pickupId: p.id,
-                      pickupTitle: p.title,
-                      roomNumber: p.askForRoomNumber ? f.roomNumber : '',
-                    }))
-                  }
-                  onChange={v =>
-                    setForm(f => ({ ...f, pickupTitle: v, pickupId: null }))
-                  }
-                  t={t}
-                />
-              )}
-
-              {needsRoomNumber && !form.customPickup && (
-                <Field id="cp-room" label={t('roomNumber')} required>
-                  <input
-                    id="cp-room"
-                    type="text"
-                    required
-                    value={form.roomNumber}
-                    onChange={e => setForm(f => ({ ...f, roomNumber: e.target.value }))}
-                    placeholder={t('roomNumberPh')}
-                    className="w-full border border-[#E5E5E5] text-[#111] text-[13px] font-light px-3.5 py-2.5 outline-none focus:border-[#248D6C] transition-colors placeholder:text-[#aaa]"
-                  />
-                </Field>
-              )}
-
-              {showCustomPickupToggle && (
-                <CustomPickupToggle
-                  on={form.customPickup}
-                  onToggle={v =>
-                    setForm(f => ({
-                      ...f,
-                      customPickup: v,
-                      pickupId: v ? null : f.pickupId,
-                      pickupTitle: v ? '' : f.pickupTitle,
-                      roomNumber: v ? '' : f.roomNumber,
-                      customPickupAddress: v ? f.customPickupAddress : '',
-                      customPickupLat: v ? f.customPickupLat : undefined,
-                      customPickupLon: v ? f.customPickupLon : undefined,
-                    }))
-                  }
-                  t={t}
-                />
-              )}
-
-              {form.customPickup && showCustomPickupToggle && (
-                <AddressAutocomplete
-                  id="cp-custom-addr"
-                  label={t('pickupAddress')}
-                  required
-                  value={{
-                    text: form.customPickupAddress,
-                    lat: form.customPickupLat,
-                    lon: form.customPickupLon,
-                  }}
-                  onChange={v =>
-                    setForm(f => ({
-                      ...f,
-                      customPickupAddress: v.text,
-                      customPickupLat: v.lat,
-                      customPickupLon: v.lon,
-                    }))
-                  }
-                  placeholder={t('pickupAddressPh')}
-                  hint={t('pickupAddressHint')}
-                />
-              )}
-            </>
+            <CheckoutPickupBlock
+              ctx={ctx}
+              form={form}
+              setForm={setForm}
+              needsRoomNumber={needsRoomNumber}
+              showCustomPickupToggle={showCustomPickupToggle}
+              t={t}
+            />
           )}
         </Section>
 
