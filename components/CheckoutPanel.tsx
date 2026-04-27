@@ -29,6 +29,7 @@ import Field from '@/components/checkout/Field'
 import CancellationLine from '@/components/checkout/CancellationLine'
 import DevMockBanner from '@/components/checkout/DevMockBanner'
 import SuccessState from '@/components/checkout/SuccessState'
+import CheckoutHeader from '@/components/checkout/CheckoutHeader'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 import { useCheckoutContext } from '@/lib/checkout/use-checkout-context'
 import { useCheckoutTotal } from '@/lib/checkout/use-checkout-total'
@@ -283,30 +284,15 @@ function CheckoutPanelInner({
     <aside className="border border-[#E5E5E5] bg-white">
       {devMock && <DevMockBanner t={t} />}
 
-      <header className="bg-[#FAFAFA] border-b border-[#E5E5E5] px-6 py-5 flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C] mb-1.5">
-            {t('secureCheckout')}
-          </p>
-          <p className="text-[#111] text-[15px] font-normal mb-1">
-            {ctx?.title ?? tour.name}
-          </p>
-          <p className="text-[12px] font-light text-[#717170]">
-            {date} · {startTimeLabel} · {totalGuests}{' '}
-            {totalGuests === 1 ? tCommon('guest') : tCommon('guests')}
-          </p>
-        </div>
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-[#717170] hover:text-[#111] transition-colors text-[18px] leading-none px-2"
-            aria-label={t('closeCheckout')}
-          >
-            ×
-          </button>
-        )}
-      </header>
+      <CheckoutHeader
+        title={ctx?.title ?? tour.name}
+        date={date}
+        startTimeLabel={startTimeLabel}
+        totalGuests={totalGuests}
+        onClose={onClose}
+        t={t}
+        tCommon={tCommon}
+      />
 
       {showMeetingPoint && meetingPoint && (
         <MeetingPointBlock point={meetingPoint} t={t} />
