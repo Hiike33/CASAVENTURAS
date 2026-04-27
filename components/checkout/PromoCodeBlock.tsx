@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { CheckIcon } from './icons'
+import Field from './Field'
 
 // ─── Promo code block ──────────────────────────────────────────────────
 // Field + inline status badge + discount breakdown. All state is driven
@@ -95,30 +96,4 @@ export default function PromoCodeBlock({
   )
 }
 
-// Local copy of the Field UI helper — kept private to this component so
-// the file stays self-contained. The original Field still lives in
-// CheckoutPanel.tsx for the rest of the form.
-function Field({
-  id,
-  label,
-  required,
-  children,
-}: {
-  id: string
-  label: string
-  required?: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <div>
-      <label
-        htmlFor={id}
-        className="block text-[9px] font-normal tracking-[0.14em] uppercase text-[#888] mb-1.5"
-      >
-        {label}
-        {required && <span className="text-[#248D6C] ml-1">*</span>}
-      </label>
-      {children}
-    </div>
-  )
-}
+// Field is now shared via ./Field.tsx (extracted Phase 2A).

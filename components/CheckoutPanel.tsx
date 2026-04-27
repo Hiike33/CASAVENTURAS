@@ -11,9 +11,7 @@ import {
 import type { Tour } from '@/lib/tours'
 import type {
   CheckoutContext,
-  PickupPlace,
   PricingCategory,
-  StartPoint,
 } from '@/app/api/bokun/checkout-context/route'
 import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
 import {
@@ -25,10 +23,16 @@ import { track } from '@/lib/analytics/events'
 import PromoCodeBlock from '@/components/checkout/PromoCodeBlock'
 import WhatsIncludedPanel from '@/components/checkout/WhatsIncludedPanel'
 import PickupCombobox from '@/components/checkout/PickupCombobox'
-import { ChevronIcon, PinIcon, CheckIcon } from '@/components/checkout/icons'
+import StripeCard from '@/components/checkout/StripeCard'
+import MeetingPointBlock from '@/components/checkout/MeetingPointBlock'
+import CustomPickupToggle from '@/components/checkout/CustomPickupToggle'
+import PricingCategoryRow from '@/components/checkout/PricingCategoryRow'
+import Section from '@/components/checkout/Section'
+import Field from '@/components/checkout/Field'
+import CancellationLine from '@/components/checkout/CancellationLine'
+import DevMockBanner from '@/components/checkout/DevMockBanner'
+import SuccessState from '@/components/checkout/SuccessState'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
-
-type T = ReturnType<typeof useTranslations<'CheckoutPanel'>>
 
 // Inline checkout panel wired to Bókun + Stripe.
 //
@@ -746,266 +750,7 @@ function CheckoutPanelInner({
   )
 }
 
-function StripeCard({ fallback, t }: { fallback: boolean; t: T }) {
-  if (fallback) {
-    return (
-      <div className="border border-[#E5E5E5] bg-white px-3.5 py-3 flex items-center gap-3">
-        <span className="text-[11px] font-light text-[#717170]">
-          {t('stripeMissing')}
-        </span>
-      </div>
-    )
-  }
-  return (
-    <div className="border border-[#E5E5E5] bg-white px-3.5 py-[11px] focus-within:border-[#248D6C] transition-colors">
-      <CardElement
-        options={{
-          style: {
-            base: {
-              fontSize: '13px',
-              fontWeight: '300',
-              fontFamily:
-                'Figtree, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
-              color: '#111111',
-              '::placeholder': { color: '#aaaaaa' },
-              iconColor: '#717170',
-            },
-            invalid: { color: '#b91c1c', iconColor: '#b91c1c' },
-          },
-          hidePostalCode: false,
-        }}
-      />
-    </div>
-  )
-}
-
-function MeetingPointBlock({ point, t }: { point: StartPoint; t: T }) {
-  const lines = [
-    point.addressLine1,
-    point.addressLine2,
-    [point.city, point.state, point.postalCode].filter(Boolean).join(', '),
-    point.countryCode,
-  ].filter((l): l is string => Boolean(l))
-  const mapsQuery = encodeURIComponent(
-    [point.title, point.addressLine1, point.city, point.state, point.countryCode]
-      .filter(Boolean)
-      .join(', '),
-  )
-  return (
-    <div className="bg-[#E6F3EE] border-b border-[#B8D9CF] px-6 py-4">
-      <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C] mb-1.5 flex items-center gap-2">
-        <PinIcon /> {t('meetingPoint')}
-      </p>
-      <p className="text-[#111] text-[13px] font-medium leading-tight">{point.title}</p>
-      <p className="text-[12px] font-light text-[#4F4F4E] leading-[1.6] mt-0.5">
-        {lines.join(' · ')}
-      </p>
-      <a
-        href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-block mt-2 text-[10px] font-medium tracking-[0.14em] uppercase text-[#248D6C] border-b border-[#248D6C]/30 hover:border-[#248D6C] transition-colors"
-      >
-        {t('viewOnMap')}
-      </a>
-    </div>
-  )
-}
-
-function CustomPickupToggle({
-  on,
-  onToggle,
-  t,
-}: {
-  on: boolean
-  onToggle: (v: boolean) => void
-  t: T
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onToggle(!on)}
-      className="w-full text-left text-[11px] font-medium tracking-[0.08em] text-[#248D6C] border-t border-[#E5E5E5] pt-3 hover:text-[#1C6E54] transition-colors"
-    >
-      {on ? t('chooseListedHotel') : t('customPickupToggle')}
-    </button>
-  )
-}
-
-// WhatsIncludedPanel + IncludeExcludeList moved to components/checkout/WhatsIncludedPanel.tsx
-
-function PricingCategoryRow({
-  category,
-  quantity,
-  unitPrice,
-  showUnitPrice,
-  onChange,
-  last,
-}: {
-  category: PricingCategory
-  quantity: number
-  unitPrice: number
-  // Hidden for per-booking tours where the categories are manifest-only
-  // and the displayed unit would mislead (each row would echo tour.price).
-  showUnitPrice: boolean
-  onChange: (v: number) => void
-  last: boolean
-}) {
-  const ageHint =
-    category.minAge && category.maxAge && category.maxAge > 0
-      ? `${category.minAge}–${category.maxAge} yrs`
-      : null
-  return (
-    <div
-      className={`flex items-center justify-between px-4 py-3 ${last ? '' : 'border-b border-[#E5E5E5]'}`}
-    >
-      <div>
-        <p className="text-[13px] font-normal text-[#111]">{category.title}</p>
-        {ageHint && (
-          <p className="text-[10px] font-light text-[#717170] mt-0.5">{ageHint}</p>
-        )}
-      </div>
-      <div className="flex items-center gap-4">
-        {showUnitPrice && (
-          <span className="text-[12px] font-light text-[#4F4F4E]">${unitPrice}</span>
-        )}
-        <QtyStepper value={quantity} onChange={onChange} />
-      </div>
-    </div>
-  )
-}
-
-function QtyStepper({
-  value,
-  onChange,
-}: {
-  value: number
-  onChange: (v: number) => void
-}) {
-  const btnClass =
-    'w-7 h-7 flex items-center justify-center border border-[#E5E5E5] text-[#4F4F4E] hover:border-[#248D6C] hover:text-[#248D6C] transition-colors disabled:opacity-40 disabled:hover:border-[#E5E5E5] disabled:hover:text-[#4F4F4E]'
-  return (
-    <div className="flex items-center gap-2">
-      <button
-        type="button"
-        onClick={() => onChange(value - 1)}
-        disabled={value <= 0}
-        className={btnClass}
-        aria-label="Decrease"
-      >
-        −
-      </button>
-      <span className="text-[13px] font-medium text-[#111] w-5 text-center tabular-nums">
-        {value}
-      </span>
-      <button
-        type="button"
-        onClick={() => onChange(value + 1)}
-        className={btnClass}
-        aria-label="Increase"
-      >
-        +
-      </button>
-    </div>
-  )
-}
-
-// PickupCombobox moved to components/checkout/PickupCombobox.tsx
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-3">
-      <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C]">{title}</p>
-      <div className="space-y-3">{children}</div>
-    </div>
-  )
-}
-
-function Field({
-  id,
-  label,
-  required,
-  children,
-}: {
-  id: string
-  label: string
-  required?: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <div>
-      <label
-        htmlFor={id}
-        className="block text-[9px] font-normal tracking-[0.14em] uppercase text-[#888] mb-1.5"
-      >
-        {label}
-        {required && <span className="text-[#248D6C] ml-1">*</span>}
-      </label>
-      {children}
-    </div>
-  )
-}
-
-function CancellationLine({
-  policy,
-  t,
-}: {
-  policy?: { title: string; fullRefundBeforeHours?: number }
-  t: T
-}) {
-  const hours = policy?.fullRefundBeforeHours
-  const text =
-    hours === undefined
-      ? t('cancellationDefault')
-      : t('cancellationWithHours', { hours })
-  return <p className="text-[9.5px] text-center text-[#aaa] font-light">{text}</p>
-}
-
-// ChevronIcon, PinIcon, CheckIcon moved to components/checkout/icons.tsx
-
-function DevMockBanner({ t }: { t: T }) {
-  return (
-    <div className="bg-[#FFF8E1] border-b border-[#E6D89A] px-6 py-2 text-[10px] font-medium tracking-[0.14em] uppercase text-[#8A6A0F]">
-      {t('devMockBanner')}
-    </div>
-  )
-}
-
-function SuccessState({
-  tour,
-  total,
-  date,
-  code,
-  t,
-}: {
-  tour: Tour
-  total: number
-  date: string
-  code: string
-  t: T
-}) {
-  return (
-    <aside className="border border-[#E5E5E5] bg-white">
-      <div className="bg-[#E6F3EE] border-b border-[#B8D9CF] px-6 py-5">
-        <p className="text-[9px] font-medium tracking-[0.2em] uppercase text-[#248D6C] mb-1.5 flex items-center gap-2">
-          <CheckIcon /> {t('bookingConfirmed')}
-        </p>
-        <p className="text-[#111] text-[20px] font-light leading-tight">{tour.name}</p>
-        <p className="text-[12px] font-light text-[#4F4F4E] mt-1">
-          {date} · {t('confirmationCode')} <span className="font-medium text-[#111]">{code}</span>
-        </p>
-      </div>
-      <div className="p-6 space-y-4 text-[13px] font-light text-[#4F4F4E] leading-[1.7]">
-        <p>{t('confirmationEmail', { code })}</p>
-        <div className="border-t border-[#E5E5E5] pt-4 flex items-baseline justify-between">
-          <span className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#717170]">
-            {t('amountPaid')}
-          </span>
-          <span className="text-[20px] font-light text-[#111]">${total}</span>
-        </div>
-      </div>
-    </aside>
-  )
-}
-
 // PromoCodeBlock moved to components/checkout/PromoCodeBlock.tsx
+// 10 sub-components moved to components/checkout/ during Phase 2A
+// (StripeCard, MeetingPointBlock, CustomPickupToggle, PricingCategoryRow,
+//  QtyStepper, Section, Field, CancellationLine, DevMockBanner, SuccessState)
