@@ -1,0 +1,133 @@
+name: Production smoke test
+
+# Lightweight smoke test that exercises the deployed casaventuras.com
+# site after every deploy + on a daily schedule. Catches the class of
+# bug that local unit tests miss : CSP wildcard origins missing in
+# prod headers, deployed bundle not serving the latest commit, GA tag
+# not reaching the browser, etc.
+#
+# The 2026-04-26 incident (`*.google-analytics.com` wildcard absent
+# from script-src so GA4 regional endpoints were CSP-blocked) is the
+# direct motivation for this workflow — a curl + grep would have
+# caught it in seconds.
+#
+# Stays bash-only on purpose : zero npm install, zero new devDep,
+# runs in <30 s. If we later need full browser assertions (console
+# error capture, etc.) Playwright can be added — but most regressions
+# show up in headers + raw HTML grep.
+#
+# Security note : no untrusted input is interpolated into run: blocks.
+# The only ${{ }} expression is a workflow_run.conclusion comparison
+# (enum value from GitHub, not user-controlled). All curl URLs are
+# constants from env: SITE_URL.
+
+on:
+  schedule:
+    # Daily 09:00 UTC (= 05:00 ADT, before traffic peak).
+    - cron: '0 9 * * *'
+  workflow_dispatch: {}
+  workflow_run:
+    workflows: [Deploy to Cloudflare Workers]
+    types:
+      - completed
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    env:
+      SITE_URL: https://casaventuras.com
+    steps:
+      - name: Homepage responds 200
+        run: |
+          set -euo pipefail
+          code=$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' "$SITE_URL/")
+          [ "$code" = "200" ] || { echo "::error::homepage returned $code"; exit 1; }
+          echo "homepage HTTP 200"
+
+      - name: CSP header includes all required origins
+        run: |
+          set -euo pipefail
+          csp=$(curl -sS --max-time 15 -I "$SITE_URL/" | tr -d '\r' | grep -i '^content-security-policy:' || true)
+          [ -n "$csp" ] || { echo "::error::CSP header absent"; exit 1; }
+
+          require() {
+            local needle="$1"
+            local where="$2"
+            # grep -F : treat the needle as a fixed string. Critical for
+            # the `*.google-analytics.com` entry — without -F, grep would
+            # interpret `*` as a regex quantifier and silently match
+            # things that don't actually contain the wildcard.
+            if ! echo "$csp" | grep -qF -- "$needle"; then
+              echo "::error::CSP missing $needle in $where"
+              exit 1
+            fi
+            echo "  CSP $where contains $needle"
+          }
+
+          require "https://js.stripe.com"             "script-src (Stripe.js)"
+          require "https://widgets.bokun.io"          "script-src (Bokun widgets)"
+          require "https://static.cloudflareinsights.com" "script-src (CF Web Analytics)"
+          require "https://www.googletagmanager.com"  "script-src (GA4 loader)"
+          require "https://www.google-analytics.com"  "script-src (GA legacy)"
+
+          require "https://api.stripe.com"            "connect-src (Stripe API)"
+          require "https://api.bokun.is"              "connect-src (Bokun REST)"
+          require "https://*.google-analytics.com"    "connect-src (GA4 regional wildcard)"
+          require "https://analytics.google.com"      "connect-src (GA4 measurement)"
+
+          echo "$csp" | grep -q "object-src 'none'"      || { echo "::error::object-src 'none' lost"; exit 1; }
+          echo "$csp" | grep -q "frame-ancestors 'none'" || { echo "::error::frame-ancestors 'none' lost"; exit 1; }
+          echo "  object-src + frame-ancestors locked"
+
+      - name: HTML contains GA measurement id and gtag loader
+        run: |
+          set -euo pipefail
+          html=$(curl -sS --max-time 15 "$SITE_URL/")
+          echo "$html" | grep -q "G-02DN83KF2B" || {
+            echo "::error::GA measurement id not found in homepage HTML"
+            exit 1
+          }
+          echo "$html" | grep -q "googletagmanager.com/gtag/js" || {
+            echo "::error::gtag.js loader URL not found in homepage HTML"
+            exit 1
+          }
+          echo "  GA tag fully wired in HTML"
+
+      - name: Consent Mode v2 default-denied is set before any GA hit
+        run: |
+          set -euo pipefail
+          html=$(curl -sS --max-time 15 "$SITE_URL/")
+          if ! echo "$html" | grep -q "analytics_storage: 'denied'"; then
+            echo "::error::Consent Mode default-denied not in HTML — GA may set cookies pre-consent"
+            exit 1
+          fi
+          echo "  Consent Mode v2 default-denied present"
+
+      - name: Tour page renders a price
+        run: |
+          set -euo pipefail
+          html=$(curl -sS --max-time 15 "$SITE_URL/tours/el-yunque")
+          if ! echo "$html" | grep -qE '\$[0-9]+'; then
+            echo "::error::tour page renders no price"
+            exit 1
+          fi
+          echo "  tour page price present"
+
+      - name: API health — availability route responds
+        run: |
+          set -euo pipefail
+          today=$(date -u '+%Y-%m-%d')
+          end=$(date -u -d '+7 days' '+%Y-%m-%d')
+          url="$SITE_URL/api/bokun/availability?productId=448405&start=$today&end=$end"
+          code=$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' "$url")
+          # Accept 200 (success) or 502 (Bokun upstream blip) — anything else means routing broke.
+          [ "$code" = "200" ] || [ "$code" = "502" ] || {
+            echo "::error::availability route returned $code"
+            exit 1
+          }
+          echo "  availability route HTTP $code"
+
+      - name: Summary
+        if: success()
+        run: echo "production smoke checks passed"
