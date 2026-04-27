@@ -1,0 +1,60 @@
+version: 2
+
+# Dependabot — automated dependency PRs.
+#
+# Why now : the audit (2026-04-26) flagged that the project pins Stripe
+# (^9.2.0 / ^6.2.0) and next-intl (^4.9.1) without any auto-update
+# mechanism. CVE turnaround relied on manual `npm audit fix` runs —
+# already used once for postcss (commit 79fd3e5, GHSA-qx2v-qp2m-jg93).
+#
+# Strategy :
+#   • npm     : weekly Monday, grouped by ecosystem to keep PR noise low
+#   • actions : weekly, prevents the casaventuras workflow from pinning
+#               an old actions/checkout for years
+#   • Both    : security updates fire on detection regardless of schedule
+
+updates:
+  - package-ecosystem: npm
+    directory: /cv-next
+    schedule:
+      interval: weekly
+      day: monday
+      time: '08:00'
+      timezone: America/New_York
+    # PR cap : 5 open at once, prevents flood after a quiet quarter.
+    open-pull-requests-limit: 5
+    # Group all minor/patch deps so Stan reviews 1 PR a week, not 20.
+    groups:
+      production-deps:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      dev-deps:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+    # Major bumps stay individual — they often need migration code.
+    labels:
+      - dependencies
+    commit-message:
+      # Match the repo convention [SCOPE/category] used in 100% of recent
+      # commits (see git log: SEC, FIX, FEAT, OBSERVABILITY, CHORE).
+      prefix: '[CHORE/deps]'
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '08:00'
+      timezone: America/New_York
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: '[CHORE/ci]'
+      include: scope
