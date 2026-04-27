@@ -30,6 +30,7 @@ import CancellationLine from '@/components/checkout/CancellationLine'
 import DevMockBanner from '@/components/checkout/DevMockBanner'
 import SuccessState from '@/components/checkout/SuccessState'
 import CheckoutHeader from '@/components/checkout/CheckoutHeader'
+import CheckoutTotalsBlock from '@/components/checkout/CheckoutTotalsBlock'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 import { useCheckoutContext } from '@/lib/checkout/use-checkout-context'
 import { useCheckoutTotal } from '@/lib/checkout/use-checkout-total'
@@ -521,30 +522,12 @@ function CheckoutPanelInner({
           </div>
         )}
 
-        <div className="bg-[#FAFAFA] border border-[#E5E5E5] px-4 py-3 space-y-1">
-          {promoState === 'valid' && promoBreakdown && (
-            <>
-              <div className="flex items-baseline justify-between text-[12px] font-light text-[#4F4F4E]">
-                <span>{t('subtotal')}</span>
-                <span>${promoBreakdown.subtotal}</span>
-              </div>
-              <div className="flex items-baseline justify-between text-[12px] font-light text-[#248D6C]">
-                <span>
-                  {t('promoAppliedShort', { code: promoBreakdown.code })}
-                </span>
-                <span>−${promoBreakdown.discount}</span>
-              </div>
-            </>
-          )}
-          <div className="flex items-baseline justify-between">
-            <span className="text-[10px] font-medium tracking-[0.14em] uppercase text-[#717170]">
-              {t('total')}
-            </span>
-            <span className="text-[26px] font-light text-[#111] tracking-tight leading-none">
-              ${effectiveTotal}
-            </span>
-          </div>
-        </div>
+        <CheckoutTotalsBlock
+          promoState={promoState}
+          promoBreakdown={promoBreakdown}
+          effectiveTotal={effectiveTotal}
+          t={t}
+        />
 
         <button
           type="submit"
