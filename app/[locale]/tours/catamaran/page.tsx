@@ -12,6 +12,7 @@ import SchemaOrg from '@/components/SchemaOrg'
 import Breadcrumb from '@/components/Breadcrumb'
 import StickyMobileCTA from '@/components/StickyMobileCTA'
 import HeroVideo from '@/components/HeroVideo'
+import TourViewTracker from '@/components/TourViewTracker'
 import { getCMS } from '@/lib/cms'
 import { localizedAlternates } from '@/lib/seo/alternates'
 import { routing, type Locale } from '@/i18n/routing'
@@ -169,6 +170,7 @@ export default async function CatamaranPage({ params }: Props) {
   return (
     <>
       <SchemaOrg tour={tour} faqs={faqs} guides={guides} locale={locale} />
+      <TourViewTracker tourSlug={tour.slug} locale={locale} />
       <Breadcrumb items={[
         { name: 'Home', url: '/' },
         { name: 'Experiences', url: '/#tours' },

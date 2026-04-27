@@ -21,6 +21,7 @@ import {
   type RuntimeRatePrice,
 } from '@/lib/bokun/checkout-prices'
 import { formatCheckoutErrorMessage } from '@/lib/bokun/checkout-payload'
+import { track } from '@/lib/analytics/events'
 import { htmlToList } from '@/lib/html/to-list'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 
@@ -262,6 +263,7 @@ function CheckoutPanelInner({
           setPromoState('invalid')
           setPromoError(data.reason)
           setPromoBreakdown(null)
+          track.promoApplied({ code, valid: false, reason: data.reason })
           return
         }
         setPromoState('valid')
@@ -272,6 +274,11 @@ function CheckoutPanelInner({
           total: data.total,
           currency: data.currency,
           code: data.code,
+        })
+        track.promoApplied({
+          code: data.code,
+          valid: true,
+          discount: data.discount,
         })
       } catch {
         if (ticket !== promoReqCounter.current) return
@@ -325,6 +332,7 @@ function CheckoutPanelInner({
 
     setStep('submitting')
     setErrorMsg('')
+    track.bookingAttempt({ tourSlug: tour.slug, value: effectiveTotal })
 
     const { token, error: stripeError } = await stripe.createToken(card, {
       name: `${form.firstName} ${form.lastName}`.trim(),
@@ -407,11 +415,19 @@ function CheckoutPanelInner({
           code: promoBreakdown?.code,
         })
       }
+      const finalTotal = bokunTotal ?? effectiveTotal
       setConfirmation({
         code: data.booking.confirmationCode,
-        total: bokunTotal ?? effectiveTotal,
+        total: finalTotal,
       })
       setStep('success')
+      // GA4 standard `purchase` event — feeds the built-in e-commerce
+      // reports automatically (conversion rate, revenue, abandoned cart).
+      track.purchase({
+        tourSlug: tour.slug,
+        value: finalTotal,
+        confirmationCode: data.booking.confirmationCode,
+      })
     } catch (err) {
       setStep('error')
       setErrorMsg(err instanceof Error ? err.message : t('networkError'))

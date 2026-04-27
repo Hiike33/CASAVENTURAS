@@ -6,6 +6,7 @@ import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
 import { formatStartTime, getBookingTotal } from '@/lib/bokun/snapshot'
 import AvailabilityCalendar from '@/components/AvailabilityCalendar'
 import CheckoutPanel from '@/components/CheckoutPanel'
+import { track } from '@/lib/analytics/events'
 
 type AvailabilityState =
   | { kind: 'idle' }
@@ -130,7 +131,16 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
           <AvailabilityCalendar
             productId={tour.bokunProductId}
             selected={date}
-            onSelect={setDate}
+            onSelect={d => {
+              setDate(d)
+              if (d) {
+                const daysAhead = Math.max(
+                  0,
+                  Math.round((new Date(d).getTime() - Date.now()) / 86400e3),
+                )
+                track.dateSelected({ tourSlug: tour.slug, daysAhead })
+              }
+            }}
           />
         </div>
 
@@ -169,7 +179,10 @@ export default function BookingSidebar({ tour }: { tour: Tour }) {
           <button
             type="button"
             disabled={disableSubmit}
-            onClick={() => setInCheckout(true)}
+            onClick={() => {
+              setInCheckout(true)
+              track.beginCheckout({ tourSlug: tour.slug, value: total })
+            }}
             className="cta-breathe cta-smoke block w-full text-white text-center text-[10px] font-semibold tracking-[0.16em] uppercase py-3.5 mt-3 disabled:opacity-60"
           >
             {availability.kind === 'ok' && availability.soldOut
