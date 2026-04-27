@@ -14,10 +14,7 @@ import type {
   PricingCategory,
 } from '@/app/api/bokun/checkout-context/route'
 import { CLIENT_CHECKOUT_MODE } from '@/lib/bokun/checkout-mode'
-import {
-  resolveCheckoutPriceMap,
-  type RuntimeRatePrice,
-} from '@/lib/bokun/checkout-prices'
+import type { RuntimeRatePrice } from '@/lib/bokun/checkout-prices'
 import { formatCheckoutErrorMessage } from '@/lib/bokun/checkout-payload'
 import { track } from '@/lib/analytics/events'
 import PromoCodeBlock from '@/components/checkout/PromoCodeBlock'
@@ -34,6 +31,7 @@ import DevMockBanner from '@/components/checkout/DevMockBanner'
 import SuccessState from '@/components/checkout/SuccessState'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 import { useCheckoutContext } from '@/lib/checkout/use-checkout-context'
+import { useCheckoutTotal } from '@/lib/checkout/use-checkout-total'
 
 // Inline checkout panel wired to Bókun + Stripe.
 //
@@ -154,46 +152,20 @@ function CheckoutPanelInner({
 
   const needs = (field: string) =>
     ctx?.requiredCustomerFields?.includes(field) ?? false
-  const totalGuests = Object.values(qty).reduce((n, v) => n + v, 0)
   const selectedPickup = ctx?.pickupPlaces.find(p => p.id === form.pickupId)
   const needsRoomNumber =
     !form.customPickup && selectedPickup?.askForRoomNumber === true
 
-  // Prices shown next to each pricing category.
-  //   1. Live: `pricesByRate` from the slot currently selected in the parent
-  //      (BookingSidebar / HomeBookingForm) — fresh at page load, matches
-  //      exactly what Bokun will charge at submit.
-  //   2. Fallback: `tour.bokunSnapshot.ratePrices` (build-time, ≤ 6h stale).
-  // When the parent doesn't pass a slot (e.g., direct deep-link or preview
-  // route), the snapshot keeps the UI rendering without a network round-trip.
-  const priceByCategory = useMemo(
-    () =>
-      resolveCheckoutPriceMap({
-        runtime: pricesByRate,
-        snapshot: tour.bokunSnapshot?.ratePrices,
-        preferredRateId: rateId || undefined,
-      }),
-    [pricesByRate, tour.bokunSnapshot, rateId],
-  )
-
-  const rateFor = (categoryId: number): number =>
-    priceByCategory.get(categoryId) ?? tour.price
-
-  const total = useMemo(() => {
-    // Per-booking tours (private charters like the catamaran): one flat fee
-    // for the entire booking. Pricing categories exist only for manifest
-    // headcount (Adults/Children) — they MUST NOT be multiplied. Bokun
-    // sends `pricePerCategoryUnit: []` for these rates; without this guard
-    // the priceByCategory map is empty, rateFor() falls back to tour.price,
-    // and the total becomes tour.price × guests (over-billing the customer).
-    if (tour.pricedPerPerson === false) return tour.price
-    if (!ctx) return tour.price * Math.max(1, totalGuests)
-    return ctx.pricingCategories.reduce((sum, c) => {
-      const units = qty[c.id] ?? 0
-      return sum + units * rateFor(c.id)
-    }, 0)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ctx, qty, tour.price, tour.pricedPerPerson, totalGuests, priceByCategory])
+  // Per-category price map + booking total — see lib/checkout/use-checkout-total
+  // (math) and lib/checkout/checkout-totals.test.ts (13 unit tests covering
+  // per-booking, per-person, fallback, and edge cases).
+  const { total, totalGuests, rateFor } = useCheckoutTotal({
+    ctx,
+    qty,
+    tour,
+    pricesByRate,
+    rateId,
+  })
 
   // ─── Promo preview: debounced validation ───────────────────────────
   // Fires /api/bokun/promo/validate 500ms after the user stops typing.
