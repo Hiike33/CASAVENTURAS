@@ -3,6 +3,7 @@ import type { CMSAdapter } from './adapter'
 import type { Locale } from '@/i18n/routing'
 import { enrichToursWithSnapshot, type BokunSnapshotMap } from '@/lib/bokun/snapshot'
 import { getLiveStartingPrice } from '@/lib/bokun/live-prices-cached'
+import { enrichWithLivePrices } from './live-price-enrichment'
 
 // Static imports per locale. Next.js / Webpack tree-shake the ones that are
 // unused on a given page, so bundle cost is paid only when needed.
@@ -54,7 +55,7 @@ export class LocalAdapter implements CMSAdapter {
       DATA[locale].tours.tours,
       bokunSnapshot as BokunSnapshotMap,
     )
-    return enrichWithLivePrices(enriched)
+    return enrichWithLivePrices(enriched, getLiveStartingPrice)
   }
 
   async getTour(slug: string, locale: Locale = DEFAULT_LOCALE): Promise<Tour | null> {
@@ -64,7 +65,7 @@ export class LocalAdapter implements CMSAdapter {
     )
     const match = enriched.find(t => t.slug === slug)
     if (!match) return null
-    const [withLive] = await enrichWithLivePrices([match])
+    const [withLive] = await enrichWithLivePrices([match], getLiveStartingPrice)
     return withLive ?? match
   }
 
@@ -92,30 +93,5 @@ export class LocalAdapter implements CMSAdapter {
   }
 }
 
-/**
- * Final layer of price enrichment: replace `tour.price` (snapshot value,
- * up to 6h stale) with the live "starting from" price fetched from Bokun
- * (cached 60s via getLiveStartingPrice).
- *
- * Falls back silently to the snapshot value when:
- *   • bokunProductId is missing (dev fixture or non-Bokun tour)
- *   • Bokun fetch fails or times out
- *   • Bokun returns no bookable slots in the next 30 days
- *   • Build-time CI without Bokun creds (BokunConfigError thrown)
- *
- * The try/catch ensures a Bokun outage never crashes the page render —
- * the user sees the snapshot price (≤6h old), no error UI surfaces.
- */
-async function enrichWithLivePrices(tours: Tour[]): Promise<Tour[]> {
-  return Promise.all(
-    tours.map(async t => {
-      if (!t.bokunProductId) return t
-      try {
-        const live = await getLiveStartingPrice(t.bokunProductId)
-        return live !== null ? { ...t, price: live } : t
-      } catch {
-        return t
-      }
-    }),
-  )
-}
+// enrichWithLivePrices was extracted to lib/cms/live-price-enrichment.ts
+// so it can be unit-tested without dragging next/cache into node:test.
