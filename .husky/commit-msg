@@ -1,0 +1,56 @@
+#!/usr/bin/env sh
+# Enforce the [SCOPE/category] commit-message convention used in 100 %
+# of recent commits (see git log : FIX, FEAT, CHORE, SEC, UX, OBSERVABILITY).
+#
+# Examples that PASS :
+#   [FIX/checkout] ship passengerDetails per pax + normalise phone to E.164
+#   [CHORE/bokun] auto-refresh snapshot (cron)
+#   [SEC/csp] Allow Cloudflare Web Analytics beacon + extract CSP to lib/security/
+#   [FEAT/analytics] Track GA4 funnel events
+#   [SEC] minimal scope (no category) — also accepted
+#
+# Examples that FAIL :
+#   fix: foo                        # conventional-commits style, not ours
+#   [fix/ux] message                # lowercase scope
+#   Update README                   # no brackets
+#   []                              # empty brackets
+#
+# Merge / Revert commits are exempted (their messages are auto-generated).
+#
+# To bypass in an emergency : `git commit --no-verify`. The audit
+# (2026-04-26) recommended NOT making the rule globally bypass-blocked
+# because some force-pushes after rebase cleanup need flexibility.
+
+msg_file="$1"
+msg=$(head -n 1 "$msg_file")
+
+# Allow merge / revert auto-messages
+case "$msg" in
+  "Merge "* | "Revert "*) exit 0 ;;
+esac
+
+# Pattern : ^[ALL-CAPS-SCOPE(/lower-kebab-category)?] then space then content
+if echo "$msg" | grep -Eq '^\[[A-Z][A-Z]+(/[a-z][a-z0-9-]*)?\]\s+\S+'; then
+  exit 0
+fi
+
+cat <<'EOF'
+✘ Commit message format rejected.
+
+Casa Venturas convention :
+   [SCOPE]              short message
+   [SCOPE/category]     short message
+
+  • SCOPE in UPPERCASE  (FIX, FEAT, CHORE, SEC, UX, OBSERVABILITY, …)
+  • category in lower-kebab-case  (checkout, csp, bokun, analytics, …)
+  • brackets [] required, then a space, then the actual message
+
+Examples that pass :
+  [FIX/checkout] surface bokun upstream error message
+  [CHORE/deps]   bump postcss to 8.5.10
+  [SEC]          rotate API token
+
+Bypass in emergency :  git commit --no-verify
+EOF
+
+exit 1
