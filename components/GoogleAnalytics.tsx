@@ -52,6 +52,26 @@ export default function GoogleAnalytics() {
               gtag('consent', 'update', { analytics_storage: 'granted' });
             }
           } catch (e) { /* localStorage unavailable — keep default denied */ }
+          // Geo enrichment — fetch the visitor's country/city from our own
+          // /api/geo/me endpoint (powered by Cloudflare's cf-ipcountry +
+          // cf-ipcity request headers). Sets gtag user_properties so GA4
+          // reports can segment by "PR-local vs tourist" and source city
+          // without us storing any cookie / PII server-side. Failure-safe :
+          // any error (404, network, CF header missing in dev) is silently
+          // ignored so analytics still works without geo enrichment.
+          fetch('/api/geo/me', { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (geo) {
+              if (!geo) return;
+              var props = {};
+              if (geo.country) props.geo_country = geo.country;
+              if (geo.city) props.geo_city = geo.city;
+              if (typeof geo.isLocalPR === 'boolean') props.is_local_pr = geo.isLocalPR;
+              if (Object.keys(props).length > 0) {
+                gtag('set', 'user_properties', props);
+              }
+            })
+            .catch(function () { /* offline / endpoint blocked — ignore */ });
         `}
       </Script>
     </>
