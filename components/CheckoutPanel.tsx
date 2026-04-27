@@ -33,6 +33,11 @@ import AddressAutocomplete from '@/components/AddressAutocomplete'
 import { useCheckoutContext } from '@/lib/checkout/use-checkout-context'
 import { useCheckoutTotal } from '@/lib/checkout/use-checkout-total'
 import { usePromoValidation } from '@/lib/checkout/use-promo-validation'
+import {
+  validateSubmitPreflight,
+  buildSubmitBody,
+  checkPriceMismatch,
+} from '@/lib/checkout/submit-helpers'
 
 // Inline checkout panel wired to Bókun + Stripe.
 //
@@ -167,31 +172,31 @@ function CheckoutPanelInner({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!ctx) return
-    if (!stripe || !elements) {
-      setErrorMsg(t('paymentLibraryNotReady'))
+    const card = elements?.getElement(CardElement) ?? null
+
+    // Pre-flight guards — see lib/checkout/submit-helpers (7 unit tests
+    // cover ctx-missing, stripe-missing, card-missing, promo-not-validated).
+    const guard = validateSubmitPreflight({
+      ctx, stripe, elements, card, promoInput, promoState,
+    })
+    if (!guard.ok) {
+      // ctxMissing is silent (context still loading is not a user error);
+      // every other key surfaces a translated message in the red banner.
+      if (guard.errorKey !== 'ctxMissing') {
+        setStep('error')
+        setErrorMsg(t(guard.errorKey))
+      }
       return
     }
-    const card = elements.getElement(CardElement)
-    if (!card) {
-      setErrorMsg(t('cardNotFound'))
-      return
-    }
-    // Guard: a non-empty promo code must be validated before the user
-    // can pay. This prevents the "silent pass-through" failure mode where
-    // an unvalidated code hits Bokun at submit time and either fails the
-    // whole booking or, worse, applies no discount without notice.
-    if (promoInput.trim() && promoState !== 'valid') {
-      setStep('error')
-      setErrorMsg(t('promoMustValidateBeforePay'))
-      return
-    }
+    // ctx, stripe, elements and card are non-null beyond this point.
+    // Type-narrowing the discriminated union doesn't carry through
+    // separate refs, so we re-assert below via `!`.
 
     setStep('submitting')
     setErrorMsg('')
     track.bookingAttempt({ tourSlug: tour.slug, value: effectiveTotal })
 
-    const { token, error: stripeError } = await stripe.createToken(card, {
+    const { token, error: stripeError } = await stripe!.createToken(card!, {
       name: `${form.firstName} ${form.lastName}`.trim(),
     })
     if (stripeError || !token) {
@@ -200,52 +205,27 @@ function CheckoutPanelInner({
       return
     }
 
-    const passengers = ctx.pricingCategories.flatMap(c =>
-      Array.from({ length: qty[c.id] ?? 0 }, () => ({
-        pricingCategoryId: c.id,
-        firstName: form.firstName,
-        lastName: form.lastName,
-      })),
-    )
-
     try {
+      // The body shape is shared with the /api/bokun/checkout/submit
+      // route via the CheckoutSubmitRequest type — buildSubmitBody is
+      // the single source of truth for client → server payload mapping
+      // (15 unit tests cover the cascade rules around customPickup).
+      const body = buildSubmitBody({
+        form,
+        qty,
+        ctx: ctx!,
+        startTimeId,
+        rateId,
+        date,
+        tokenId: token.id,
+        promoState,
+        promoBreakdown,
+        needsTitleField: needs('title'),
+      })
       const res = await fetch('/api/bokun/checkout/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: ctx.productId,
-          startTimeId,
-          rateId,
-          date,
-          passengers,
-          pickupPlaceId:
-            !form.customPickup && form.pickupId ? form.pickupId : undefined,
-          roomNumber: !form.customPickup ? form.roomNumber || undefined : undefined,
-          customPickupAddress: form.customPickup
-            ? form.customPickupAddress
-            : undefined,
-          customPickupLat: form.customPickup ? form.customPickupLat : undefined,
-          customPickupLon: form.customPickup ? form.customPickupLon : undefined,
-          mainContactDetails: {
-            // Title field was removed from the UI for inclusivity. If Bokun
-            // listed it as required for this product we still ship "MX"
-            // (gender-neutral) so the submit doesn't fail validation.
-            title: needs('title') ? 'MX' : undefined,
-            firstName: form.firstName,
-            lastName: form.lastName,
-            email: form.email,
-            phone: form.phone || undefined,
-          },
-          answers: form.answers,
-          specialRequests: form.requests || undefined,
-          paymentToken: { token: token.id },
-          currency: 'USD',
-          // Only include the code if it passed preview validation,
-          // otherwise the guard above returned earlier.
-          ...(promoState === 'valid' && promoBreakdown
-            ? { promoCode: promoBreakdown.code }
-            : {}),
-        }),
+        body: JSON.stringify(body),
       })
       const data = (await res.json()) as
         | { ok: true; booking: { confirmationCode: string; totalPrice?: number } }
@@ -255,24 +235,20 @@ function CheckoutPanelInner({
         setErrorMsg(formatCheckoutErrorMessage(data.error, data.detail))
         return
       }
-      // Invariant check: the amount charged by Bokun should equal what
-      // the user agreed to in the preview. A mismatch > 1¢ is a signal
-      // (promo expired between preview and submit, upstream change,
-      // stale state) — surface via console and keep the authoritative
-      // Bokun total as the displayed value.
-      const bokunTotal = data.booking.totalPrice
-      if (
-        bokunTotal !== undefined &&
-        Math.abs(bokunTotal - effectiveTotal) > 0.01
-      ) {
+
+      // Telemetry guard : flag preview/Bokun price drift > 1 cent.
+      // See lib/checkout/submit-helpers.checkPriceMismatch (3 unit tests).
+      const mismatch = checkPriceMismatch({
+        preview: effectiveTotal,
+        bokunTotal: data.booking.totalPrice,
+        promoCode: promoBreakdown?.code,
+      })
+      if (mismatch) {
         // eslint-disable-next-line no-console
-        console.error('[checkout] preview/submit total mismatch', {
-          preview: effectiveTotal,
-          bokun: bokunTotal,
-          code: promoBreakdown?.code,
-        })
+        console.error('[checkout] preview/submit total mismatch', mismatch)
       }
-      const finalTotal = bokunTotal ?? effectiveTotal
+
+      const finalTotal = data.booking.totalPrice ?? effectiveTotal
       setConfirmation({
         code: data.booking.confirmationCode,
         total: finalTotal,
