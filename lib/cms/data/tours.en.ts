@@ -74,6 +74,8 @@ const rawTours: Tour[] = [
     ],
     video: 'https://www.youtube.com/watch?v=_qz8fcMaor8',
     tripAdvisorProductUrl: 'https://www.tripadvisor.com/Attraction_Review-g147320-d21156167-Reviews-Casa_Venturas-San_Juan_Puerto_Rico.html',
+    // El Yunque National Forest — La Mina / Yokahú heart of the rainforest.
+    geo: { latitude: 18.2966, longitude: -65.7959 },
   },
   {
     slug: 'catamaran',
@@ -122,6 +124,8 @@ const rawTours: Tour[] = [
       '/images/tours/catamaran/customer2-hd.jpg',
     ],
     tripAdvisorProductUrl: 'https://www.tripadvisor.com/AttractionProductReview-g147319-d34092341-Private_Luxury_Sailing_Catamaran_Day_to_Vieques-Puerto_Rico.html',
+    // Punta Arena beach, Vieques — the destination, not the marina.
+    geo: { latitude: 18.0991, longitude: -65.4396 },
   },
   {
     slug: 'salsa',
@@ -170,6 +174,8 @@ const rawTours: Tour[] = [
       '/images/tours/salsa/salsasite2-hd.jpg',
       '/images/tours/salsa/salsasite3-hd.jpg',
     ],
+    // Casa Santurce rooftop, 1050 Calle Marianna, Santurce, San Juan.
+    geo: { latitude: 18.4527, longitude: -66.0723 },
   },
 ]
 

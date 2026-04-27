@@ -53,6 +53,15 @@ function buildOrganization() {
       addressRegion: 'PR',
       addressCountry: 'US',
     },
+    // Geo coordinates of the Casa Venturas operating base in Santurce —
+    // helps Google Maps + "near me" local search match queries like
+    // "tour operator in San Juan Puerto Rico" to a precise pin.
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: 18.4527,
+      longitude: -66.0723,
+    },
+    hasMap: 'https://www.google.com/maps/place/San+Juan,+Puerto+Rico/',
     areaServed: [
       { '@type': 'AdministrativeArea', name: 'Puerto Rico' },
       { '@type': 'Place', name: 'El Yunque National Forest' },
@@ -98,9 +107,26 @@ function buildTouristTrip(tour: Tour, locale: Locale) {
       url: `${siteConfig.url}/tours/${tour.slug}`,
     },
     provider: { '@id': ORG_ID },
-    ...(tour.address && {
-      itinerary: { '@type': 'Place', name: tour.address, address: tour.address },
-    }),
+    // Itinerary = the experience location (rainforest, beach, rooftop) so
+    // search engines can plot the trip on a map. Geo coordinates come
+    // from `tour.geo` (lib/cms/data/tours.en.ts) — when present they
+    // upgrade the Place node from a name-only stub to a precisely
+    // geocoded entity, which is what unlocks "things to do near …" local
+    // pack inclusion. `address` is the meeting point (where the customer
+    // shows up); for tours without a separate address we synthesise from
+    // the heroTag so the Place still has a non-empty `name`.
+    itinerary: {
+      '@type': 'Place',
+      name: tour.address ?? tour.heroTag,
+      ...(tour.address && { address: tour.address }),
+      ...(tour.geo && {
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: tour.geo.latitude,
+          longitude: tour.geo.longitude,
+        },
+      }),
+    },
     ...(tour.groupSize.match(/\d+/) && {
       maximumAttendeeCapacity: Number(tour.groupSize.match(/\d+/)![0]),
     }),

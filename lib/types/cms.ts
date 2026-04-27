@@ -49,6 +49,17 @@ export type Tour = {
   highlights: string[]
   whatToBring?: string[]
   address?: string
+  /**
+   * Geographic coordinates of the tour's primary location, used to
+   * enrich the TouristTrip JSON-LD with `itinerary.geo` so search
+   * engines can place the experience on a map and surface it for
+   * "things to do near {place}" local searches.
+   *
+   * Coordinates point to the tour's HEART (the rainforest center, the
+   * destination beach, the dance studio), not to the meeting point —
+   * the meeting point lives in `address`. Same lat/lon across locales.
+   */
+  geo?: { latitude: number; longitude: number }
   heroTag: string
   photos: string[]
   galleryPhotos?: string[]
