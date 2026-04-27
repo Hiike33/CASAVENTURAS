@@ -33,6 +33,7 @@ import CancellationLine from '@/components/checkout/CancellationLine'
 import DevMockBanner from '@/components/checkout/DevMockBanner'
 import SuccessState from '@/components/checkout/SuccessState'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
+import { useCheckoutContext } from '@/lib/checkout/use-checkout-context'
 
 // Inline checkout panel wired to Bókun + Stripe.
 //
@@ -107,7 +108,7 @@ function CheckoutPanelInner({
     code: string
     total: number
   } | null>(null)
-  const [ctx, setCtx] = useState<CheckoutContext | null>(null)
+  const { ctx, qty, setQty } = useCheckoutContext(tour.bokunProductId)
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -123,7 +124,6 @@ function CheckoutPanelInner({
     answers: {} as Record<number, string>,
     requests: '',
   })
-  const [qty, setQty] = useState<Record<number, number>>({})
 
   // ─── Promo code state (Variante B — preview before pay) ────────────
   // Policy : the UI always holds the UNVALIDATED user input (`promoInput`)
@@ -151,26 +151,6 @@ function CheckoutPanelInner({
     | 'network'
     | null
   >(null)
-
-  useEffect(() => {
-    if (!tour.bokunProductId) return
-    const ctrl = new AbortController()
-    fetch(`/api/bokun/checkout-context?productId=${tour.bokunProductId}`, {
-      signal: ctrl.signal,
-    })
-      .then(r => r.json())
-      .then((data: { ok: boolean; context?: CheckoutContext }) => {
-        if (!data.ok || !data.context) return
-        setCtx(data.context)
-        const seed: Record<number, number> = {}
-        for (const c of data.context.pricingCategories) {
-          seed[c.id] = c.defaultCategory ? 2 : 0
-        }
-        setQty(seed)
-      })
-      .catch(() => {})
-    return () => ctrl.abort()
-  }, [tour.bokunProductId])
 
   const needs = (field: string) =>
     ctx?.requiredCustomerFields?.includes(field) ?? false
