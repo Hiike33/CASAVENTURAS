@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { loadStripe, type Stripe } from '@stripe/stripe-js'
 import {
@@ -32,6 +32,7 @@ import SuccessState from '@/components/checkout/SuccessState'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 import { useCheckoutContext } from '@/lib/checkout/use-checkout-context'
 import { useCheckoutTotal } from '@/lib/checkout/use-checkout-total'
+import { usePromoValidation } from '@/lib/checkout/use-promo-validation'
 
 // Inline checkout panel wired to Bókun + Stripe.
 //
@@ -123,33 +124,6 @@ function CheckoutPanelInner({
     requests: '',
   })
 
-  // ─── Promo code state (Variante B — preview before pay) ────────────
-  // Policy : the UI always holds the UNVALIDATED user input (`promoInput`)
-  // + the VALIDATED view (`promoState`, `promoBreakdown`, `promoError`).
-  // Any upstream change (qty, date, startTimeId) resets the validated
-  // view without clearing the user's typing, so they see a spinner,
-  // never a jarring "code disappeared" moment.
-  const [promoInput, setPromoInput] = useState('')
-  const [promoState, setPromoState] = useState<
-    'idle' | 'checking' | 'valid' | 'invalid'
-  >('idle')
-  const [promoBreakdown, setPromoBreakdown] = useState<{
-    subtotal: number
-    discount: number
-    total: number
-    currency: string
-    code: string
-  } | null>(null)
-  const [promoError, setPromoError] = useState<
-    | 'invalid_code'
-    | 'expired'
-    | 'min_not_met'
-    | 'usage_limit'
-    | 'product_not_eligible'
-    | 'network'
-    | null
-  >(null)
-
   const needs = (field: string) =>
     ctx?.requiredCustomerFields?.includes(field) ?? false
   const selectedPickup = ctx?.pickupPlaces.find(p => p.id === form.pickupId)
@@ -167,87 +141,11 @@ function CheckoutPanelInner({
     rateId,
   })
 
-  // ─── Promo preview: debounced validation ───────────────────────────
-  // Fires /api/bokun/promo/validate 500ms after the user stops typing.
-  // Re-fires whenever the priced inputs change (qty / date / startTimeId)
-  // so the displayed breakdown never diverges from the current basket.
-  const promoReqCounter = useRef(0)
-  useEffect(() => {
-    const code = promoInput.trim()
-    if (!code) {
-      setPromoState('idle')
-      setPromoBreakdown(null)
-      setPromoError(null)
-      return
-    }
-    if (!ctx || !startTimeId || !rateId || total <= 0) return
-
-    setPromoState('checking')
-    setPromoError(null)
-    const ticket = ++promoReqCounter.current
-    const timer = window.setTimeout(async () => {
-      try {
-        const passengersByCategory: Record<number, number> = {}
-        for (const c of ctx.pricingCategories) {
-          const q = qty[c.id] ?? 0
-          if (q > 0) passengersByCategory[c.id] = q
-        }
-        const res = await fetch('/api/bokun/promo/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            productId: ctx.productId,
-            startTimeId,
-            rateId,
-            date,
-            passengersByCategory,
-            subtotal: total,
-            currency: 'USD',
-            promoCode: code,
-          }),
-        })
-        const data = (await res.json()) as
-          | { ok: true; valid: true; code: string; subtotal: number; discount: number; total: number; currency: string }
-          | { ok: true; valid: false; reason: 'invalid_code' | 'expired' | 'min_not_met' | 'usage_limit' | 'product_not_eligible' }
-          | { ok: false; error: string }
-        // Discard stale responses (newer request already in flight).
-        if (ticket !== promoReqCounter.current) return
-        if (!data.ok) {
-          setPromoState('invalid')
-          setPromoError('network')
-          setPromoBreakdown(null)
-          return
-        }
-        if (!data.valid) {
-          setPromoState('invalid')
-          setPromoError(data.reason)
-          setPromoBreakdown(null)
-          track.promoApplied({ code, valid: false, reason: data.reason })
-          return
-        }
-        setPromoState('valid')
-        setPromoError(null)
-        setPromoBreakdown({
-          subtotal: data.subtotal,
-          discount: data.discount,
-          total: data.total,
-          currency: data.currency,
-          code: data.code,
-        })
-        track.promoApplied({
-          code: data.code,
-          valid: true,
-          discount: data.discount,
-        })
-      } catch {
-        if (ticket !== promoReqCounter.current) return
-        setPromoState('invalid')
-        setPromoError('network')
-        setPromoBreakdown(null)
-      }
-    }, 500)
-    return () => window.clearTimeout(timer)
-  }, [promoInput, ctx, startTimeId, rateId, date, total, qty])
+  // Promo state machine + debounced live validation against
+  // /api/bokun/promo/validate. See lib/checkout/use-promo-validation
+  // for the stale-response guard, telemetry, and the full flow.
+  const { promoInput, setPromoInput, promoState, promoError, promoBreakdown } =
+    usePromoValidation({ ctx, startTimeId, rateId, date, total, qty })
 
   // The amount the UI should display as "Total" — the preview breakdown
   // when a code is validated, otherwise the raw computed total.
