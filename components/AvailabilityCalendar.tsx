@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useLocale } from 'next-intl'
 import type { BokunAvailability, BokunAvailabilityResponse } from '@/lib/bokun/types'
 import {
@@ -59,13 +60,47 @@ export default function AvailabilityCalendar({
   })
   const [state, setState] = useState<FetchState>({ kind: 'idle' })
   const [today, setToday] = useState<string>(TODAY_YMD_SSR)
+  const [mounted, setMounted] = useState(false)
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number; width: number } | null>(null)
   const popoverRef = useRef<HTMLDivElement | null>(null)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
 
   // Compute today's date only on client so SSR markup matches initial hydration.
   useEffect(() => {
     setToday(toYMD(Date.now()))
+    setMounted(true)
   }, [])
+
+  // The popover is rendered via createPortal into document.body so it
+  // escapes any `overflow-hidden` ancestor (e.g. BookingSidebar's
+  // glass-luxe wrapper which would otherwise clip the bottom rows of
+  // the month grid). Position is computed from the trigger's bounding
+  // rect and recomputed on scroll/resize so it stays anchored when the
+  // page or any scroll container moves.
+  useEffect(() => {
+    if (!open) {
+      setPopoverPos(null)
+      return
+    }
+    function update() {
+      const rect = triggerRef.current?.getBoundingClientRect()
+      if (!rect) return
+      setPopoverPos({
+        top: rect.bottom + 4, // mirrors the original mt-1 (4px gap)
+        left: rect.left,
+        width: rect.width,
+      })
+    }
+    update()
+    // capture phase = catches scroll on every ancestor (sticky aside,
+    // overflow scrollers, etc.), not just window.
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('resize', update)
+    }
+  }, [open])
 
   // Fetch the visible month whenever product or month changes, and only
   // when the popover is open so we avoid a wasted fetch on first render.
@@ -156,12 +191,18 @@ export default function AvailabilityCalendar({
         </svg>
       </button>
 
-      {open && (
+      {open && mounted && popoverPos && createPortal(
         <div
           ref={popoverRef}
           role="dialog"
           aria-label="Availability calendar"
-          className="absolute top-full left-0 right-0 mt-1 z-20 bg-white border border-[#E5E5E5] shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-4"
+          style={{
+            position: 'fixed',
+            top: popoverPos.top,
+            left: popoverPos.left,
+            width: popoverPos.width,
+          }}
+          className="z-[60] bg-white border border-[#E5E5E5] shadow-[0_8px_24px_rgba(0,0,0,0.08)] p-4"
           data-test="availability-calendar-popover"
         >
           <div className="flex items-center justify-between mb-3">
@@ -243,7 +284,8 @@ export default function AvailabilityCalendar({
           {state.kind === 'error' && (
             <p className="text-[10px] font-light text-red-600 mt-2 text-center">{state.message}</p>
           )}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )
