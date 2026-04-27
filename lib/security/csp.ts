@@ -36,9 +36,16 @@ export const CSP_DIRECTIVES: Record<string, readonly string[]> = {
     'https://nominatim.openstreetmap.org',
     'https://cloudflareinsights.com',
     // Google Analytics — measurement hit endpoints.
-    //   • google-analytics.com : legacy /collect + gtag config fetch
-    //   • analytics.google.com : GA4 Measurement Protocol endpoint
+    //   • www.google-analytics.com : legacy /collect + gtag config fetch
+    //   • analytics.google.com     : GA4 Measurement Protocol endpoint
+    //   • *.google-analytics.com   : GA4 regional endpoints (region1,
+    //     region2, ...) used for IP anonymisation. Without this wildcard,
+    //     GA4 hits get silently CSP-blocked → zero conversion tracking
+    //     despite the script loading. Verified live 2026-04-26 via
+    //     Playwright console capture on prod (region1.google-analytics.com
+    //     blocked → all events lost).
     'https://www.google-analytics.com',
+    'https://*.google-analytics.com',
     'https://analytics.google.com',
   ],
   'frame-src': [

@@ -53,6 +53,21 @@ describe('CSP_DIRECTIVES — connect-src', () => {
       'connect-src must allow https://analytics.google.com for GA4 measurement endpoint',
     )
   })
+
+  it('authorizes GA4 regional endpoints via wildcard (region1, region2, ...)', () => {
+    // GA4 sends measurement hits to region-specific subdomains like
+    // region1.google-analytics.com for IP anonymisation. Without the
+    // wildcard, all GA4 hits are CSP-blocked in the browser → zero
+    // conversion tracking despite gtag.js loading correctly.
+    // Verified live 2026-04-26 via Playwright console capture on
+    // https://casaventuras.com/fr (real prod traffic):
+    //   "Refused to connect because it violates CSP:
+    //    region1.google-analytics.com/g/collect?..."
+    assert.ok(
+      CSP_DIRECTIVES['connect-src']?.includes('https://*.google-analytics.com'),
+      'connect-src must include wildcard for GA4 regional endpoints',
+    )
+  })
 })
 
 describe('CSP_DIRECTIVES — locked-down directives (security invariants)', () => {
