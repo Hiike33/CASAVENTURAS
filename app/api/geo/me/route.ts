@@ -24,8 +24,15 @@ import { NextResponse } from 'next/server'
 // Privacy note : we never persist these values server-side. The response
 // is `cache-control: no-store` so a future user behind the same Cloudflare
 // edge POP isn't served the previous user's geo by mistake.
-
-export const runtime = 'edge'
+//
+// Runtime : we deliberately do NOT declare `runtime = 'edge'` here.
+// OpenNext Cloudflare bundles every route into a single Worker; declaring
+// edge runtime forces Next.js to split this route into a separate bundle,
+// which OpenNext refuses (build error: `cannot use the edge runtime`).
+// On CF Workers with `nodejs_compat`, the default Node-style runtime IS
+// already a V8 isolate at the edge — the label is what differs, not the
+// physical environment. Since this route only reads request headers
+// (no Node-only APIs), it runs identically on either runtime.
 
 type GeoResponse = {
   country: string | null
