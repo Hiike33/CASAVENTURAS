@@ -1,5 +1,4 @@
-import { headers } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
 // GET /api/geo/me
 //
@@ -8,10 +7,10 @@ import { NextResponse } from 'next/server'
 //
 // Why an endpoint and not a cookie / inline server data :
 //   • A cookie would be PII-tinted and require a cookie-policy update.
-//   • Inlining the values via Server Component `headers()` in the root
-//     layout opts the entire app out of ISR — which we use for live
-//     prices (revalidate: 60). Keeping the lookup behind a dedicated
-//     endpoint preserves ISR for everything else.
+//   • Inlining the values via Server Component would opt the entire
+//     app out of ISR — which we use for live prices (revalidate: 60).
+//     Keeping the lookup behind a dedicated endpoint preserves ISR
+//     for everything else.
 //   • The route reads ONLY headers, no DB / no I/O — its cost on
 //     Cloudflare Workers is sub-millisecond.
 //
@@ -25,15 +24,14 @@ import { NextResponse } from 'next/server'
 // is `cache-control: no-store` so a future user behind the same Cloudflare
 // edge POP isn't served the previous user's geo by mistake.
 //
-// Runtime : explicit `nodejs` declaration to override any Next.js
-// auto-inference. Without this, Next.js 15 can infer edge runtime for
-// routes that only use lightweight APIs (e.g. just `headers()`),
-// which causes OpenNext Cloudflare to crash with:
-//   "app/api/geo/me/route cannot use the edge runtime"
-// Verified 2026-04-28: the original commit removing `runtime = 'edge'`
-// was insufficient — CI continued to fail because Next.js still
-// emitted edge metadata for this route. The explicit `nodejs` export
-// is what actually shuts the inference off.
+// Why `request.headers` instead of `headers()` from `next/headers` :
+// the original implementation imported `headers()` from `next/headers`,
+// which triggered Next.js 15's auto-inference to classify this route as
+// edge runtime — even though we never declared it. OpenNext Cloudflare
+// then crashed with `cannot use the edge runtime`. Reading headers from
+// the request parameter sidesteps the inference (same pattern used in
+// the sibling `app/api/geo/search/route.ts`). The explicit `runtime`
+// declaration below is belt-and-suspenders defense.
 
 export const runtime = 'nodejs'
 
@@ -43,13 +41,12 @@ type GeoResponse = {
   isLocalPR: boolean
 }
 
-export async function GET(): Promise<NextResponse<GeoResponse>> {
-  const h = await headers()
+export async function GET(request: NextRequest): Promise<NextResponse<GeoResponse>> {
   // Cloudflare Workers populate these on every request reaching the
   // origin. Locally (next dev without the CF proxy) they're absent —
   // we return nulls and the client treats it as "geo unknown".
-  const country = h.get('cf-ipcountry') ?? null
-  const city = h.get('cf-ipcity') ?? null
+  const country = request.headers.get('cf-ipcountry') ?? null
+  const city = request.headers.get('cf-ipcity') ?? null
   return NextResponse.json(
     {
       country,
