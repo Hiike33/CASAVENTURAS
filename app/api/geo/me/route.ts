@@ -25,14 +25,17 @@ import { NextResponse } from 'next/server'
 // is `cache-control: no-store` so a future user behind the same Cloudflare
 // edge POP isn't served the previous user's geo by mistake.
 //
-// Runtime : we deliberately do NOT declare `runtime = 'edge'` here.
-// OpenNext Cloudflare bundles every route into a single Worker; declaring
-// edge runtime forces Next.js to split this route into a separate bundle,
-// which OpenNext refuses (build error: `cannot use the edge runtime`).
-// On CF Workers with `nodejs_compat`, the default Node-style runtime IS
-// already a V8 isolate at the edge — the label is what differs, not the
-// physical environment. Since this route only reads request headers
-// (no Node-only APIs), it runs identically on either runtime.
+// Runtime : explicit `nodejs` declaration to override any Next.js
+// auto-inference. Without this, Next.js 15 can infer edge runtime for
+// routes that only use lightweight APIs (e.g. just `headers()`),
+// which causes OpenNext Cloudflare to crash with:
+//   "app/api/geo/me/route cannot use the edge runtime"
+// Verified 2026-04-28: the original commit removing `runtime = 'edge'`
+// was insufficient — CI continued to fail because Next.js still
+// emitted edge metadata for this route. The explicit `nodejs` export
+// is what actually shuts the inference off.
+
+export const runtime = 'nodejs'
 
 type GeoResponse = {
   country: string | null
