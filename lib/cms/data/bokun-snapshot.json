@@ -52,7 +52,7 @@
         ]
       }
     ],
-    "fetchedAt": "2026-05-19T14:47:48.521Z"
+    "fetchedAt": "2026-05-19T19:47:04.456Z"
   },
   "catamaran": {
     "productId": 1134501,
@@ -92,12 +92,12 @@
         "pricedPerPerson": false,
         "pricePerCategoryUnit": [],
         "pricePerBooking": {
-          "amount": 1650,
+          "amount": 2000,
           "currency": "USD"
         }
       }
     ],
-    "fetchedAt": "2026-05-19T14:47:48.418Z"
+    "fetchedAt": "2026-05-19T19:47:04.579Z"
   },
   "salsa": {
     "productId": 680641,
@@ -131,6 +131,6 @@
         ]
       }
     ],
-    "fetchedAt": "2026-05-19T14:47:48.499Z"
+    "fetchedAt": "2026-05-19T19:47:03.910Z"
   }
 }
