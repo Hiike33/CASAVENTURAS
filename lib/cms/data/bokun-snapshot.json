@@ -52,23 +52,11 @@
         ]
       }
     ],
-    "fetchedAt": "2026-05-20T08:58:05.708Z"
+    "fetchedAt": "2026-05-20T14:48:05.426Z"
   },
   "catamaran": {
     "productId": 1134501,
     "cancellationHours": 24,
-    "startTimes": [
-      "10:00"
-    ],
-    "daysOfWeek": [
-      "Mon",
-      "Tue",
-      "Wed",
-      "Thu",
-      "Fri",
-      "Sat",
-      "Sun"
-    ],
     "pricingCategories": [
       {
         "id": 327073,
@@ -85,19 +73,7 @@
         "maxAge": 0
       }
     ],
-    "ratePrices": [
-      {
-        "activityRateId": 2252193,
-        "rateTitle": "Private Luxury Sailing Catamaran Day to Vieques",
-        "pricedPerPerson": false,
-        "pricePerCategoryUnit": [],
-        "pricePerBooking": {
-          "amount": 2000,
-          "currency": "USD"
-        }
-      }
-    ],
-    "fetchedAt": "2026-05-20T08:58:05.468Z"
+    "fetchedAt": "2026-05-20T14:48:04.880Z"
   },
   "salsa": {
     "productId": 680641,
@@ -131,6 +107,6 @@
         ]
       }
     ],
-    "fetchedAt": "2026-05-20T08:58:05.056Z"
+    "fetchedAt": "2026-05-20T14:48:05.319Z"
   }
 }
