@@ -106,8 +106,8 @@ const rawTours: Tour[] = [
     address: 'Plaza Mayor, Palmas del Mar, Humacao',
     heroTag: 'Sailing · Punta Arena, Vieques',
     photos: [
-      '/images/tours/catamaran/CatamaranGroup.png',
       '/images/tours/catamaran/bali1-hd.jpg',
+      '/images/tours/catamaran/CatamaranGroup.png',
       '/images/tours/catamaran/bali2-hd.jpg',
       '/images/tours/catamaran/bali3-hd.jpg',
       '/images/tours/catamaran/bali4-hd.jpg',
@@ -117,9 +117,9 @@ const rawTours: Tour[] = [
       '/images/tours/catamaran/customer2-hd.jpg',
     ],
     galleryPhotos: [
+      '/images/tours/catamaran/bali1-hd.jpg',
       '/images/tours/catamaran/CatamaranGroup.png',
       '/images/tours/catamaran/bali2-hd.jpg',
-      '/images/tours/catamaran/bali1-hd.jpg',
       '/images/tours/catamaran/bali3-hd.jpg',
       '/images/tours/catamaran/bali4-hd.jpg',
       '/images/tours/catamaran/bali5-hd.jpg',
