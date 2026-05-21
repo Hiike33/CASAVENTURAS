@@ -25,6 +25,7 @@ import type { BokunAvailability } from './types.ts'
 
 const WINDOW_DAYS = 30
 const CACHE_TTL_SECONDS = 60
+const FETCH_TIMEOUT_MS = 5_000
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10)
@@ -39,7 +40,7 @@ export const getLiveStartingPrice = unstable_cache(
     if (!Number.isInteger(productId) || productId <= 0) return null
     try {
       const path = `/activity.json/${productId}/availabilities?start=${todayIso()}&end=${futureIso(WINDOW_DAYS)}`
-      const res = await bokunFetch(path)
+      const res = await bokunFetch(path, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
       if (!res.ok) return null
       const slots = (await res.json()) as unknown
       return computeMinStartingPrice(slots as BokunAvailability[])
